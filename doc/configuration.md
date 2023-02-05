@@ -1,0 +1,301 @@
+# Configuration Of WallpaBlur
+
+WallpaBlur uses an INI-derived configuration. It can be passed either as a string via the
+`--config-string` flag or as a file via `--config`.
+If no configuration is provided via parameters, the following places will be checked:
+
+* `$WALLPABLUR_CONFIG`
+* `$XDG_CONFIG_HOME/wallpablur/config.ini`
+* `$HOME/.config/wallpablur/config.ini`
+
+**Note**: When executing `wallpablur <imagefile>` a temporary configuration string is
+created and all other configurations are ignored.
+The equivalent configuration string in this case is:
+```ini
+[background]
+path = <imagefile>
+
+[wallpaper]
+filter = blur
+```
+
+## Full Example Using Default Values
+```ini
+poll-rate-ms = 250
+fade-out-ms  = 0
+fade-in-ms   = 0
+
+[panels]
+# - anchor =; size = 0:0; margin = 0:0:0:0
+
+[background]
+color  = #00000000
+# path =
+scale  = zoom
+wrap-x = none
+wrap-y = none
+# - filter = invert
+# - filter = blur;     iterations = 2; radius = 96
+# - filter = box-blur; iterations = 1; radius = 96
+
+[wallpaper]
+# same as [background]
+
+# [OUTPUT.panels]
+# override panels for OUTPUT
+
+# [OUTPUT.wallpaper]
+# override wallpaper for OUTPUT
+
+# [OUTPUT.background]
+# override background for OUTPUT
+
+
+```
+
+## Syntax
+The configuration consists of the following syntactical elements:
+* Comments: introduced by `#` at the beginning of a line until the end of that line
+* (Named) sections: introduced by a section header `[name of section]` until the next
+  section header or until cleared by returning to the global section via `[]`.
+  Subsections are denoted by `[section.subsection]`.
+* (Anonymous) groups: introduced by `-` inside a section or by a repeating the section
+  header (they mimic lists and are described in `[panels]` below)
+* Key-value pairs: introduced by a string, separated by `=` and ended at the end of line,
+  at a section header, at a group divider `-`, or with a semicolon `;`.
+
+All keys, values, and (sub)section names are syntactically strings and are subject to the
+following rules:
+
+* when started with a single quotation mark `'` everything after this character up until
+  the next `'` is the content of the string
+* when started with a double quotation mark `"` everything after this character up until
+  the next `"` is the content of the string, escape sequences get resolved
+* for unquoted strings leading and trailing spaces get trimmed and escape sequences
+  get resolved
+* the escape sequence `\n` is resolved as new line, while any other sequence `\<char>` is
+  resolved as `<char>`
+
+In particular, the following are equivalent:
+```ini
+number=10
+number = 10
+number = \1\0
+number = "1\0"
+number = '10'
+```
+
+Note that these rules (unless your using comments) allow the configuration file to be
+written in a single line to be passed as argument via `--config-string`.
+
+### File Paths
+File paths can be specified as:
+* absolute path
+* $HOME-relative paths starting with `~/`
+* relative paths:
+  - relative to the configuration file if it exists
+  - relative to the execution directory of wallpablur otherwise
+
+## Options
+
+### Global Options
+The following options are defined in the global section, e.g. on top of the file.
+
+#### `poll-rate-ms`
+How frequently to poll the i3ipc for changes related to window resizing and window moving
+(all other events are subscription based and unaffected by this setting).
+
+Default value: `250`
+
+#### `fade-in-ms`
+How long to fade in on startup for a smoother experience.
+
+Default value: `0`
+
+#### `fade-out-ms`
+How long to fade out on receiving a `SIGTERM` or `SIGINT` (e.g. `killall` or C-c in a
+terminal).
+
+Default value: `0`
+
+### `[panels]`
+Panels are used to mark regions of the screen as "always use the background", e.g. to
+draw the background of your status bar.
+All sizes are in pixels and refer to the respective size at output scale 1.
+Each panel has the following properties (which are meant to reflect the corresponding
+properties of the
+[layer-shell protocol](https://wayland.app/protocols/wlr-layer-shell-unstable-v1):
+
+#### `anchor`
+Describes to which sides of the screen the panel is attached to.
+It is specified as a (potentially empty) string consisting of 'l', 'r', 'b' and 't' to
+indicated if the panel is attached to the **l**eft, **r**ight, **b**ottom or **t**op of
+the screen.
+The order (or multiplicity) does not matter.
+For instance, a status bar on the bottom and spanning the width of the screen is attached
+to the left, bottom, and right, i.e. `anchor = lbr`.
+
+Default value: `""`
+
+#### `size`
+Specifies the size of the panel as `<width>:<height>`. If you want the panel to span the
+width or height of the screen use `0` for the respective dimension and the appropriate
+`anchor`.
+
+Default value: `0:0`
+
+#### `margin`
+How much space to leave between the screen edges and the panel. It can be either
+specified as a uniform margin `<int>` or explicitly for each side as
+`<left>:<right>:<top>:<bottom>`.
+
+Default value: `0`
+
+#### Multiple Panels
+
+Each of the above properties is only allowed once per panel. To specify multiple panels
+the key-value pairs need to be grouped. A new group is either started by creating another
+section with the same name or by writing `-`.
+For example:
+```ini
+[panels]
+anchor = lbr
+size = 0:22
+
+[panels]
+anchor = ltr
+size = 0:22
+```
+
+This will create one panel on the top of the screen and one on the bottom, both of height
+22.
+Alternatively, you can write:
+```ini
+[panels]
+anchor = lbr
+size = 0:22
+-
+anchor = ltr
+size = 0:22
+```
+or, more compact:
+```ini
+[panels]
+- anchor = lbr; size = 0:22
+- anchor = ltr; size = 0:22
+```
+(the first `-` is optional for readability, the second one is required to separate the
+same keys)
+
+### `[wallpaper]`
+The wallpaper is created as follows:
+
+If a *path* is specified and the file can be decoded:
+* create a new image with the size of the output cleared with *color*
+* draw the image from *path* on top using alpha-blending, *scale*, *wrap-x*, and *wrap-y*
+* apply the filters in the specified order
+Otherwise *color* is used as background color as-is.
+
+#### `color`
+The color with which the *wallpaper* is initialized. The color is specified as
+case-insensitive hexadecimal string of the form `[#]rrggbb[aa]` or `[#]rgb[a]`.
+
+Default value: `#00000000`
+
+#### `path`
+The file path of the image to use as *wallpaper*.
+
+Default value: not specified
+
+#### `scale`
+How to scale the image if its resolution does not match the monitors. Possible values:
+
+* `fit`: aspect ratio is preserved while the image has the largest possible size without
+  being cropped
+* `zoom`: aspect ratio is preserved while the image has the smallest possible size while
+  covering the entire screen
+* `stretch`: stretch the image to fit the screen
+* `centered`: do not rescale the image
+
+Default value: `zoom`
+
+#### `wrap` or `wrap-x` and `wrap-y`
+What to do, when the rescaled image does not cover the whole screen. Possible values:
+
+* `none`: use the background color
+* `stretch-edge`: paint the remaining space using the pixels on the edge
+* `tiled`: repeat the image
+* `tiled-mirror`: repeat the image but flipped along the common edge
+
+Use `wrap` to specify both the horizontal and vertical behavior at the same time or
+`wrap-x` and `wrap-y` to specify them separately.
+
+Default value: `none`
+
+#### `filter`
+Filters to apply to the *wallpaper*. Multiple filters can be specified when they are
+separated into individual groups (compare `[panels]`).
+
+##### `filter = invert`
+
+Inverts the colors of the image.
+
+##### `filter = box-blur`
+Apply a box blur to the image. Additional properties:
+* `radius`: how much to blur in horizontal or vertical direction. Default: `96`
+* `width`: override how much to blur in the horizontal direction.
+  Default: uses value of `radius`
+* `height`: override how much to blur in the vertical direction.
+  Default: uses value of `radius`
+* `iterations`: how often to apply the filter. Default: `1`
+
+
+##### `filter = blur`
+Same as `filter = box-blur`, but with `iterations = 2` as default.
+
+
+#### Example
+To invert the colors and apply a rectangular blur:
+```ini
+[wallpaper]
+path = <filepath>
+- filter = invert
+- filter = box-blur; width = 20; height = 10
+
+```
+
+
+### `[background]`
+`[background]` is identical to `[wallpaper]` with the following exception:
+If no `path` is specified, but one is specified in `[wallpaper]`,
+all properties except the filters are ignored and
+the filters are applied **on top** of the *wallpaper*
+(compare the example for `wallpablur <image>` in the introduction).
+If you explicitly do not want an image as *background* but as *wallpaper*,
+set `path =` to be empty.
+
+## Configuring Individual Outputs
+The sections above can be overwritten for a specific output `NAME`
+(e.g. `eDP-1` or `HDMI-A-1`) by providing a `[NAME.panels]`, `[NAME.wallpaper]` or
+`[NAME.background]` section, respectively.
+Without using quotation marks or escaping, `NAME` must not contain `.` or `]`.
+
+Example:
+Suppose you have a primary output `eDP-1` with status bar and `image1.png` and
+potentially multiple other outputs without status bar and `image2.png`.
+Furthermore, you want a basic blur effect on all *backgrounds*. Then you could use:
+```ini
+[wallpaper]
+path = image2.png
+
+[background]
+filter = blur
+
+[eDP-1.panels]
+anchor = lbr; size = 0:22
+
+[eDP-1.wallpaper]
+path = image1.png
+```
+The *wallpaper* on `eDP-1` will also be blurred (but based on `image1.png`),
+since `[eDP-1.background]` is not specified and so `[background]` is used as fallback.
