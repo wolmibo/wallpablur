@@ -36,8 +36,8 @@ wrap-x = none
 wrap-y = none
 scale-filter = linear
 # - filter = invert
-# - filter = blur;     iterations = 2; radius = 96
-# - filter = box-blur; iterations = 1; radius = 96
+# - filter = blur;     iterations = 2; radius = 96; dithering = 1.0
+# - filter = box-blur; iterations = 1; radius = 96; dithering = 1.0
 
 [wallpaper]
 # same as [background]
@@ -258,6 +258,7 @@ Apply a box blur to the image. Additional properties:
 * `height`: override how much to blur in the vertical direction.
   Default: uses value of `radius`
 * `iterations`: how often to apply the filter. Default: `1`
+* `dithering`: how much noise to add to reduce color banding. Default: `1.0`
 
 
 ##### `filter = blur`

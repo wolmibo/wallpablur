@@ -7,12 +7,13 @@ out vec4 fragColor;
 uniform sampler2D textureSampler;
 uniform int       samples;
 uniform vec2      direction;
+uniform float     dithering;
 
 
 
 vec4 noise(vec2 position) {
   return (fract(dot(position, vec2(2718.28, 3141.592))
-    * vec4(420.420f, 47.47f, 69.69f, 42.42f)) - 0.5f) / 255.f;
+    * vec4(420.420f, 47.47f, 69.69f, 42.42f)) - 0.5f) * dithering;
 }
 
 

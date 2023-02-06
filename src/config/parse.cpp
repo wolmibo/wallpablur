@@ -292,7 +292,9 @@ namespace {
                      .value_or(96),
 
           .iterations = iconfigp::parse<uint32_t>(filter.unique_key("iterations"))
-                          .value_or(filter_type == filter_e::blur ? 2 : 1)
+                          .value_or(filter_type == filter_e::blur ? 2 : 1),
+          .dithering  = iconfigp::parse<float>(filter.unique_key("dithering"))
+                          .value_or(1.f)
         };
       case filter_e::invert:
         return config::invert_filter{};

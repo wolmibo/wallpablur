@@ -16,7 +16,7 @@
 
 namespace {
   gl::texture line_blur(const gl::texture& texture, int samples, float dx, float dy,
-      const gl::program& shader, const gl::plane& quad) {
+      float dithering, const gl::program& shader, const gl::plane& quad) {
 
 
     texture.bind();
@@ -34,6 +34,7 @@ namespace {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
     shader.use();
+    glUniform1f(shader.uniform("dithering"), dithering / 255.f);
     glUniform1i(shader.uniform("samples"), samples);
     glUniform2f(shader.uniform("direction"),
         dx / static_cast<float>(size.width), dy / static_cast<float>(size.height));
@@ -56,12 +57,14 @@ namespace {
     logging::verbose("applying box blur filter with scale {}x{} and {} iterations",
         filter.width * 2 + 1, filter.height * 2 + 1, filter.iterations);
 
-    auto output = line_blur(line_blur(texture, filter.width, 1.f, 0.f, shader, quad),
-                    filter.height, 0.f, 1.f, shader, quad);
+    auto output = line_blur(line_blur(texture, filter.width, 1.f, 0.f,
+                                      filter.dithering, shader, quad),
+                    filter.height, 0.f, 1.f, filter.dithering, shader, quad);
 
     for (unsigned int i = 1; i < filter.iterations; ++i) {
-      output = line_blur(line_blur(output, filter.width, 1.f, 0.f, shader, quad),
-                    filter.height, 0.f, 1.f, shader, quad);
+      output = line_blur(line_blur(output, filter.width, 1.f, 0.f,
+                                   filter.dithering, shader, quad),
+                    filter.height, 0.f, 1.f, filter.dithering, shader, quad);
     }
     return output;
   }

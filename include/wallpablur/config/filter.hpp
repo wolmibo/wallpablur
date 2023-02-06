@@ -21,6 +21,7 @@ struct box_blur_filter {
   unsigned int width;
   unsigned int height;
   unsigned int iterations;
+  float        dithering;
 
   bool operator==(const box_blur_filter&) const = default;
 };
