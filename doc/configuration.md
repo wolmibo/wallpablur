@@ -34,6 +34,7 @@ color  = #00000000
 scale  = zoom
 wrap-x = none
 wrap-y = none
+scale-filter = linear
 # - filter = invert
 # - filter = blur;     iterations = 2; radius = 96
 # - filter = box-blur; iterations = 1; radius = 96
@@ -192,7 +193,8 @@ The wallpaper is created as follows:
 
 If a *path* is specified and the file can be decoded:
 * create a new image with the size of the output cleared with *color*
-* draw the image from *path* on top using alpha-blending, *scale*, *wrap-x*, and *wrap-y*
+* draw the image from *path* on top using alpha-blending, *scale*, *scale-filter*,
+  *wrap-x*, and *wrap-y*
 * apply the filters in the specified order
 Otherwise *color* is used as background color as-is.
 
@@ -218,6 +220,14 @@ How to scale the image if its resolution does not match the monitors. Possible v
 * `centered`: do not rescale the image
 
 Default value: `zoom`
+
+#### `scale-filter`
+How to sample pixels when rescaling the image. Possible values:
+
+* `linear`: use (bi)linear interpolation
+* `nearest`: use nearest-neighbor interpolation
+
+Default value: `linear`
 
 #### `wrap` or `wrap-x` and `wrap-y`
 What to do, when the rescaled image does not cover the whole screen. Possible values:

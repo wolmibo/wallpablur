@@ -63,8 +63,10 @@ namespace {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
         std::to_underlying(distribution.wrap_y));
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+        std::to_underlying(distribution.filter));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+        std::to_underlying(distribution.filter));
 
     switch (distribution.scale) {
       case config::scale_mode::zoom: {

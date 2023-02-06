@@ -54,10 +54,18 @@ enum class wrap_mode : GLint {
 
 
 
+enum class scale_filter {
+  nearest = GL_NEAREST,
+  linear  = GL_LINEAR
+};
+
+
+
 struct image_distribution {
-  scale_mode scale {scale_mode::zoom};
-  wrap_mode  wrap_x{wrap_mode::none};
-  wrap_mode  wrap_y{wrap_mode::none};
+  scale_mode   scale {scale_mode::zoom};
+  wrap_mode    wrap_x{wrap_mode::none};
+  wrap_mode    wrap_y{wrap_mode::none};
+  scale_filter filter{scale_filter::linear};
 
   bool operator==(const image_distribution&) const = default;
 };

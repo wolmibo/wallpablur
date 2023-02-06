@@ -66,6 +66,14 @@ template<> struct iconfigp::case_insensitive_parse_lut<config::scale_mode> {
   };
 };
 
+template<> struct iconfigp::case_insensitive_parse_lut<config::scale_filter> {
+  static constexpr std::string_view name{"scale-filter"};
+  static constexpr std::array<std::pair<std::string_view, config::scale_filter>, 2> lut {
+    std::make_pair("linear",  config::scale_filter::linear),
+    std::make_pair("nearest", config::scale_filter::nearest)
+  };
+};
+
 
 
 enum class filter_e {
@@ -321,7 +329,9 @@ namespace {
                   .or_else([&](){
                     return iconfigp::parse<config::wrap_mode>(
                         section.unique_key("wrap")); })
-                  .value_or(config::wrap_mode::none)
+                  .value_or(config::wrap_mode::none),
+      .filter = iconfigp::parse<config::scale_filter>(section.unique_key("scale-filter"))
+                  .value_or(config::scale_filter::linear)
     };
   }
 
