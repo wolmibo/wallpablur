@@ -1,7 +1,7 @@
 # WallpaBlur
 
-A wallpaper provider for [Sway](https://swaywm.org) and other Wayland based,
-i3ipc-enabled window managers which is designed to fake window blur.
+Wallpaper provider which fakes window blur on Wayland based, i3ipc-enabled window
+managers like [Sway](https://swaywm.org).
 
 ![screenshot](doc/screenshot_small.jpg)
 
@@ -79,7 +79,7 @@ sudo meson install -C build
 ## Try It Out
 
 First, make sure there is no other background provider running
-(e.g. when using the default Sway configuration run `killall swaybg`).
+(when using `output ... bg` in Sway the background provider is `swaybg`).
 Then execute:
 ```sh
 wallpablur <path-to-image>.png

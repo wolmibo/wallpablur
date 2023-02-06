@@ -114,7 +114,7 @@ How long to fade in on startup for a smoother experience.
 Default value: `0`
 
 #### `fade-out-ms`
-How long to fade out on receiving a `SIGTERM` or `SIGINT` (e.g. `killall` or C-c in a
+How long to fade out on receiving a `SIGTERM` or `SIGINT` (e.g. `kill` or C-c in a
 terminal).
 
 Default value: `0`
