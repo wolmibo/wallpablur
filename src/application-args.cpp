@@ -158,7 +158,9 @@ std::optional<application_args> application_args::parse(std::span<char*> arg) {
   }
 
   if (args.version) {
-    logging::print_raw_sync(std::cout, logging::format("{} version " VERSION_STR "\n",
+    logging::print_raw_sync(std::cout, logging::format("{} version " VERSION_STR "\n"
+          "\n"
+          "image decoder: " IMAGE_DECODER "\n",
           std::filesystem::path{arg[0]}.filename().string()));
     return {};
   }

@@ -1,0 +1,1 @@
+option('gdk-pixbuf', type: 'feature', value: 'auto')

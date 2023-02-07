@@ -1,6 +1,5 @@
 version_data = configuration_data()
 version_data.set('VERSION_STR', '"@0@"'.format(meson.project_version()))
-configure_file(output: 'version.h', configuration: version_data)
 
 
 # Wayland stuff
@@ -42,7 +41,6 @@ dependencies = [
   dependency('wayland-client'),
   dependency('wayland-egl'),
   dependency('egl'),
-  dependency('libpng')
 ]
 
 sources = [
@@ -63,7 +61,6 @@ sources = [
   'config/config.cpp',
   'config/parse.cpp',
 
-  'load-image.cpp',
   'texture-generator.cpp',
   'texture-generator-filter.cpp',
   'texture-provider.cpp',
@@ -73,6 +70,36 @@ sources = [
   'application-args.cpp',
   'main.cpp',
 ]
+
+
+
+
+
+gdkpixbuf = dependency(
+  'gdk-pixbuf-2.0',
+  required: get_option('gdk-pixbuf'),
+  version:  '>=2.32'
+)
+
+if gdkpixbuf.found()
+  sources       += 'load-image-gdk-pixbuf.cpp'
+  dependencies  += gdkpixbuf
+  image_decoder = 'gdk-pixbuf'
+else
+  sources       += 'load-image-png.cpp'
+  dependencies  += dependency('libpng')
+  image_decoder = 'libpng'
+endif
+
+version_data.set('IMAGE_DECODER', '"@0@"'.format(image_decoder))
+summary('image decoder', image_decoder)
+
+
+
+
+
+configure_file(output: 'version.h', configuration: version_data)
+
 
 executable(
   'wallpablur',

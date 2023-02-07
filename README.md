@@ -43,7 +43,6 @@ WallpaBlur enables the most basic window blur effect in combination with upstrea
   configuration
 * resizing windows and moving floating windows are not provided as events through
   the i3ipc, for these cases `GET_TREE` must be called in frequent intervals
-* only PNG images are currently supported
 
 
 # Getting Started
@@ -55,17 +54,18 @@ To build WallpaBlur you will need:
 * [meson](https://mesonbuild.com)
 * wayland development libraries
 * [libepoxy](https://github.com/anholt/libepoxy)
-* [libpng](http://www.libpng.org/pub/png/libpng.html)
 * [rapidjson](https://rapidjson.org)
+* [gdk-pixbuf](https://gitlab.gnome.org/GNOME/gdk-pixbuf) (>= 2.32)
+  or as fallback [libpng](http://www.libpng.org/pub/png/libpng.html)
 
 
 If your compiler does not provide `std::format` you'll additionally need:
 * [fmt](https://fmt.dev)
 
-To install all necessary dependencies on Fedora 37 run:
+To install all dependencies on Fedora 37 run:
 ```sh
 sudo dnf install gcc-g++ meson libepoxy-devel rapidjson-devel fmt-devel \
-wayland-devel wayland-protocols-devel libpng-devel
+wayland-devel wayland-protocols-devel gdk-pixbuf2-devel
 ```
 
 ## Build Instructions
@@ -82,7 +82,7 @@ First, make sure there is no other background provider running
 (when using `output ... bg` in Sway the background provider is `swaybg`).
 Then execute:
 ```sh
-wallpablur <path-to-image>.png
+wallpablur <path-to-image>
 ```
 
 To add a status bar or changing other properties, check out how to

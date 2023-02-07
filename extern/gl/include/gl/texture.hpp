@@ -19,7 +19,8 @@ struct texture_size {
 class texture {
   public:
     enum class format {
-      rgba8
+      rgba8,
+      rgb8,
     };
 
 

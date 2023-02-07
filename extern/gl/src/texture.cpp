@@ -2,11 +2,13 @@
 
 #include <stdexcept>
 
+#include <cassert>
 
 
 namespace {
   [[nodiscard]] GLint format_to_internal(gl::texture::format format) {
     switch (format) {
+      case gl::texture::format::rgb8:  return GL_RGB8;
       case gl::texture::format::rgba8: return GL_RGBA8;
     }
     throw std::runtime_error{"unsupported texture format"};
@@ -16,6 +18,7 @@ namespace {
 
   [[nodiscard]] GLenum format_to_format(gl::texture::format format) {
     switch (format) {
+      case gl::texture::format::rgb8:  return GL_RGB;
       case gl::texture::format::rgba8: return GL_RGBA;
     }
     throw std::runtime_error{"unsupported texture format"};
@@ -25,7 +28,30 @@ namespace {
 
   [[nodiscard]] GLenum format_to_type(gl::texture::format format) {
     switch (format) {
+      case gl::texture::format::rgb8:
       case gl::texture::format::rgba8: return GL_UNSIGNED_BYTE;
+    }
+    throw std::runtime_error{"unsupported texture format"};
+  }
+
+
+
+  [[nodiscard]] GLint unpack_alignment(size_t stride) {
+    GLint alignment = 8;
+
+    while (stride % alignment != 0) {
+      alignment >>= 1;
+    }
+
+    return alignment;
+  }
+
+
+
+  [[nodiscard]] GLint pixels_per_stride(size_t stride, gl::texture::format format) {
+    switch (format) {
+      case gl::texture::format::rgb8:  return stride / 3;
+      case gl::texture::format::rgba8: return stride / 4;
     }
     throw std::runtime_error{"unsupported texture format"};
   }
@@ -82,6 +108,12 @@ gl::texture::texture(
   texture{}
 {
   bind();
+
+  size_t stride = data.size() / height;
+  assert(stride * height == data.size());
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT,  unpack_alignment(stride));
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, pixels_per_stride(stride, fmt));
 
   glTexImage2D(GL_TEXTURE_2D, 0, format_to_internal(fmt),
       width, height, 0,
