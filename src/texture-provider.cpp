@@ -41,7 +41,9 @@ std::shared_ptr<gl::texture> texture_provider::get(
   }
 
   auto texture = create_texture(geometry, brush);
-  cache_.emplace({geometry, brush}, texture);
+  if (texture) {
+    cache_.emplace({geometry, brush}, texture);
+  }
 
   return texture;
 }
