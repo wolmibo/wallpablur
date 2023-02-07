@@ -10,9 +10,11 @@
 
 
 void texture_provider::cleanup() {
-  for (size_t i = 0; i < cache_.size(); ++i) {
+  for (size_t i = 0; i < cache_.size();) {
     if (cache_.value(i).expired()) {
       cache_.erase(i);
+    } else {
+      ++i;
     }
   }
 }
