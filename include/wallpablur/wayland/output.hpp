@@ -4,7 +4,7 @@
 #include <wayland-client.h>
 #include <wayland-egl.h>
 
-#define namespace nmspace
+#define namespace nmspace // NOLINT(*keyword-macro)
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #undef namespace
 

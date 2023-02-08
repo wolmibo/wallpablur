@@ -10,6 +10,7 @@
 template<typename T> struct wayland_deleter{};
 template<typename T> struct wayland_interface{};
 
+// NOLINTBEGIN(*macro-usage,*macro-parentheses)
 #define DEFINE_WAYLAND_DELETER(x, y)           \
   class x;                                     \
   template<> struct wayland_deleter<x> {       \
@@ -26,6 +27,7 @@ template<typename T> struct wayland_interface{};
       return & x ##_interface;                 \
     }                                          \
   };                                           \
+// NOLINTEND(*macro-usage,*macro-parentheses)
 
 
 DEFINE_WAYLAND_DELETER(wl_display,  disconnect);
