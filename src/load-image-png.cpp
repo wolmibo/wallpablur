@@ -115,7 +115,7 @@ namespace {
     image img{
       .width  = static_cast<GLsizei>(png_get_image_width(png.ptr, png.info)),
       .height = static_cast<GLsizei>(png_get_image_height(png.ptr, png.info)),
-      .data   = std::vector<png_byte>(img.width * img.height * 4)
+      .data   = std::vector<png_byte>(static_cast<size_t>(img.width) * img.height * 4)
     };
 
     force_rgba8(png.ptr);
