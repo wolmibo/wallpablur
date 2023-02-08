@@ -80,7 +80,7 @@ wm::unix_socket::unix_socket(const std::filesystem::path& path) :
     throw std::runtime_error{"unable to open unix socket stream"};
   }
 
-  fcntl(fd_, F_SETFD, FD_CLOEXEC); // NOLINT
+  fcntl(fd_, F_SETFD, FD_CLOEXEC); // NOLINT(*vararg)
 
   sockaddr_un addr {
     .sun_family = AF_UNIX,
@@ -94,7 +94,8 @@ wm::unix_socket::unix_socket(const std::filesystem::path& path) :
 
   std::strncpy(static_cast<char*>(addr.sun_path), str.c_str(), sizeof(addr.sun_path)-1);
 
-  if (connect(fd_, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == -1) { // NOLINT
+  // NOLINTNEXTLINE(*reinterpret-cast)
+  if (connect(fd_, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == -1) {
     throw std::runtime_error{"unable to connect to socket \"" + path.string() + "\""};
   }
 }

@@ -75,7 +75,7 @@ namespace {
 
   struct file_destructor {
     void operator()(FILE* f) const {
-      fclose(f); // NOLINT
+      fclose(f); // NOLINT(*owning-memory)
     }
   };
 
