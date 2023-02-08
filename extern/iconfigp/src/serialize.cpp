@@ -22,7 +22,7 @@ std::string iconfigp::serialize(std::string_view input, std::string_view illegal
     return {};
   }
 
-  if (!isspace(input.front()) && !isspace(input.back()) &&
+  if (isspace(input.front()) == 0 && isspace(input.back()) == 0 &&
       !contains_any_of(input, illegal)) {
     return std::string{input};
   }

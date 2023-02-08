@@ -36,9 +36,12 @@ namespace {
 
       if (offset < pos) {
         return {content.substr(0, pos), line_number, offset};
-      } else if (offset == pos) {
+      }
+
+      if (offset == pos) {
         return {content.substr(0, pos), line_number, offset - 1};
       }
+
       content.remove_prefix(pos + 1);
       offset -= pos + 1;
       ++line_number;
@@ -106,7 +109,11 @@ namespace {
       size_t           offset,
       size_t           width
   ) {
-    if (width < 15) {
+    static constexpr size_t dot_size {3};
+    static constexpr size_t min_size {dot_size * 2 + 1};
+    static constexpr size_t rposition{5};
+
+    if (width < min_size) {
       return {"", 0};
     }
 
@@ -115,17 +122,18 @@ namespace {
     }
 
     if (offset < width) {
-      return {iconfigp::format("{}...", line.substr(0, width - 3)), offset};
+      return {iconfigp::format("{}...", line.substr(0, width - dot_size)), offset};
     }
 
     if (line.size() - offset < width) {
-      return {iconfigp::format("...{}", line.substr(line.size() - width + 3)),
+      return {iconfigp::format("...{}", line.substr(line.size() - width + dot_size)),
         width + offset - line.size()};
     }
 
-    size_t pos = width / 5;
+    size_t pos = width / rposition;
 
-    return {iconfigp::format("...{}...", line.substr(offset + 3 - pos, width - 6)), pos};
+    return {iconfigp::format("...{}...",
+        line.substr(offset + dot_size - pos, width - 2 * dot_size)), pos};
   }
 
 

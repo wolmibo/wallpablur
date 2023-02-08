@@ -43,7 +43,7 @@ class reader {
       while (!eof()) {
         if (peek() == '#') {
           skip_line();
-        } else if (isspace(peek())) {
+        } else if (isspace(peek()) != 0) {
           skip_whitespace();
         } else {
           break;
@@ -63,7 +63,7 @@ class reader {
       if (peek() != '"' && peek() != '\'') {
         auto [content, end] = read_escaped_until_one_of(controls);
 
-        while (!content.empty() && isspace(content.back())) {
+        while (!content.empty() && isspace(content.back()) != 0) {
           content.pop_back();
         }
 
@@ -118,7 +118,7 @@ class reader {
 
 
     void skip_whitespace() {
-      while (!eof() && isspace(peek())) {
+      while (!eof() && isspace(peek()) != 0) {
         skip();
       }
     }
@@ -126,7 +126,7 @@ class reader {
 
 
     void skip_whitespace_within_line() {
-      while (!eof() && peek() != '\n' && isspace(peek())) {
+      while (!eof() && peek() != '\n' && isspace(peek()) != 0) {
         skip();
       }
     }
@@ -154,7 +154,7 @@ class reader {
 
       for (; !eof() && controls.find(peek()) == std::string_view::npos; skip()) {
         if (peek() != '\\') {
-          if (!isspace(peek())) {
+          if (isspace(peek()) == 0) {
             last_non_whitespace = offset();
           }
           content.push_back(peek());

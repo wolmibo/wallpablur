@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
-#include <iterator>
 #include <limits>
 #include <optional>
 #include <sstream>
@@ -53,7 +52,7 @@ struct value_parser<T> {
 
   static std::optional<T> parse(std::string_view input) {
     T output{};
-    auto end = input.data() + input.size();
+    const auto *end = input.data() + input.size();
     if (std::from_chars(input.data(), end, output).ptr == end) {
       return output;
     }
@@ -101,7 +100,7 @@ struct value_parser<T> {
 
   static std::optional<T> parse(std::string_view input) {
     T output{};
-    auto end = input.data() + input.size();
+    const auto *end = input.data() + input.size();
     if (auto res = std::from_chars(input.data(), end, output);
         res.ptr == end && res.ec != std::errc::result_out_of_range) {
 
@@ -146,12 +145,17 @@ struct value_parser<T> {
 
   static std::string format() {
     std::stringstream output;
-    output << "(";
+    output << '(';
 
-    std::ranges::transform(case_insensitive_parse_lut<T>::lut,
-        std::ostream_iterator<std::string_view>(output, "|"),
-        [](const auto& p) { return std::get<0>(p); }
-    );
+    bool first{true};
+    for (const auto& [label, _]: case_insensitive_parse_lut<T>::lut) {
+      if (!first) {
+        output << '|';
+      }
+      output << label;
+
+      first = false;
+    }
 
     output << ") // case insensitive";
     return output.str();
