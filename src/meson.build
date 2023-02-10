@@ -1,7 +1,3 @@
-version_data = configuration_data()
-version_data.set('VERSION_STR', '"@0@"'.format(meson.project_version()))
-
-
 # Wayland stuff
 
 wlscanner = dependency('wayland-scanner', native: true)
@@ -69,11 +65,13 @@ sources = [
   'application.cpp',
   'application-args.cpp',
   'main.cpp',
+
+  'version.cpp'
 ]
 
 
 
-
+build_options = ''
 
 gdkpixbuf = dependency(
   'gdk-pixbuf-2.0',
@@ -84,21 +82,24 @@ gdkpixbuf = dependency(
 if gdkpixbuf.found()
   sources       += 'load-image-gdk-pixbuf.cpp'
   dependencies  += gdkpixbuf
-  image_decoder = 'gdk-pixbuf'
+  build_options += 'gdk-pixbuf=enabled'
 else
   sources       += 'load-image-png.cpp'
   dependencies  += dependency('libpng')
-  image_decoder = 'libpng'
+  build_options += 'gdk-pixbuf=disabled'
 endif
 
-version_data.set('IMAGE_DECODER', '"@0@"'.format(image_decoder))
-summary('image decoder', image_decoder)
 
 
 
 
+build_info = configuration_data()
+build_info.set('BUILD_OPTIONS', '"@0@"'.format(build_options))
+build_info.set('VERSION_STR', '"@0@"'.format(meson.project_version()))
 
-configure_file(output: 'version.h', configuration: version_data)
+configure_file(output: 'buildinfo.h', configuration: build_info)
+
+vcs_tag(input: 'versioninfo.h.in', output: 'versioninfo.h')
 
 
 executable(

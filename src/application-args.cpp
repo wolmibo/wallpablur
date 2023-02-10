@@ -1,4 +1,3 @@
-#include "version.h"
 #include "wallpablur/application-args.hpp"
 #include "wallpablur/application.hpp"
 
@@ -147,6 +146,7 @@ Alternatively, you can set a configuration via the following options:
 
 
 
+std::string_view version_info();
 
 std::optional<application_args> application_args::parse(std::span<char*> arg) {
   auto args = parse_args(arg);
@@ -158,10 +158,7 @@ std::optional<application_args> application_args::parse(std::span<char*> arg) {
   }
 
   if (args.version) {
-    logging::print_raw_sync(std::cout, logging::format("{} version " VERSION_STR "\n"
-          "\n"
-          "image decoder: " IMAGE_DECODER "\n",
-          std::filesystem::path{arg[0]}.filename().string()));
+    logging::print_raw_sync(std::cout, version_info());
     return {};
   }
 
