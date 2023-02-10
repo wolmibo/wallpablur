@@ -142,6 +142,21 @@ void wayland::output::create_context() {
 
 
 
+void wayland::output::output_mode_(
+    void*      data,
+    wl_output* /*output*/,
+    uint32_t   /*flags*/,
+    int32_t    width,
+    int32_t    height,
+    int32_t    /*refresh*/
+) {
+  auto& geometry = static_cast<output*>(data)->current_geometry_;
+  geometry.pixel_width(width);
+  geometry.pixel_height(height);
+}
+
+
+
 void wayland::output::output_done_(void* data, wl_output* /*output*/) {
   auto* self = static_cast<output*>(data);
 
@@ -157,12 +172,12 @@ void wayland::output::layer_surface_configure_(
   zwlr_layer_surface_v1*  zwlr_layer_surface,
   uint32_t                serial,
   uint32_t                width,
-  uint32_t                height
+  uint32_t                /*height*/
 ) {
   auto* self = static_cast<output*>(data);
 
-  self->current_geometry_.logical_width(width);
-  self->current_geometry_.logical_height(height);
+  self->current_geometry_.scale(static_cast<float>(self->current_geometry_.pixel_width())
+      / static_cast<float>(width));
 
   if (self->first_configuration_) {
     self->create_context();

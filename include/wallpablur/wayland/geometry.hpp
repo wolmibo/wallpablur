@@ -19,27 +19,27 @@ class geometry {
 
 
 
-    [[nodiscard]] uint32_t pixel_width()    const { return width_  * scale_; }
-    [[nodiscard]] uint32_t pixel_height()   const { return height_ * scale_; }
+    [[nodiscard]] uint32_t pixel_width()    const { return width_;  }
+    [[nodiscard]] uint32_t pixel_height()   const { return height_; }
 
-    [[nodiscard]] uint32_t logical_width()  const { return width_;  }
-    [[nodiscard]] uint32_t logical_height() const { return height_; }
+    [[nodiscard]] uint32_t logical_width()  const { return width_ / scale_;  }
+    [[nodiscard]] uint32_t logical_height() const { return height_ / scale_; }
 
-    [[nodiscard]] uint32_t scale()          const { return scale_;  }
+    [[nodiscard]] float    scale()          const { return scale_;  }
 
 
 
-    void logical_width (uint32_t width)  { width_  = width;  }
-    void logical_height(uint32_t height) { height_ = height; }
+    void pixel_width (uint32_t width)  { width_  = width;  }
+    void pixel_height(uint32_t height) { height_ = height; }
 
-    void scale         (uint32_t s)      { scale_  = s;      }
+    void scale       (float s)         { scale_  = s;      }
 
 
 
   private:
     uint32_t width_ {0};
     uint32_t height_{0};
-    uint32_t scale_ {1};
+    float    scale_ {1};
 };
 
 }

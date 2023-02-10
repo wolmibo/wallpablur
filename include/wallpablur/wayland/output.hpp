@@ -110,25 +110,18 @@ class output {
         int32_t     /*transform*/
     ) {}
 
-    static void output_mode_(
-        void*    /*data*/,    wl_output* /*output*/,
-        uint32_t /*flags*/,
-        int32_t  /*width*/,   int32_t /*height*/,
-        int32_t  /*refresh*/
-    ) {}
+    static void output_mode_(void*, wl_output*, uint32_t, int32_t, int32_t, int32_t);
 
     static void output_description_(void* /*data*/, wl_output* /*output*/,
         const char* /*description*/) {}
 
-    static void output_scale_(void* data, wl_output* /*output*/, int32_t scale) {
-      static_cast<output*>(data)->current_geometry_.scale(scale);
-    }
+    static void output_scale_(void* /*data*/, wl_output* /*output*/, int32_t /*scale*/){}
 
-    static void output_name_ (void* data, wl_output* /*output*/, const char* name) {
+    static void output_name_(void* data, wl_output* /*output*/, const char* name) {
       static_cast<output*>(data)->name_ = name;
     }
 
-    static void output_done_ (void*, wl_output*);
+    static void output_done_(void*, wl_output*);
 
 
 
