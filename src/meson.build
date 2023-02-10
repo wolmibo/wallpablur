@@ -17,6 +17,8 @@ scanner_header = generator(
 
 wlprotocols = dependency('wayland-protocols')
 protocols = [
+  wlprotocols.get_variable('pkgdatadir') / 'stable/viewporter/viewporter.xml',
+
   wlprotocols.get_variable('pkgdatadir') / 'stable/xdg-shell/xdg-shell.xml',
   '../protocols/wlr-layer-shell-unstable-v1.xml'
 ]

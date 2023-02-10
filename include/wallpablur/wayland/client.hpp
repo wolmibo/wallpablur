@@ -3,6 +3,11 @@
 
 #include <wayland-egl.h> // must be included before egl/context.hpp
 
+#define namespace nmspace // NOLINT(*keyword-macro)
+#include "wlr-layer-shell-unstable-v1-client-protocol.h"
+#undef namespace
+#include "viewporter-client-protocol.h"
+
 #include "wallpablur/egl/context.hpp"
 #include "wallpablur/flat-map.hpp"
 #include "wallpablur/wayland/output.hpp"
@@ -38,6 +43,7 @@ class client {
 
     [[nodiscard]] wl_compositor*       compositor()  const { return compositor_.get();  }
     [[nodiscard]] zwlr_layer_shell_v1* layer_shell() const { return layer_shell_.get(); }
+    [[nodiscard]] wp_viewporter*       viewporter()  const { return viewporter_.get();  }
 
     [[nodiscard]] egl::context&                 context()       { return *context_; }
     [[nodiscard]] std::shared_ptr<egl::context> share_context() { return context_;  }
@@ -60,6 +66,7 @@ class client {
 
     wl_ptr<wl_compositor>                       compositor_;
     wl_ptr<zwlr_layer_shell_v1>                 layer_shell_;
+    wl_ptr<wp_viewporter>                       viewporter_;
 
     flat_map<uint32_t, std::unique_ptr<output>> outputs_;
 

@@ -7,6 +7,7 @@
 #define namespace nmspace // NOLINT(*keyword-macro)
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #undef namespace
+#include "viewporter-client-protocol.h"
 
 #include "wallpablur/wayland/utils.hpp"
 #include "wallpablur/wayland/geometry.hpp"
@@ -68,6 +69,7 @@ class output {
 
     wl_ptr<wl_output>                       output_;
     wl_ptr<wl_surface>                      surface_;
+    wl_ptr<wp_viewport>                     viewport_;
     wl_ptr<zwlr_layer_surface_v1>           layer_surface_;
     wl_ptr<wl_egl_window>                   egl_window_;
     std::shared_ptr<egl::context>           context_;
@@ -93,6 +95,8 @@ class output {
 
     void create_layer_surface();
     void create_context();
+
+    void update_viewport() const;
 
 
 

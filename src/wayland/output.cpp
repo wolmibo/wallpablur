@@ -100,24 +100,41 @@ namespace {
 
 
 void wayland::output::create_layer_surface() {
-  logging::verbose("{}: creating layer surface", name());
+  logging::verbose("{}: creating surface", name());
   surface_.reset(wl_compositor_create_surface(client_->compositor()));
 
   if (!surface_) {
     throw std::runtime_error{"unable to create surface"};
   }
 
+
+
+  if (client_->viewporter() != nullptr) {
+    logging::debug("{}: creating viewport", name());
+    viewport_.reset(wp_viewporter_get_viewport(client_->viewporter(), surface_.get()));
+    if (!viewport_) {
+      logging::warn("{}: unable to create viewport", name());
+    }
+  }
+
+
+
+  logging::debug("{}: creating layer surface", name());
   layer_surface_ =
     ::create_layer_surface(client_->layer_shell(), output_.get(), surface_.get());
 
   zwlr_layer_surface_v1_add_listener(layer_surface_.get(),
       &layer_surface_listener_, this);
+
+
+
+  wl_surface_commit(surface_.get());
 }
 
 
 
 void wayland::output::create_context() {
-  logging::verbose("{}: creating egl context", name());
+  logging::debug("{}: creating egl context", name());
 
   egl_window_.reset(wl_egl_window_create(surface_.get(),
         current_geometry_.pixel_width(), current_geometry_.pixel_height()));
@@ -139,9 +156,6 @@ void wayland::output::output_done_(void* data, wl_output* /*output*/) {
   if (!self->layer_surface_) {
     self->create_layer_surface();
   }
-
-  wl_surface_set_buffer_scale(self->surface_.get(), self->current_geometry_.scale);
-  wl_surface_commit(self->surface_.get());
 }
 
 
@@ -168,6 +182,8 @@ void wayland::output::layer_surface_configure_(
         0, 0);
   }
 
+  self->update_viewport();
+
   zwlr_layer_surface_v1_ack_configure(zwlr_layer_surface, serial);
 
   if (self->ready_cb_) {
@@ -180,4 +196,22 @@ void wayland::output::layer_surface_configure_(
     self->render();
     self->first_configuration_ = false;
   }
+}
+
+
+
+void wayland::output::update_viewport() const {
+  if (!viewport_) {
+    wl_surface_set_buffer_scale(surface_.get(), current_geometry_.scale);
+    return;
+  }
+
+  wp_viewport_set_destination(viewport_.get(),
+      current_geometry_.width, current_geometry_.height);
+
+  wp_viewport_set_source(viewport_.get(),
+      wl_fixed_from_int(0),
+      wl_fixed_from_int(0),
+      wl_fixed_from_int(current_geometry_.pixel_width()),
+      wl_fixed_from_int(current_geometry_.pixel_height()));
 }

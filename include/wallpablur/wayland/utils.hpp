@@ -57,6 +57,13 @@ DEFINE_WAYLAND_INTERFACE(zwlr_layer_shell_v1);
 #endif
 
 
+#ifdef WP_VIEWPORTER_INTERFACE
+DEFINE_WAYLAND_DELETER  (wp_viewport,   destroy);
+DEFINE_WAYLAND_DELETER  (wp_viewporter, destroy);
+DEFINE_WAYLAND_INTERFACE(wp_viewporter);
+#endif
+
+
 #undef DEFINE_WAYLAND_INTERFACE
 #undef DEFINE_WAYLAND_DELETER
 

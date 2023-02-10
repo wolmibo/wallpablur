@@ -1,5 +1,4 @@
 #include "wallpablur/wayland/client.hpp"
-#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 #include <array>
 #include <stdexcept>
@@ -8,6 +7,8 @@
 
 #include <cstdint>
 #include <cstdio>
+
+#include <logging/log.hpp>
 
 
 
@@ -55,6 +56,10 @@ void wayland::client::explore() {
 
   if (!layer_shell_) {
     throw std::runtime_error{"wayland: unable to obtain interface zwlr_layer_shell_v1"};
+  }
+
+  if (!viewporter_) {
+    logging::verbose("unable to find viewporter interface");
   }
 }
 
@@ -106,6 +111,8 @@ void wayland::client::registry_global_(
     });
   } else if (is_interface(interface, zwlr_layer_shell_v1_interface)) {
     self->layer_shell_ = registry_bind<zwlr_layer_shell_v1>(registry, name, 1);
+  } else if (is_interface(interface, wp_viewporter_interface)) {
+    self->viewporter_ = registry_bind<wp_viewporter>(registry, name, 1);
   }
 }
 
