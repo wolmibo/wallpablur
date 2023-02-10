@@ -48,7 +48,6 @@ void wayland::client::explore() {
   if (dispatch() == -1) {
     throw std::runtime_error{"wayland: unable to dispatch"};
   };
-  roundtrip();
 
   if (!compositor_) {
     throw std::runtime_error{"wayland: unable to obtain interface wl_compositor"};
@@ -59,8 +58,10 @@ void wayland::client::explore() {
   }
 
   if (!viewporter_) {
-    logging::verbose("unable to find viewporter interface");
+    throw std::runtime_error{"wayland: unable to obtain interface wp_viewporter"};
   }
+
+  roundtrip();
 }
 
 

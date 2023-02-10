@@ -103,12 +103,10 @@ void wayland::output::create_layer_surface() {
 
 
 
-  if (client_->viewporter() != nullptr) {
-    logging::debug("{}: creating viewport", name());
-    viewport_.reset(wp_viewporter_get_viewport(client_->viewporter(), surface_.get()));
-    if (!viewport_) {
-      logging::warn("{}: unable to create viewport", name());
-    }
+  logging::debug("{}: creating viewport", name());
+  viewport_.reset(wp_viewporter_get_viewport(client_->viewporter(), surface_.get()));
+  if (!viewport_) {
+    logging::warn("{}: unable to create viewport", name());
   }
 
 
@@ -195,11 +193,6 @@ void wayland::output::layer_surface_configure_(
 
 
 void wayland::output::update_viewport() const {
-  if (!viewport_) {
-    wl_surface_set_buffer_scale(surface_.get(), current_geometry_.scale());
-    return;
-  }
-
   wp_viewport_set_destination(viewport_.get(),
       current_geometry_.logical_width(), current_geometry_.logical_height());
 
