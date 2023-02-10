@@ -124,7 +124,7 @@ namespace {
     if (size.width == 0 &&
         (anchor.value & an::left) != 0 && (anchor.value & an::right) != 0) {
 
-      out.width = saturate_sub<uint32_t>(geo.width, margin.left + margin.right);
+      out.width = saturate_sub<uint32_t>(geo.logical_width(), margin.left + margin.right);
     } else {
       out.width = size.width;
     }
@@ -132,7 +132,7 @@ namespace {
     if (size.height == 0 &&
         (anchor.value & an::top) != 0 && (anchor.value & an::bottom) != 0) {
 
-      out.height = saturate_sub<uint32_t>(geo.height, margin.top + margin.bottom);
+      out.height = saturate_sub<uint32_t>(geo.logical_height(), margin.top + margin.bottom);
     } else {
       out.height = size.height;
     }
@@ -142,22 +142,22 @@ namespace {
     if ((anchor.value & an::left) != 0 && (anchor.value & an::right) == 0) {
       out.x = margin.left;
     } else if ((anchor.value & an::right) != 0 && (anchor.value & an::left) == 0) {
-      out.x = saturate_sub(geo.width, margin.right + out.width);
+      out.x = saturate_sub(geo.logical_width(), margin.right + out.width);
     } else {
-      out.x = saturate_sub(geo.width / 2,
+      out.x = saturate_sub(geo.logical_width() / 2,
           (out.width + margin.left + margin.right) / 2) + margin.left;
     }
 
     if ((anchor.value & an::top) != 0 && (anchor.value & an::bottom) == 0) {
       out.y = margin.top;
     } else if ((anchor.value & an::bottom) != 0 && (anchor.value & an::top) == 0) {
-      out.y = saturate_sub(geo.height, margin.bottom + out.height);
+      out.y = saturate_sub(geo.logical_height(), margin.bottom + out.height);
     } else {
-      out.y = saturate_sub(geo.height / 2,
+      out.y = saturate_sub(geo.logical_height() / 2,
           (out.height + margin.bottom + margin.top) / 2) + margin.top;
     }
 
-    if (geo.width * geo.height != 0) {
+    if (!geo.empty()) {
       if (out.width * out.height == 0) {
         logging::warn("fixed panel has size {}x{}", out.width, out.height);
       }
@@ -201,8 +201,8 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
   geometry_ = geometry;
 
-  logging::verbose("{}: changed output geometry to {}x{}@{}",
-      config_.name, geometry_.width, geometry_.height, geometry_.scale);
+  logging::verbose("{}: changed output geometry to {}x{}@{}", config_.name,
+      geometry_.logical_width(), geometry_.logical_height(), geometry_.scale());
 
   fixed_panels_.resize(config_.fixed_panels.size());
   for (size_t i = 0; i < config_.fixed_panels.size(); ++i) {
@@ -235,7 +235,8 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 void layout_painter::draw_rectangle(const rect& rectangle) const {
   glUniformMatrix4fv(0, 1, GL_FALSE,
-      rectangle_to_matrix(rectangle, geometry_.width, geometry_.height).data());
+      rectangle_to_matrix(rectangle,
+        geometry_.logical_width(), geometry_.logical_height()).data());
 
   quad_.draw();
 }

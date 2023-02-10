@@ -11,13 +11,7 @@ wayland::output::output(wl_ptr<wl_output> op, client& parent) :
   client_{&parent},
   output_{std::move(op)},
 
-  ready_{false},
-
-  current_geometry_{
-    .width  = 640,
-    .height = 480,
-    .scale  = 1
-  }
+  ready_{false}
 {
   wl_output_add_listener(output_.get(), &output_listener_, this);
 }
@@ -31,7 +25,7 @@ void wayland::output::render() {
 
   context_->make_current();
 
-  if (render_cb_ && current_geometry_.width > 0 && current_geometry_.height > 0) {
+  if (render_cb_ && !current_geometry_.empty()) {
     render_cb_(current_geometry_);
   }
 
@@ -169,8 +163,8 @@ void wayland::output::layer_surface_configure_(
 ) {
   auto* self = static_cast<output*>(data);
 
-  self->current_geometry_.width  = width;
-  self->current_geometry_.height = height;
+  self->current_geometry_.logical_width(width);
+  self->current_geometry_.logical_height(height);
 
   if (self->first_configuration_) {
     self->create_context();
@@ -202,12 +196,12 @@ void wayland::output::layer_surface_configure_(
 
 void wayland::output::update_viewport() const {
   if (!viewport_) {
-    wl_surface_set_buffer_scale(surface_.get(), current_geometry_.scale);
+    wl_surface_set_buffer_scale(surface_.get(), current_geometry_.scale());
     return;
   }
 
   wp_viewport_set_destination(viewport_.get(),
-      current_geometry_.width, current_geometry_.height);
+      current_geometry_.logical_width(), current_geometry_.logical_height());
 
   wp_viewport_set_source(viewport_.get(),
       wl_fixed_from_int(0),

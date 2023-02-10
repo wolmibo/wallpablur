@@ -121,7 +121,7 @@ class output {
         const char* /*description*/) {}
 
     static void output_scale_(void* data, wl_output* /*output*/, int32_t scale) {
-      static_cast<output*>(data)->current_geometry_.scale = scale;
+      static_cast<output*>(data)->current_geometry_.scale(scale);
     }
 
     static void output_name_ (void* data, wl_output* /*output*/, const char* name) {
