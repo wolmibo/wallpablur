@@ -201,8 +201,10 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
   geometry_ = geometry;
 
-  logging::verbose("{}: changed output geometry to {}x{}@{}", config_.name,
-      geometry_.logical_width(), geometry_.logical_height(), geometry_.scale());
+  logging::verbose("{}: update geometry to logical = {}x{}@{}, pixel = {}x{}",
+      config_.name,
+      geometry_.logical_width(), geometry_.logical_height(), geometry_.scale(),
+      geometry_.pixel_width(), geometry_.pixel_height());
 
   fixed_panels_.resize(config_.fixed_panels.size());
   for (size_t i = 0; i < config_.fixed_panels.size(); ++i) {
