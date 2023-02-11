@@ -1,7 +1,9 @@
+#include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/config/config.hpp"
 #include "wallpablur/config/filter.hpp"
 #include "wallpablur/config/output.hpp"
 #include "wallpablur/config/panel.hpp"
+#include "wallpablur/config/types.hpp"
 
 #include <iostream>
 #include <optional>
@@ -74,6 +76,89 @@ template<> struct iconfigp::case_insensitive_parse_lut<config::scale_filter> {
   };
 };
 
+template<> struct iconfigp::case_insensitive_parse_lut<config::blend_mode> {
+  static constexpr std::string_view name{"blend-mode"};
+  static constexpr std::array<std::pair<std::string_view, config::blend_mode>, 3> lut {
+    std::make_pair("add",     config::blend_mode::add),
+    std::make_pair("alpha",   config::blend_mode::alpha),
+    std::make_pair("replace", config::blend_mode::replace)
+  };
+};
+
+template<> struct iconfigp::case_insensitive_parse_lut<config::falloff> {
+  static constexpr std::string_view name{"blend-mode"};
+  static constexpr std::array<std::pair<std::string_view, config::falloff>, 3> lut {
+    std::make_pair("step",     config::falloff::step),
+    std::make_pair("linear",   config::falloff::linear),
+    std::make_pair("sinoidal", config::falloff::sinoidal)
+  };
+};
+
+template<> struct iconfigp::case_insensitive_parse_lut<config::border_position> {
+  static constexpr std::string_view name{"blend-mode"};
+  static constexpr std::array<std::pair<std::string_view, config::border_position>, 3>
+  lut {
+    std::make_pair("outside",  config::border_position::outside),
+    std::make_pair("inside",   config::border_position::inside),
+    std::make_pair("centered", config::border_position::centered)
+  };
+};
+
+
+
+enum class surface_effect_e {
+  border,
+  shadow,
+  glow
+};
+
+template<> struct iconfigp::case_insensitive_parse_lut<surface_effect_e> {
+  static constexpr std::string_view name{"border-effect"};
+  static constexpr std::array<std::pair<std::string_view, surface_effect_e>, 3>
+  lut {
+    std::make_pair("border", surface_effect_e::border),
+    std::make_pair("shadow", surface_effect_e::shadow),
+    std::make_pair("glow",   surface_effect_e::glow)
+  };
+};
+
+static const config::border_effect surface_effect_e_border {
+  .thickness = config::margin_type{2},
+  .position  = config::border_position::outside,
+  .offset    = config::border_effect::offset_type{},
+  .col     = {0.f, 0.f, 0.f, 1.f},
+  .blend     = config::blend_mode::alpha,
+  .foff   = config::falloff::step
+};
+
+static const config::border_effect surface_effect_e_shadow {
+  .thickness = config::margin_type{10},
+  .position  = config::border_position::centered,
+  .offset    = config::border_effect::offset_type {.x = 3, .y = 3},
+  .col     = {0.f, 0.f, 0.f, 0.5f},
+  .blend     = config::blend_mode::alpha,
+  .foff   = config::falloff::sinoidal
+};
+
+static const config::border_effect surface_effect_e_glow {
+  .thickness = config::margin_type{5},
+  .position  = config::border_position::outside,
+  .offset    = config::border_effect::offset_type{},
+  .col     = {1.f, 1.f, 1.f, 1.f},
+  .blend     = config::blend_mode::add,
+  .foff   = config::falloff::linear
+};
+
+[[nodiscard]] static const config::border_effect& surface_effect_e_default(
+    surface_effect_e var
+) {
+  switch (var) {
+    case surface_effect_e::border: return surface_effect_e_border;
+    case surface_effect_e::shadow: return surface_effect_e_shadow;
+    case surface_effect_e::glow:   return surface_effect_e_glow;
+  }
+  return surface_effect_e_border;
+}
 
 
 enum class filter_e {
@@ -120,12 +205,7 @@ template<> struct iconfigp::value_parser<config::margin_type> {
   }
   static std::optional<config::margin_type> parse(std::string_view input) {
     if (auto value = iconfigp::value_parser<int32_t>::parse(input)) {
-      return config::margin_type{
-        .left   = *value,
-        .right  = *value,
-        .top    = *value,
-        .bottom = *value
-      };
+      return config::margin_type{*value};
     }
     auto list = split(input, ':');
     std::array<int32_t, 4> intlist{};
@@ -134,12 +214,7 @@ template<> struct iconfigp::value_parser<config::margin_type> {
       return {};
     }
 
-    return config::margin_type{
-      .left   = intlist[0],
-      .right  = intlist[1],
-      .top    = intlist[2],
-      .bottom = intlist[3]
-    };
+    return config::margin_type{intlist[0], intlist[1], intlist[2], intlist[3]};
   }
 };
 
@@ -181,6 +256,26 @@ template<> struct iconfigp::value_parser<config::panel::size_type> {
     return config::panel::size_type {
       .width  = intlist[0],
       .height = intlist[1]
+    };
+  }
+};
+
+
+
+template<> struct iconfigp::value_parser<config::border_effect::offset_type> {
+  static constexpr std::string_view name {"size"};
+  static constexpr std::string_view format() { return "<width>:<height>"; }
+
+  static std::optional<config::border_effect::offset_type> parse(std::string_view in) {
+    auto list = split(in, ',');
+    std::array<int32_t, 2> intlist{};
+    if (list.size() != 2 || !parse_list<int32_t>(list, intlist)) {
+      return {};
+    }
+
+    return config::border_effect::offset_type {
+      .x = intlist[0],
+      .y = intlist[1]
     };
   }
 };
@@ -242,6 +337,52 @@ template<> struct iconfigp::value_parser<config::color> {
 
 
 namespace {
+  [[nodiscard]] config::border_effect parse_border_effect(
+      const iconfigp::group&       group,
+      const config::border_effect& defaults
+  ) {
+    using offset_type = config::border_effect::offset_type;
+
+    return config::border_effect {
+      .thickness = iconfigp::parse<config::margin_type>(group.unique_key("thickness"))
+                     .value_or(defaults.thickness),
+      .position  = iconfigp::parse<config::border_position>(group.unique_key("position"))
+                     .value_or(defaults.position),
+      .offset    = iconfigp::parse<offset_type>(group.unique_key("offset"))
+                     .value_or(defaults.offset),
+
+      .col       = iconfigp::parse<config::color>(group.unique_key("color"))
+                     .value_or(defaults.col),
+      .blend     = iconfigp::parse<config::blend_mode>(group.unique_key("blend"))
+                     .value_or(defaults.blend),
+      .foff      = iconfigp::parse<config::falloff>(group.unique_key("falloff"))
+                     .value_or(defaults.foff)
+    };
+  }
+
+
+
+  [[nodiscard]] std::vector<config::border_effect> parse_border_effects(
+    iconfigp::opt_ref<const iconfigp::section> section
+  ) {
+    if (!section) {
+      return {};
+    }
+
+    std::vector<config::border_effect> effects;
+    for (const auto& grp: section->groups()) {
+      if (grp.count_keys("type") > 0) {
+        auto type = iconfigp::parse<surface_effect_e>(grp.require_unique_key("type"));
+        effects.emplace_back(parse_border_effect(grp, surface_effect_e_default(type)));
+      }
+    }
+    return effects;
+  }
+
+
+
+
+
   [[nodiscard]] config::panel parse_panel(const iconfigp::group& group) {
     return config::panel {
       .anchor = iconfigp::parse<config::panel::anchor_type>(group.unique_key("anchor"))
@@ -414,11 +555,17 @@ namespace {
       panel_section = fallback->subsection("panels");
     }
 
+    auto border_effects_section = section.subsection("surface-effects");
+    if (!border_effects_section && fallback) {
+      border_effects_section = fallback->subsection("surface-effects");
+    }
+
     return config::output {
-      .name         = std::string{section.name()},
-      .wallpaper    = std::move(wallpaper),
-      .background   = std::move(background),
-      .fixed_panels = parse_panels(panel_section)
+      .name           = std::string{section.name()},
+      .wallpaper      = std::move(wallpaper),
+      .background     = std::move(background),
+      .fixed_panels   = parse_panels(panel_section),
+      .border_effects = parse_border_effects(border_effects_section)
     };
   }
 }
@@ -444,10 +591,12 @@ config::config::config(std::string_view input) {
     default_output_ = parse_output(root, {});
 
     for (const auto& section: root.subsections()) {
-      if (section.name().empty()        ||
-          section.name() == "panels"    ||
-          section.name() == "wallpaper" ||
-          section.name() == "background") {
+      if (section.name().empty()              ||
+          section.name() == "panels"          ||
+          section.name() == "wallpaper"       ||
+          section.name() == "background"      ||
+          section.name() == "surface-effects"
+      ) {
         continue;
       }
 

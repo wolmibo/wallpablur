@@ -1,6 +1,7 @@
 #ifndef WALLPABLUR_CONFIG_OUTPUT_HPP_INCLUDED
 #define WALLPABLUR_CONFIG_OUTPUT_HPP_INCLUDED
 
+#include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/config/filter.hpp"
 #include "wallpablur/config/panel.hpp"
 
@@ -10,10 +11,6 @@
 #include <vector>
 
 namespace config {
-
-using color = std::array<float, 4>;
-
-
 
 struct brush {
   color                       solid {0.f, 0.f, 0.f, 0.f};
@@ -25,12 +22,14 @@ struct brush {
 
 
 struct output {
-  std::string        name;
+  std::string                name;
 
-  brush              wallpaper;
-  brush              background;
+  brush                      wallpaper;
+  brush                      background;
 
-  std::vector<panel> fixed_panels;
+  std::vector<panel>         fixed_panels;
+
+  std::vector<border_effect> border_effects;
 };
 
 }
