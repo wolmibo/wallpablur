@@ -119,7 +119,13 @@ namespace {
       return {};
     }
 
-    surface surf{rectangle_from_json(*json_rect), type};
+    surface surf{
+      rectangle_from_json(*json_rect),
+      type,
+      std::string{json::member_to_str(value, "app_id").value_or("")},
+      json::member_to_bool(value, "focused").value_or(false),
+      json::member_to_bool(value, "urgent").value_or(false)
+    };
 
     return surf;
   }

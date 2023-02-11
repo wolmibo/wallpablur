@@ -26,6 +26,21 @@ struct value_parser {};
 
 
 
+template<>
+struct value_parser<std::string_view> {
+  static constexpr std::string_view name{"string"};
+
+  static std::string format() {
+    return "[string] // case sensitive";
+  }
+
+  static std::optional<std::string_view> parse(std::string_view input) {
+    return input;
+  }
+};
+
+
+
 
 
 template<typename T>

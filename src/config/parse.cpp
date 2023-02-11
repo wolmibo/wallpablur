@@ -249,7 +249,14 @@ namespace {
       .size   = iconfigp::parse<config::panel::size_type>  (group.unique_key("size"  ))
                   .value_or(config::panel::size_type{}),
       .margin = iconfigp::parse<config::panel::margin_type>(group.unique_key("margin"))
-                  .value_or(config::panel::margin_type{})
+                  .value_or(config::panel::margin_type{}),
+
+      .app_id  = std::string{
+                  iconfigp::parse<std::string_view>(group.unique_key("app-id"))
+                    .value_or("")
+                 },
+      .focused = iconfigp::parse<bool>(group.unique_key("focused")).value_or(false),
+      .urgent  = iconfigp::parse<bool>(group.unique_key("urgent")).value_or(false)
     };
   }
 

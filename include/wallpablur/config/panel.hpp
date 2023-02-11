@@ -2,6 +2,7 @@
 #define WALLPABLUR_CONFIG_PANEL_HPP_INCLUDED
 
 #include <cstdint>
+#include <string>
 
 
 
@@ -34,6 +35,11 @@ struct panel {
   anchor_type anchor;
   size_type   size;
   margin_type margin;
+
+
+  std::string app_id;
+  bool        focused{false};
+  bool        urgent {false};
 };
 
 }
