@@ -113,14 +113,14 @@ template<> struct iconfigp::value_parser<std::filesystem::path> {
 
 
 
-template<> struct iconfigp::value_parser<config::panel::margin_type> {
+template<> struct iconfigp::value_parser<config::margin_type> {
   static constexpr std::string_view name {"margin"};
   static constexpr std::string_view format() {
     return "<int> or <left>:<right>:<top>:<bottom>";
   }
-  static std::optional<config::panel::margin_type> parse(std::string_view input) {
+  static std::optional<config::margin_type> parse(std::string_view input) {
     if (auto value = iconfigp::value_parser<int32_t>::parse(input)) {
-      return config::panel::margin_type{
+      return config::margin_type{
         .left   = *value,
         .right  = *value,
         .top    = *value,
@@ -134,7 +134,7 @@ template<> struct iconfigp::value_parser<config::panel::margin_type> {
       return {};
     }
 
-    return config::panel::margin_type{
+    return config::margin_type{
       .left   = intlist[0],
       .right  = intlist[1],
       .top    = intlist[2],
@@ -246,10 +246,10 @@ namespace {
     return config::panel {
       .anchor = iconfigp::parse<config::panel::anchor_type>(group.unique_key("anchor"))
                   .value_or(config::panel::anchor_type{}),
-      .size   = iconfigp::parse<config::panel::size_type>  (group.unique_key("size"  ))
+      .size   = iconfigp::parse<config::panel::size_type>(group.unique_key("size"))
                   .value_or(config::panel::size_type{}),
-      .margin = iconfigp::parse<config::panel::margin_type>(group.unique_key("margin"))
-                  .value_or(config::panel::margin_type{}),
+      .margin = iconfigp::parse<config::margin_type>(group.unique_key("margin"))
+                  .value_or(config::margin_type{}),
 
       .app_id  = std::string{
                   iconfigp::parse<std::string_view>(group.unique_key("app-id"))

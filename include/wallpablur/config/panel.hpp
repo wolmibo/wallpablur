@@ -1,8 +1,11 @@
 #ifndef WALLPABLUR_CONFIG_PANEL_HPP_INCLUDED
 #define WALLPABLUR_CONFIG_PANEL_HPP_INCLUDED
 
-#include <cstdint>
+#include "wallpablur/config/types.hpp"
+
 #include <string>
+
+#include <cstdint>
 
 
 
@@ -21,13 +24,6 @@ struct panel {
   struct size_type {
     uint32_t width {0};
     uint32_t height{0};
-  };
-
-  struct margin_type {
-    int32_t left  {0};
-    int32_t right {0};
-    int32_t top   {0};
-    int32_t bottom{0};
   };
 
 
