@@ -1,4 +1,5 @@
 #include "wallpablur/json/utils.hpp"
+#include "wallpablur/surface.hpp"
 #include "wallpablur/wm/change-token.hpp"
 #include "wallpablur/wm/i3ipc.hpp"
 #include "wallpablur/wm/layout-manager.hpp"
@@ -85,17 +86,17 @@ void wm::i3ipc::event_loop(const std::stop_token& stoken) {
 
 
 namespace {
-  void translate_rectangles(std::span<rect> rects, int dx, int dy) {
-    for (auto& r: rects) {
-      r.x += dx;
-      r.y += dy;
+  void translate_surfaces(std::span<surface> surf, int dx, int dy) {
+    for (auto& r: surf) {
+      r.rect().x += dx;
+      r.rect().y += dy;
     }
   }
 
 
 
-  [[nodiscard]] rect rect_from_json(const rapidjson::Value& value) {
-    return rect {
+  [[nodiscard]] rectangle rectangle_from_json(const rapidjson::Value& value) {
+    return rectangle {
       .x      = json::member_to_int (value, "x"     ).value_or(0),
       .y      = json::member_to_int (value, "y"     ).value_or(0),
       .width  = json::member_to_uint(value, "width" ).value_or(0),
@@ -105,26 +106,30 @@ namespace {
 
 
 
-  void load_node_leaves(wm::layout& surfaces, const rapidjson::Value::ConstArray& list) {
+  void load_node_leaves(
+      wm::layout&                         surfaces,
+      const rapidjson::Value::ConstArray& list,
+      surface_type                        type
+  ) {
+
     for (const auto& container: list) {
       auto nodes    = json::member_to_array(container, "nodes");
       auto floating = json::member_to_array(container, "floating_nodes");
 
       if ((!nodes || nodes->Empty()) && (!floating || floating->Empty())) {
         if (auto json_rect = json::find_member(container, "rect")) {
-          auto r = rect_from_json(*json_rect);
-
-          if (std::ranges::find(surfaces, r) == surfaces.end()) {
-            surfaces.emplace_back(r);
+          surface surf{rectangle_from_json(*json_rect), type};
+          if (std::ranges::find(surfaces, surf) == surfaces.end()) {
+            surfaces.emplace_back(surf);
           }
         }
       } else {
         if (nodes) {
-          load_node_leaves(surfaces, *nodes);
+          load_node_leaves(surfaces, *nodes, surface_type::tiled);
         }
 
         if (floating) {
-          load_node_leaves(surfaces, *floating);
+          load_node_leaves(surfaces, *floating, surface_type::floating);
         }
       }
     }
@@ -136,11 +141,11 @@ namespace {
     wm::layout surfaces;
 
     if (auto nodes = json::member_to_array(value, "nodes")) {
-      load_node_leaves(surfaces, *nodes);
+      load_node_leaves(surfaces, *nodes, surface_type::tiled);
     }
 
     if (auto floating = json::member_to_array(value, "floating_nodes")) {
-      load_node_leaves(surfaces, *floating);
+      load_node_leaves(surfaces, *floating, surface_type::floating);
     }
 
     return surfaces;
@@ -172,7 +177,7 @@ namespace {
       auto layout = parse_workspace_layout(node);
 
       if (auto offset = json::find_member(value, "rect")) {
-        translate_rectangles(layout,
+        translate_surfaces(layout,
           -json::member_to_int(*offset, "x").value_or(0),
           -json::member_to_int(*offset, "y").value_or(0)
         );

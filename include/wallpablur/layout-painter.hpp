@@ -55,7 +55,7 @@ class layout_painter {
 
 
 
-    void draw_rectangle(const rect&) const;
+    void draw_rectangle(const rectangle&) const;
 };
 
 

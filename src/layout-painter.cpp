@@ -21,7 +21,7 @@ namespace {
 
 
 
-  constexpr mat4 rectangle_to_matrix(rect in, GLfloat width, GLfloat height) {
+  constexpr mat4 rectangle_to_matrix(rectangle in, GLfloat width, GLfloat height) {
     auto sx = static_cast<GLfloat>(in.width)  / width;
     auto sy = static_cast<GLfloat>(in.height) / height;
 
@@ -112,58 +112,60 @@ namespace {
 
 
 
-  rect panel_to_rectangle(const config::panel& panel, const wayland::geometry& geo) {
+  surface panel_to_surface(const config::panel& panel, const wayland::geometry& geo) {
     using an = config::panel::anchor_type;
 
     auto anchor = panel.anchor;
     auto size   = panel.size;
     auto margin = panel.margin;
 
-    rect out;
+    rectangle rect;
 
     if (size.width == 0 &&
         (anchor.value & an::left) != 0 && (anchor.value & an::right) != 0) {
 
-      out.width = saturate_sub<uint32_t>(geo.logical_width(), margin.left + margin.right);
+      rect.width = saturate_sub<uint32_t>(geo.logical_width(),
+                      margin.left + margin.right);
     } else {
-      out.width = size.width;
+      rect.width = size.width;
     }
 
     if (size.height == 0 &&
         (anchor.value & an::top) != 0 && (anchor.value & an::bottom) != 0) {
 
-      out.height = saturate_sub<uint32_t>(geo.logical_height(), margin.top + margin.bottom);
+      rect.height = saturate_sub<uint32_t>(geo.logical_height(),
+                      margin.top + margin.bottom);
     } else {
-      out.height = size.height;
+      rect.height = size.height;
     }
 
 
 
     if ((anchor.value & an::left) != 0 && (anchor.value & an::right) == 0) {
-      out.x = margin.left;
+      rect.x = margin.left;
     } else if ((anchor.value & an::right) != 0 && (anchor.value & an::left) == 0) {
-      out.x = saturate_sub(geo.logical_width(), margin.right + out.width);
+      rect.x = saturate_sub(geo.logical_width(), margin.right + rect.width);
     } else {
-      out.x = saturate_sub(geo.logical_width() / 2,
-          (out.width + margin.left + margin.right) / 2) + margin.left;
+      rect.x = saturate_sub(geo.logical_width() / 2,
+          (rect.width + margin.left + margin.right) / 2) + margin.left;
     }
 
     if ((anchor.value & an::top) != 0 && (anchor.value & an::bottom) == 0) {
-      out.y = margin.top;
+      rect.y = margin.top;
     } else if ((anchor.value & an::bottom) != 0 && (anchor.value & an::top) == 0) {
-      out.y = saturate_sub(geo.logical_height(), margin.bottom + out.height);
+      rect.y = saturate_sub(geo.logical_height(), margin.bottom + rect.height);
     } else {
-      out.y = saturate_sub(geo.logical_height() / 2,
-          (out.height + margin.bottom + margin.top) / 2) + margin.top;
+      rect.y = saturate_sub(geo.logical_height() / 2,
+          (rect.height + margin.bottom + margin.top) / 2) + margin.top;
     }
 
     if (!geo.empty()) {
-      if (out.width * out.height == 0) {
-        logging::warn("fixed panel has size {}x{}", out.width, out.height);
+      if (rect.width * rect.height == 0) {
+        logging::warn("fixed panel has size {}x{}", rect.width, rect.height);
       }
     }
 
-    return out;
+    return surface{rect, surface_type::panel};
   }
 }
 
@@ -206,10 +208,16 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
       geometry_.logical_width(), geometry_.logical_height(), geometry_.scale(),
       geometry_.pixel_width(), geometry_.pixel_height());
 
-  fixed_panels_.resize(config_.fixed_panels.size());
-  for (size_t i = 0; i < config_.fixed_panels.size(); ++i) {
-    fixed_panels_[i] = panel_to_rectangle(config_.fixed_panels[i], geometry_);
+
+
+  fixed_panels_.clear();
+  fixed_panels_.reserve(config_.fixed_panels.size());
+
+  for (const auto& panel : config_.fixed_panels) {
+    fixed_panels_.push_back(panel_to_surface(panel, geometry_));
   }
+
+
 
   if (config_.wallpaper.fgraph) {
     wallpaper_ = texture_provider_->get(geometry, config_.wallpaper);
@@ -235,9 +243,9 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 
 
-void layout_painter::draw_rectangle(const rect& rectangle) const {
+void layout_painter::draw_rectangle(const rectangle& rect) const {
   glUniformMatrix4fv(0, 1, GL_FALSE,
-      rectangle_to_matrix(rectangle,
+      rectangle_to_matrix(rect,
         geometry_.logical_width(), geometry_.logical_height()).data());
 
   quad_.draw();
@@ -276,12 +284,12 @@ void layout_painter::draw_layout(
   draw_stenciled([&]() {
     solid_color_shader_.use();
 
-    for (const auto& rectangle: layout) {
-      draw_rectangle(rectangle);
+    for (const auto& surface: layout) {
+      draw_rectangle(surface.rect());
     }
 
-    for (const auto& rectangle: fixed_panels_) {
-      draw_rectangle(rectangle);
+    for (const auto& surface: fixed_panels_) {
+      draw_rectangle(surface.rect());
     }
 
   }, [&](){
