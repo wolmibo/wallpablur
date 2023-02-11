@@ -106,6 +106,26 @@ namespace {
 
 
 
+  [[nodiscard]] std::optional<surface> surface_from_json(
+      const rapidjson::Value& value,
+      surface_type            type
+  ) {
+    if (!json::member_to_bool(value, "visible").value_or(false)) {
+      return {};
+    }
+
+    auto json_rect = json::find_member(value, "rect");
+    if (!json_rect) {
+      return {};
+    }
+
+    surface surf{rectangle_from_json(*json_rect), type};
+
+    return surf;
+  }
+
+
+
   void load_node_leaves(
       wm::layout&                         surfaces,
       const rapidjson::Value::ConstArray& list,
@@ -117,11 +137,8 @@ namespace {
       auto floating = json::member_to_array(container, "floating_nodes");
 
       if ((!nodes || nodes->Empty()) && (!floating || floating->Empty())) {
-        if (auto json_rect = json::find_member(container, "rect")) {
-          surface surf{rectangle_from_json(*json_rect), type};
-          if (std::ranges::find(surfaces, surf) == surfaces.end()) {
-            surfaces.emplace_back(surf);
-          }
+        if (auto surf = surface_from_json(container, type)) {
+          surfaces.emplace_back(*surf);
         }
       } else {
         if (nodes) {
