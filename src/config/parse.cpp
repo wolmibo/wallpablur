@@ -126,27 +126,30 @@ static const config::border_effect surface_effect_e_border {
   .thickness = config::margin_type{2},
   .position  = config::border_position::outside,
   .offset    = config::border_effect::offset_type{},
-  .col     = {0.f, 0.f, 0.f, 1.f},
+  .col       = {0.f, 0.f, 0.f, 1.f},
   .blend     = config::blend_mode::alpha,
-  .foff   = config::falloff::step
+  .foff      = config::falloff::step,
+  .exponent  = 1.f
 };
 
 static const config::border_effect surface_effect_e_shadow {
   .thickness = config::margin_type{10},
   .position  = config::border_position::centered,
   .offset    = config::border_effect::offset_type {.x = 3, .y = 3},
-  .col     = {0.f, 0.f, 0.f, 0.5f},
+  .col       = {0.f, 0.f, 0.f, 0.5f},
   .blend     = config::blend_mode::alpha,
-  .foff   = config::falloff::sinusoidal
+  .foff      = config::falloff::sinusoidal,
+  .exponent  = 1.5f
 };
 
 static const config::border_effect surface_effect_e_glow {
   .thickness = config::margin_type{5},
   .position  = config::border_position::outside,
   .offset    = config::border_effect::offset_type{},
-  .col     = {1.f, 1.f, 1.f, 1.f},
+  .col       = {1.f, 1.f, 1.f, 1.f},
   .blend     = config::blend_mode::add,
-  .foff   = config::falloff::linear
+  .foff      = config::falloff::linear,
+  .exponent  = 3.f
 };
 
 [[nodiscard]] static const config::border_effect& surface_effect_e_default(
@@ -356,7 +359,9 @@ namespace {
       .blend     = iconfigp::parse<config::blend_mode>(group.unique_key("blend"))
                      .value_or(defaults.blend),
       .foff      = iconfigp::parse<config::falloff>(group.unique_key("falloff"))
-                     .value_or(defaults.foff)
+                     .value_or(defaults.foff),
+      .exponent  = iconfigp::parse<float>(group.unique_key("exponent"))
+                     .value_or(defaults.exponent)
     };
   }
 

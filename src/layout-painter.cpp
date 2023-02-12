@@ -351,10 +351,12 @@ void layout_painter::draw_border_effect(
     case config::falloff::linear:
       shader_cache_.find_or_create(shader::border_linear,
           resources::border_vs(), resources::border_linear_fs()).use();
+      glUniform1f(20, effect.exponent);
       break;
     case config::falloff::sinusoidal:
       shader_cache_.find_or_create(shader::border_sinusoidal,
           resources::border_vs(), resources::border_sinusoidal_fs()).use();
+      glUniform1f(20, effect.exponent);
       break;
   }
 
