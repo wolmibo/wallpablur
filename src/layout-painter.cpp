@@ -416,8 +416,11 @@ void layout_painter::draw_layout(
 
 
   for (const auto& be: config_.border_effects) {
-    for (const auto& surf: layout) {
-      draw_border_effect(be, surf);
+    for (const auto& surface: layout) {
+      draw_border_effect(be, surface);
+    }
+    for (const auto& surface: fixed_panels_) {
+      draw_border_effect(be, surface);
     }
   }
 
