@@ -1,7 +1,7 @@
 # WallpaBlur
 
-Wallpaper provider which fakes window blur on Wayland based, i3ipc-enabled window
-managers like [Sway](https://swaywm.org).
+Wallpaper provider which fakes window blur and other effects on Wayland based,
+i3ipc-enabled window managers like [Sway](https://swaywm.org).
 
 ![screenshot](doc/screenshot_small.jpg)
 
@@ -18,17 +18,8 @@ regions of the output.
 
 Sway does not support window blur and this is
 [unlikely to change](https://github.com/swaywm/sway/issues/453).
-WallpaBlur enables the most basic window blur effect in combination with upstream Sway.
-
-## Supported Features
-
-* multi-monitor support including monitor hot-plugging and individual configuration
-* output scaling
-* *wallpaper* and *background* can be chosen independently
-* built-in effects:
-  - box-blur (which can be iterated for a "fast gaussian" blur)
-  - color inversion
-* (optional) alpha fade-in and fade-out on startup and `SIGTERM`, respectively
+WallpaBlur aims to enable the most basic kind of window effects
+in combination with upstream Sway.
 
 ## Limitations
 
@@ -36,7 +27,7 @@ WallpaBlur enables the most basic window blur effect in combination with upstrea
   delay (one or two frames at 60Hz) whenever the window layout changes --
   depending on the visual differences between *wallpaper* and *background* this
   **can lead to screen flashing**
-* obviously, there are no effects applied when windows are stacked on top of each other
+* there are no effects applied when windows are stacked on top of each other
 * layer surfaces
   (used for status bars, notifications, application launchers, etc.)
   are not exposed via i3ipc and can currently only be added statically via the
@@ -44,6 +35,30 @@ WallpaBlur enables the most basic window blur effect in combination with upstrea
 * resizing windows and moving floating windows are not provided as events through
   the i3ipc, for these cases `GET_TREE` must be called in frequent intervals
 
+## Currently Supported Features
+
+* multi-monitor support including monitor hot-plugging and individual configuration
+* fractional output scaling
+* *wallpaper* and *background* can be independent images
+* filter for *wallpaper* and *background*: blur, box-blur, color inversion
+* (optional) alpha fade-in and fade-out on startup and `SIGTERM`, respectively
+
+## Features Being Worked On
+
+* border effects like shadows, glow, etc.
+* conditional filter/effects (e.g. use glow only for the focused window)
+
+## Future Ideas / Personal Wishlist
+
+* custom shader (for filter and effects), including animated shader
+* rounded corners
+* dynamic layer surfaces
+* more responsive layout changes
+
+## Non-Goals
+
+* animated background images / gifs / videos
+* forked Sway version
 
 # Getting Started
 
