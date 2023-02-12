@@ -133,17 +133,17 @@ static const config::border_effect surface_effect_e_border {
 };
 
 static const config::border_effect surface_effect_e_shadow {
-  .thickness = config::margin_type{10},
+  .thickness = config::margin_type{30},
   .position  = config::border_position::centered,
-  .offset    = config::border_effect::offset_type {.x = 3, .y = 3},
-  .col       = {0.f, 0.f, 0.f, 0.5f},
+  .offset    = config::border_effect::offset_type {.x = 2, .y = 2},
+  .col       = {0.f, 0.f, 0.f, 0.8f},
   .blend     = config::blend_mode::alpha,
   .foff      = config::falloff::sinusoidal,
   .exponent  = 1.5f
 };
 
 static const config::border_effect surface_effect_e_glow {
-  .thickness = config::margin_type{5},
+  .thickness = config::margin_type{20},
   .position  = config::border_position::outside,
   .offset    = config::border_effect::offset_type{},
   .col       = {1.f, 1.f, 1.f, 1.f},
