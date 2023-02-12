@@ -2,6 +2,7 @@
 #include "wallpablur/layout-painter.hpp"
 #include "shader/shader.hpp"
 
+#include <algorithm>
 #include <array>
 
 #include <logging/log.hpp>
@@ -344,10 +345,15 @@ void layout_painter::draw_border_effect(
   set_blend_mode(effect.blend);
 
   switch (effect.foff) {
-    case config::falloff::step:
+    case config::falloff::step: {
       shader_cache_.find_or_create(shader::border_step,
           resources::border_vs(), resources::border_step_fs()).use();
+
+      auto m = std::max({effect.thickness.left, effect.thickness.right,
+            effect.thickness.top,  effect.thickness.bottom, 1});
+      glUniform1f(30, 0.75f / m);
       break;
+    }
     case config::falloff::linear:
       shader_cache_.find_or_create(shader::border_linear,
           resources::border_vs(), resources::border_linear_fs()).use();
