@@ -86,7 +86,7 @@ template<> struct iconfigp::case_insensitive_parse_lut<config::blend_mode> {
 };
 
 template<> struct iconfigp::case_insensitive_parse_lut<config::falloff> {
-  static constexpr std::string_view name{"blend-mode"};
+  static constexpr std::string_view name{"falloff"};
   static constexpr std::array<std::pair<std::string_view, config::falloff>, 3> lut {
     std::make_pair("step",       config::falloff::step),
     std::make_pair("linear",     config::falloff::linear),
@@ -95,7 +95,7 @@ template<> struct iconfigp::case_insensitive_parse_lut<config::falloff> {
 };
 
 template<> struct iconfigp::case_insensitive_parse_lut<config::border_position> {
-  static constexpr std::string_view name{"blend-mode"};
+  static constexpr std::string_view name{"border-position"};
   static constexpr std::array<std::pair<std::string_view, config::border_position>, 3>
   lut {
     std::make_pair("outside",  config::border_position::outside),

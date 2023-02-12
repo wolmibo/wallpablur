@@ -42,6 +42,14 @@ scale-filter = linear
 [wallpaper]
 # same as [background]
 
+[surface-effects]
+# - type = border; thickness = 2; position = outside; offset = 0,0;
+    color = #000000; blend = alpha; falloff = step; exponent = 1
+# - type = shadow; thickness = 30; position = centered; offset = 2,2;
+    color = #000000cc; blend = alpha; falloff = sinusoidal; exponent = 1.5
+# - type = glow; thickness = 20; position = outside; offset = 0,0;
+    color = #ffffff; blend = add; falloff = linear; exponent = 3
+
 # [OUTPUT.panels]
 # override panels for OUTPUT
 
@@ -50,6 +58,9 @@ scale-filter = linear
 
 # [OUTPUT.background]
 # override background for OUTPUT
+
+# [OUTPUT.surface-effects]
+# override surface-effects for OUTPUT
 
 
 ```
@@ -284,6 +295,13 @@ the filters are applied **on top** of the *wallpaper*
 (compare the example for `wallpablur <image>` in the introduction).
 If you explicitly do not want an image as *background* but as *wallpaper*,
 set `path =` to be empty.
+
+
+### `[surface-effects]`
+Effects that are applied on a per surface basis
+(currently rendered between wallpaper and background).
+
+TBD.
 
 ## Configuring Individual Outputs
 The sections above can be overwritten for a specific output `NAME`
