@@ -21,9 +21,10 @@ filter = blur
 
 ## Full Example Using Default Values
 ```ini
-poll-rate-ms = 250
-fade-out-ms  = 0
-fade-in-ms   = 0
+poll-rate-ms  = 250
+fade-out-ms   = 0
+fade-in-ms    = 0
+disable-i3ipc = false
 
 [panels]
 # - anchor =; size = 0:0; margin = 0:0:0:0
@@ -129,6 +130,11 @@ How long to fade out on receiving a `SIGTERM` or `SIGINT` (e.g. `kill` or C-c in
 terminal).
 
 Default value: `0`
+
+#### `disable-i3ipc`
+Disable i3ipc and only use the wallpaper.
+
+Default value: `false`
 
 ### `[panels]`
 Panels are used to mark regions of the screen as "always use the background", e.g. to

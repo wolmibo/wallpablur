@@ -24,7 +24,7 @@ class application {
 
   private:
     config::config                    config_;
-    wm::i3ipc                         i3ipc_;
+    std::optional<wm::i3ipc>          i3ipc_;
     wayland::client                   wayland_client_;
     std::shared_ptr<texture_provider> texture_provider_;
 

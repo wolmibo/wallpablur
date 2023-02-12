@@ -12,6 +12,12 @@ class change_token {
   template<std::regular U> friend class change_source;
 
   public:
+    change_token() :
+      state_{std::make_shared<shared_state>()}
+    {}
+
+
+
     class locked_ref {
       public:
         locked_ref(T& ref, std::unique_lock<std::mutex>&& lock) :

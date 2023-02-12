@@ -20,12 +20,11 @@ Available options:
   -V, --verbose               enable verbose logging (use twice for debug output)
 
   -s, --socket <path>         connect to <socket> instead of $SWAYSOCK or $I3SOCK
+  -W, --disable-i3ipc         disable i3ipc and only draw the wallpaper
 
   -p, --poll-rate <ms>        how often to poll the window manager for updates
-                              (overrides config)
   -f, --fade-out <ms>         how long to fade out after receiving SIGTERM or SIGINT
-                              (overrides config)
-  -F, --fade-in <ms>          how long to fade in (overrides config)
+  -F, --fade-in <ms>          how long to fade in
 
 
 If an image path is provided, all outputs will use this image as wallpaper and a blurred
@@ -56,6 +55,7 @@ Alternatively, you can set a configuration via the following options:
     option{"config-string", required_argument, nullptr, 'i'},
 
     option{"socket",        required_argument, nullptr, 's'},
+    option{"disable-i3ipc", no_argument,       nullptr, 'W'},
 
     option{"poll-rate",     required_argument, nullptr, 'p'},
     option{"fade-out",      required_argument, nullptr, 'f'},
@@ -66,7 +66,7 @@ Alternatively, you can set a configuration via the following options:
     option{nullptr,         0,                 nullptr,   0}
   };
 
-  const char* short_options = "hvVc:i:s:p:f:F:b:";
+  const char* short_options = "hvVc:i:s:Wp:f:F:b:";
 
 
 
@@ -100,7 +100,8 @@ Alternatively, you can set a configuration via the following options:
         case 'c': args.config_path   = optarg; break;
         case 'i': args.config_string = optarg; break;
 
-        case 's': args.socket_path = optarg; break;
+        case 's': args.socket_path   = optarg; break;
+        case 'W': args.disable_i3ipc = true;   break;
 
         case 'p': args.poll_rate = std::chrono::milliseconds{std::stoi(optarg)}; break;
         case 'f': args.fade_out  = std::chrono::milliseconds{std::stoi(optarg)}; break;

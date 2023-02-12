@@ -593,6 +593,11 @@ config::config::config(std::string_view input) {
       iconfigp::parse<uint32_t>(root.unique_key("fade-out-ms" )).value_or(0)};
 
 
+
+    disable_i3ipc_ = iconfigp::parse<bool>(root.unique_key("disable-i3ipc"))
+      .value_or(false);
+
+
     default_output_ = parse_output(root, {});
 
     for (const auto& section: root.subsections()) {

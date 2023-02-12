@@ -54,6 +54,8 @@ namespace {
     if (arg.fade_out)  { cfg.fade_out(*arg.fade_out);   }
     if (arg.poll_rate) { cfg.poll_rate(*arg.poll_rate); }
 
+    cfg.disable_i3ipc(arg.disable_i3ipc);
+
     return cfg;
   }
 
@@ -82,17 +84,22 @@ namespace {
 
 
 
-  [[nodiscard]] wm::i3ipc i3ipc_from_args_and_config(
+  [[nodiscard]] std::optional<wm::i3ipc> i3ipc_from_args_and_config(
       const application_args& arg,
       const config::config&   conf
   ) {
+    if (conf.disable_i3ipc()) {
+      return {};
+    }
+
     auto path = arg.socket_path.or_else([](){ return wm::find_i3_socket(); });
     if (!path) {
       throw std::runtime_error{"unable to find i3ipc socket\n"
         "make sure SWAYSOCK or I3SOCK or --socket is set correctly"};
     }
 
-    return wm::i3ipc{*path, arg.poll_rate.value_or(conf.poll_rate())};
+    return std::make_optional<wm::i3ipc>(
+        *path, arg.poll_rate.value_or(conf.poll_rate()));
   }
 
 
@@ -139,9 +146,15 @@ application::application(const application_args& args) :
                          output.share_context(),
                          texture_provider_
                        },
-      .layout_source = i3ipc_.layout_token(output.name()),
+      .layout_source = {},
       .last_alpha    = alpha()
     };
+
+    if (i3ipc_) {
+      data.layout_source = i3ipc_->layout_token(output.name());
+    }
+
+
 
     data_.push_back(std::make_unique<output_data>(std::move(data)));
     auto *data_ptr = data_.back().get();

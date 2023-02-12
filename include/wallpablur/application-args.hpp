@@ -27,6 +27,7 @@ struct application_args {
   std::optional<std::string_view>          config_string;
 
   std::optional<std::filesystem::path>     socket_path;
+  bool                                     disable_i3ipc{false};
 
   std::optional<std::chrono::milliseconds> poll_rate;
   std::optional<std::chrono::milliseconds> fade_out;
