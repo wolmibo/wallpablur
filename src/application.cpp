@@ -94,12 +94,19 @@ namespace {
 
     auto path = arg.socket_path.or_else([](){ return wm::find_i3_socket(); });
     if (!path) {
-      throw std::runtime_error{"unable to find i3ipc socket\n"
-        "make sure SWAYSOCK or I3SOCK or --socket is set correctly"};
+      logging::warn("Unable to find i3ipc socket\n"
+        "Make sure --socket, SWAYSOCK, or I3SOCK is set correctly.\n"
+        "Alternatively, use --disable-i3ipc to disable i3ipc.");
+      return {};
     }
 
-    return std::make_optional<wm::i3ipc>(
-        *path, arg.poll_rate.value_or(conf.poll_rate()));
+    try {
+      return std::make_optional<wm::i3ipc>(
+          *path, arg.poll_rate.value_or(conf.poll_rate()));
+    } catch (std::exception& ex) {
+      logging::error(ex.what());
+      return {};
+    }
   }
 
 
