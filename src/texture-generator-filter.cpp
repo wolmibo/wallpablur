@@ -79,7 +79,9 @@ gl::texture texture_generator::apply_filter(
 ) const {
   if (const auto *bblur = std::get_if<config::box_blur_filter>(&filter)) {
     return box_blur(texture, *bblur, geometry,
-        filter_shader("box-blur", resources::filter_line_blur_fs()), quad_);
+        filter_shader_cache_.find_or_create(shader::box_blur,
+          resources::filter_vs(), resources::filter_line_blur_fs()),
+        quad_);
   }
 
 
@@ -95,7 +97,8 @@ gl::texture texture_generator::apply_filter(
 
     if (std::holds_alternative<config::invert_filter>(filter)) {
       logging::verbose("applying invert filter");
-      filter_shader("invert", resources::filter_invert_fs()).use();
+      filter_shader_cache_.find_or_create(shader::invert,
+          resources::filter_vs(), resources::filter_invert_fs()).use();
 
     } else {
       throw std::runtime_error{"trying to use unimplemented filter"};

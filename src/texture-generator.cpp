@@ -196,13 +196,6 @@ gl::texture texture_generator::generate(
 
 
 
-const gl::program& texture_generator::filter_shader(
-  std::string_view key,
-  std::string_view fs
-) const {
-  return filter_shader_cache_.find_or_create(key, resources::filter_vs(), fs);
-}
-
 
 
 texture_generator::~texture_generator() {

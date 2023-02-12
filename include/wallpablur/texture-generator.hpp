@@ -38,12 +38,16 @@ class texture_generator {
 
 
   private:
-    std::shared_ptr<egl::context>              context_;
+    std::shared_ptr<egl::context>         context_;
 
-    gl::plane                                  quad_;
-    gl::program                                draw_texture_;
+    gl::plane                             quad_;
+    gl::program                           draw_texture_;
 
-    mutable flat_map<std::string, gl::program> filter_shader_cache_;
+    enum class shader {
+      box_blur,
+      invert,
+    };
+    mutable flat_map<shader, gl::program> filter_shader_cache_;
 
 
 
@@ -54,9 +58,6 @@ class texture_generator {
 
     [[nodiscard]] gl::texture apply_filter(
         const gl::texture&, const config::filter&, const wayland::geometry&) const;
-
-    [[nodiscard]] const gl::program& filter_shader(
-        std::string_view, std::string_view) const;
 };
 
 #endif // WALLPABLUR_TEXTURE_GENERATOR_HPP_INCLUDED
