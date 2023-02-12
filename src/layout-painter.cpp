@@ -1,3 +1,4 @@
+#include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/layout-painter.hpp"
 #include "shader/shader.hpp"
 
@@ -255,6 +256,130 @@ void layout_painter::draw_rectangle(const rectangle& rect) const {
 
 
 
+namespace {
+  void set_blend_mode(config::blend_mode mode) {
+    switch (mode) {
+      case config::blend_mode::add:
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+        break;
+
+      case config::blend_mode::alpha:
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        break;
+
+      case config::blend_mode::replace:
+        glDisable(GL_BLEND);
+        break;
+    }
+  }
+
+
+
+  rectangle center_tile(rectangle rect, const config::border_effect& effect) {
+    rect.x += effect.offset.x;
+    rect.y += effect.offset.y;
+
+    switch (effect.position) {
+      case config::border_position::inside:
+        rect.x += effect.thickness.left;
+        rect.y += effect.thickness.top;
+        rect.width  -= effect.thickness.left + effect.thickness.right;
+        rect.height -= effect.thickness.top  + effect.thickness.bottom;
+        break;
+      case config::border_position::centered:
+        rect.x += effect.thickness.left / 2;
+        rect.y += effect.thickness.top  / 2;
+        rect.width  -= (effect.thickness.left + effect.thickness.right)  / 2;
+        rect.height -= (effect.thickness.top  + effect.thickness.bottom) / 2;
+        break;
+      case config::border_position::outside:
+        break;
+    }
+
+    return rect;
+  }
+
+
+
+  [[nodiscard]] rectangle left(rectangle rect, int amount) {
+    rect.x    -= amount;
+    rect.width = amount;
+    return rect;
+  }
+
+  [[nodiscard]] rectangle right(rectangle rect, int amount) {
+    rect.x    += rect.width;
+    rect.width = amount;
+    return rect;
+  }
+
+  [[nodiscard]] rectangle top(rectangle rect, int amount) {
+    rect.y     -= amount;
+    rect.height = amount;
+    return rect;
+  }
+
+  [[nodiscard]] rectangle bottom(rectangle rect, int amount) {
+    rect.y     += rect.height;
+    rect.height = amount;
+    return rect;
+  }
+}
+
+
+
+void layout_painter::draw_border_element(float x, float y, const rectangle& rect) const {
+  glUniform2f(1, x, -y);
+  draw_rectangle(rect);
+}
+
+
+
+void layout_painter::draw_border_effect(
+    const config::border_effect& effect,
+    const surface&               surf
+) const {
+  set_blend_mode(effect.blend);
+
+  switch (effect.foff) {
+    case config::falloff::step:
+      shader_cache_.find_or_create(shader::border_step,
+          resources::border_vs(), resources::border_step_fs()).use();
+      break;
+    case config::falloff::linear:
+      shader_cache_.find_or_create(shader::border_linear,
+          resources::border_vs(), resources::border_linear_fs()).use();
+      break;
+    case config::falloff::sinusoidal:
+      shader_cache_.find_or_create(shader::border_sinusoidal,
+          resources::border_vs(), resources::border_sinusoidal_fs()).use();
+      break;
+  }
+
+  invoke_append_color(glUniform4f, effect.col, 1.f, 10);
+
+  auto center = center_tile(surf.rect(), effect);
+
+  draw_border_element(0.f, 0.f, center);
+
+  auto [l, r, t, b] = effect.thickness;
+
+  if (l > 0)          { draw_border_element(-1.f,  0.f, left(center, l));             }
+  if (l > 0 && t > 0) { draw_border_element(-1.f, -1.f, top(left(center, l), t));     }
+  if (t > 0)          { draw_border_element( 0.f, -1.f, top(center, t));              }
+  if (t > 0 && r > 0) { draw_border_element( 1.f, -1.f, right(top(center, t), r));    }
+  if (r > 0)          { draw_border_element( 1.f,  0.f, right(center, r));            }
+  if (r > 0 && b > 0) { draw_border_element( 1.f,  1.f, bottom(right(center, r), b)); }
+  if (b > 0)          { draw_border_element( 0.f,  1.f, bottom(center, b));           }
+  if (b > 0 && l > 0) { draw_border_element(-1.f,  1.f, left(bottom(center, b), l));  }
+}
+
+
+
+
+
 void layout_painter::draw_layout(
   const wm::layout&   layout,
   float               alpha
@@ -279,6 +404,17 @@ void layout_painter::draw_layout(
     invoke_append_color(glClearColor, config_.wallpaper.solid, alpha);
     glClear(GL_COLOR_BUFFER_BIT);
   }
+
+
+
+  for (const auto& be: config_.border_effects) {
+    for (const auto& surf: layout) {
+      draw_border_effect(be, surf);
+    }
+  }
+
+  glDisable(GL_BLEND);
+
 
 
   draw_stenciled([&]() {

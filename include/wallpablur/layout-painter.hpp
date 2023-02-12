@@ -1,10 +1,11 @@
 #ifndef WALLPABLUR_LAYOUT_PAINTER_HPP_INCLUDED
 #define WALLPABLUR_LAYOUT_PAINTER_HPP_INCLUDED
 
+#include "wallpablur/config/border-effect.hpp"
+#include "wallpablur/config/output.hpp"
 #include "wallpablur/egl/context.hpp"
 #include "wallpablur/texture-provider.hpp"
 #include "wallpablur/wm/layout-manager.hpp"
-#include "wallpablur/config/output.hpp"
 #include "wallpablur/wayland/output.hpp"
 
 #include <memory>
@@ -38,24 +39,33 @@ class layout_painter {
 
 
   private:
-    config::output                    config_;
-    std::shared_ptr<egl::context>     context_;
-    std::shared_ptr<texture_provider> texture_provider_;
-    gl::plane                         quad_;
-    gl::program                       solid_color_shader_;
-    GLint                             solid_color_uniform_;
-    gl::program                       texture_shader_;
-    GLint                             texture_a_uniform_;
+    config::output                        config_;
+    std::shared_ptr<egl::context>         context_;
+    std::shared_ptr<texture_provider>     texture_provider_;
+    gl::plane                             quad_;
+    gl::program                           solid_color_shader_;
+    GLint                                 solid_color_uniform_;
+    gl::program                           texture_shader_;
+    GLint                                 texture_a_uniform_;
 
-    std::shared_ptr<gl::texture>      wallpaper_;
-    std::shared_ptr<gl::texture>      background_;
+    enum class shader {
+      border_step,
+      border_linear,
+      border_sinusoidal,
+    };
+    mutable flat_map<shader, gl::program> shader_cache_;
 
-    wayland::geometry                 geometry_{};
-    wm::layout                        fixed_panels_;
+    std::shared_ptr<gl::texture>          wallpaper_;
+    std::shared_ptr<gl::texture>          background_;
+
+    wayland::geometry                     geometry_;
+    wm::layout                            fixed_panels_;
 
 
 
     void draw_rectangle(const rectangle&) const;
+    void draw_border_element(float x, float y, const rectangle&) const;
+    void draw_border_effect(const config::border_effect&, const surface&) const;
 };
 
 

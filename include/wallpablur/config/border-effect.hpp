@@ -18,7 +18,7 @@ enum class blend_mode {
 enum class falloff {
   step,
   linear,
-  sinoidal
+  sinusoidal
 };
 
 
