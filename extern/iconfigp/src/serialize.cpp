@@ -64,7 +64,7 @@ std::string iconfigp::serialize(
   }
   name += serialize(sec.name(), "\n\".]");
 
-  auto output = format("{}[{}]\n", ind, name);
+  auto output = iconfigp::format("{}[{}]\n", ind, name);
 
   bool written{false};
   for (const auto& grp: sec.groups()) {
@@ -116,7 +116,7 @@ std::string iconfigp::serialize(const key_value& kv) {
     || kv.key().starts_with('[')
     || kv.key().starts_with('#');
 
-  return format("{} = {}",
+  return iconfigp::format("{} = {}",
       serialize(kv.key(), bad_start ? "\n\"=#;-[" : "\n\"=;"),
       serialize(kv.value(), "\n\";[")
   );

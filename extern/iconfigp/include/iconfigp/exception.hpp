@@ -29,7 +29,7 @@ class exception : public std::runtime_error {
 class missing_key_exception: public exception {
   public:
     missing_key_exception(std::string key, size_t offset) :
-      exception{format("missing key {} in group", key)},
+      exception{iconfigp::format("missing key {} in group", key)},
       key_     {std::move(key)},
       offset_  {offset}
     {}
@@ -85,7 +85,8 @@ class multiple_definitions_exception: public exception {
         key_value definition2,
         bool      per_section
     ) :
-      exception   {format("multiple definitions of the same key {}", definition1.key())},
+      exception   {iconfigp::format("multiple definitions of the same key {}",
+                     definition1.key())},
       definition1_{std::move(definition1)},
       definition2_{std::move(definition2)},
       per_section_{per_section}

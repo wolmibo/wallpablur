@@ -8,11 +8,11 @@ dependencies = []
 # find a supported format library
 
 code = '''
-#include <version>
+#include <format>
 static_assert(__cpp_lib_format >= 201907L);
 '''
 
-if not compiler.compiles(code)
+if not compiler.compiles(code, args: ['-std=c++20'])
   dependencies += dependency('fmt')
   format_library = 'fmt::format'
 else

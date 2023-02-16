@@ -17,7 +17,7 @@ namespace {
   [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
       std::ifstream input(path, std::ios::ate);
       if (!input) {
-        throw std::runtime_error{fmt::format("unable to read file at \"{}\"",
+        throw std::runtime_error{logging::format("unable to read file at \"{}\"",
             path.string())};
       }
 

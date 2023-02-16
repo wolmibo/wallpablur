@@ -2,6 +2,7 @@
 #define ICONFIGP_FORMAT_HPP_INCLUDED
 
 #include <version>
+#include <chrono> // FIXME: to get __cpp_lib_format without compilation error pre GCC13
 
 #if defined(__cpp_lib_format)
 #include <format>
