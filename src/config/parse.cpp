@@ -123,6 +123,7 @@ template<> struct iconfigp::case_insensitive_parse_lut<surface_effect_e> {
 };
 
 static const config::border_effect surface_effect_e_border {
+  .condition = true,
   .thickness = config::margin_type{2},
   .position  = config::border_position::outside,
   .offset    = config::border_effect::offset_type{},
@@ -133,6 +134,7 @@ static const config::border_effect surface_effect_e_border {
 };
 
 static const config::border_effect surface_effect_e_shadow {
+  .condition = true,
   .thickness = config::margin_type{30},
   .position  = config::border_position::centered,
   .offset    = config::border_effect::offset_type {.x = 2, .y = 2},
@@ -143,6 +145,7 @@ static const config::border_effect surface_effect_e_shadow {
 };
 
 static const config::border_effect surface_effect_e_glow {
+  .condition = true,
   .thickness = config::margin_type{20},
   .position  = config::border_position::outside,
   .offset    = config::border_effect::offset_type{},
@@ -347,6 +350,7 @@ namespace {
     using offset_type = config::border_effect::offset_type;
 
     return config::border_effect {
+      .condition = defaults.condition,
       .thickness = iconfigp::parse<config::margin_type>(group.unique_key("thickness"))
                      .value_or(defaults.thickness),
       .position  = iconfigp::parse<config::border_position>(group.unique_key("position"))
@@ -566,11 +570,12 @@ namespace {
     }
 
     return config::output {
-      .name           = std::string{section.name()},
-      .wallpaper      = std::move(wallpaper),
-      .background     = std::move(background),
-      .fixed_panels   = parse_panels(panel_section),
-      .border_effects = parse_border_effects(border_effects_section)
+      .name                 = std::string{section.name()},
+      .wallpaper            = std::move(wallpaper),
+      .background           = std::move(background),
+      .background_condition = true,
+      .fixed_panels         = parse_panels(panel_section),
+      .border_effects       = parse_border_effects(border_effects_section)
     };
   }
 }

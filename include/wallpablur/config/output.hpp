@@ -4,11 +4,14 @@
 #include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/config/filter.hpp"
 #include "wallpablur/config/panel.hpp"
+#include "wallpablur/surface-expression.hpp"
 
 #include <array>
 #include <optional>
 #include <string>
 #include <vector>
+
+
 
 namespace config {
 
@@ -26,6 +29,7 @@ struct output {
 
   brush                      wallpaper;
   brush                      background;
+  surface_expression         background_condition;
 
   std::vector<panel>         fixed_panels;
 

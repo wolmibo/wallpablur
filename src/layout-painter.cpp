@@ -427,10 +427,14 @@ void layout_painter::draw_layout(
 
   for (const auto& be: config_.border_effects) {
     for (const auto& surface: layout) {
-      draw_border_effect(be, surface);
+      if (be.condition.evaluate(surface)) {
+        draw_border_effect(be, surface);
+      }
     }
     for (const auto& surface: fixed_panels_) {
-      draw_border_effect(be, surface);
+      if (be.condition.evaluate(surface)) {
+        draw_border_effect(be, surface);
+      }
     }
   }
 
@@ -442,11 +446,15 @@ void layout_painter::draw_layout(
     solid_color_shader_.use();
 
     for (const auto& surface: layout) {
-      draw_rectangle(surface.rect());
+      if (config_.background_condition.evaluate(surface)) {
+        draw_rectangle(surface.rect());
+      }
     }
 
     for (const auto& surface: fixed_panels_) {
-      draw_rectangle(surface.rect());
+      if (config_.background_condition.evaluate(surface)) {
+        draw_rectangle(surface.rect());
+      }
     }
 
   }, [&](){
