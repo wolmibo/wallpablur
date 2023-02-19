@@ -112,6 +112,16 @@ namespace {
     return a - b;
   }
 
+  template<typename T, typename S>
+  void saturate_dec(T& a, S b) {
+    T c = static_cast<T>(std::max<S>(b, 0));
+    if (c > a) {
+      a = 0;
+    } else {
+      a -= c;
+    }
+  }
+
 
 
   surface panel_to_surface(const config::panel& panel, const wayland::geometry& geo) {
@@ -286,14 +296,14 @@ namespace {
       case config::border_position::inside:
         rect.x += effect.thickness.left;
         rect.y += effect.thickness.top;
-        rect.width  -= effect.thickness.left + effect.thickness.right;
-        rect.height -= effect.thickness.top  + effect.thickness.bottom;
+        saturate_dec(rect.width, effect.thickness.left + effect.thickness.right);
+        saturate_dec(rect.height, effect.thickness.top + effect.thickness.bottom);
         break;
       case config::border_position::centered:
         rect.x += effect.thickness.left / 2;
         rect.y += effect.thickness.top  / 2;
-        rect.width  -= (effect.thickness.left + effect.thickness.right)  / 2;
-        rect.height -= (effect.thickness.top  + effect.thickness.bottom) / 2;
+        saturate_dec(rect.width,  (effect.thickness.left + effect.thickness.right)  / 2);
+        saturate_dec(rect.height, (effect.thickness.top  + effect.thickness.bottom) / 2);
         break;
       case config::border_position::outside:
         break;
