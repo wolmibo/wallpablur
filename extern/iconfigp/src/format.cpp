@@ -152,7 +152,8 @@ namespace {
       size_t           offset,
       size_t           count,
       bool             colored,
-      int              color
+      int              color,
+      bool             show_line_number = true
   ) {
     if (source.empty() || offset + count > source.size()) {
       return fallback_range(offset, count);
@@ -167,7 +168,8 @@ namespace {
       count = 0;
     }
 
-    auto line_prefix      = iconfigp::format("  {} | ", line_number);
+    auto line_prefix      = show_line_number
+                              ? iconfigp::format("  {} | ", line_number) : "  ";
     auto line_prefix_size = line_prefix.size();
 
     auto rem_width = line_width - line_prefix_size;
@@ -209,11 +211,13 @@ namespace {
   [[nodiscard]] std::string format_range(
     const iconfigp::value_parse_exception::range_exception& ex,
     std::string_view                                        source,
-    bool                                                    colored
+    bool                                                    colored,
+    bool                                                    show_line_number = true
   ) {
     return iconfigp::format("{}:\n{}",
         ex.message(),
-        highlight_range(source, ex.offset(), ex.size(), colored, color_red)
+        highlight_range(source, ex.offset(), ex.size(),
+          colored, color_red, show_line_number)
     );
   }
 
@@ -234,7 +238,8 @@ namespace {
         highlight_range(source, ex.value().value_offset(),
           ex.value().value_size(), colored, color_red),
 
-        ex.range_ex() ? (format_range(*ex.range_ex(), ex.value().value(), colored)) : "",
+        ex.range_ex()
+          ? (format_range(*ex.range_ex(), ex.value().value(), colored, false)) : "",
 
         iconfigp::serialize(ex.target()),
         ex.format()
