@@ -224,26 +224,21 @@ namespace {
     std::string_view                       source,
     bool                                   colored
   ) {
-    auto head = iconfigp::format("{} cannot be parsed as {}:\n{}",
+    return iconfigp::format("{} cannot be parsed as {}:\n{}{}"
+        "A value of type {} has the following form:\n{}\n",
         ex.value().value().empty() ? "An empty value" :
           "The value " + emphasize(iconfigp::serialize(ex.value().value()), colored),
 
         emphasize(iconfigp::serialize(ex.target()), colored),
 
         highlight_range(source, ex.value().value_offset(),
-          ex.value().value_size(), colored, color_red)
-      );
+          ex.value().value_size(), colored, color_red),
 
-    if (auto range = ex.range_ex()) {
-      return head + format_range(*range, ex.value().value(), colored);
-    }
-
-    return iconfigp::format("{}A value of type {} has the following form:\n{}\n",
-        head,
+        ex.range_ex() ? (format_range(*ex.range_ex(), ex.value().value(), colored)) : "",
 
         iconfigp::serialize(ex.target()),
         ex.format()
-    );
+      );
   }
 
 
