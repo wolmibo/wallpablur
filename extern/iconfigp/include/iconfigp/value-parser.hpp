@@ -207,7 +207,14 @@ template<value_parser_defined T>
     if (auto result = value_parser<T>::parse(value.value())) {
       return *result;
     }
+
+  } catch (const value_parse_exception::range_exception& rex) {
+    throw value_parse_exception{value, std::string{value_parser<T>::name},
+      std::string{value_parser<T>::format()}, rex};
+
   } catch (...) {}
+
+
 
   throw value_parse_exception{value, std::string{value_parser<T>::name},
     std::string{value_parser<T>::format()}};
