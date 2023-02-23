@@ -206,21 +206,40 @@ namespace {
 
 
 
+  [[nodiscard]] std::string format_range(
+    const iconfigp::value_parse_exception::range_exception& ex,
+    std::string_view                                        source,
+    bool                                                    colored
+  ) {
+    return iconfigp::format("{}:\n{}",
+        ex.message(),
+        highlight_range(source, ex.offset(), ex.size(), colored, color_red)
+    );
+  }
+
+
+
   [[nodiscard]] std::string format_value_parse(
     const iconfigp::value_parse_exception& ex,
     std::string_view                       source,
     bool                                   colored
   ) {
-    return iconfigp::format("{} cannot be parsed as {}:\n{}"
-        "A value of type {} has the following form:\n{}\n",
-
+    auto head = iconfigp::format("{} cannot be parsed as {}:\n{}",
         ex.value().value().empty() ? "An empty value" :
           "The value " + emphasize(iconfigp::serialize(ex.value().value()), colored),
 
         emphasize(iconfigp::serialize(ex.target()), colored),
 
         highlight_range(source, ex.value().value_offset(),
-          ex.value().value_size(), colored, color_red),
+          ex.value().value_size(), colored, color_red)
+      );
+
+    if (auto range = ex.range_ex()) {
+      return head + format_range(*range, ex.value().value(), colored);
+    }
+
+    return iconfigp::format("{}A value of type {} has the following form:\n{}\n",
+        head,
 
         iconfigp::serialize(ex.target()),
         ex.format()
@@ -371,6 +390,11 @@ std::string iconfigp::format_exception(
 
   if (const auto* syntax = dynamic_cast<const syntax_exception*>(&ex)) {
     return format_syntax(*syntax, source, colored);
+  }
+
+  if (const auto* range =
+      dynamic_cast<const value_parse_exception::range_exception*>(&ex)) {
+    return format_range(*range, source, colored);
   }
 
   return ex.what();
