@@ -163,7 +163,7 @@ namespace {
     }
 
     auto [whole_line, line_number, column] = find_line(source, offset);
-    if (count >= whole_line.size()) {
+    if (count > whole_line.size()) {
       count = 0;
     }
 
