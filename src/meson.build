@@ -59,6 +59,8 @@ sources = [
   'config/config.cpp',
   'config/parse.cpp',
 
+  'surface-expression-parse.cpp',
+
   'texture-generator.cpp',
   'texture-generator-filter.cpp',
   'texture-provider.cpp',

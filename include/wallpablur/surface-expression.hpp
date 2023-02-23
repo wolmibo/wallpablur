@@ -7,6 +7,8 @@
 #include <string>
 #include <variant>
 
+#include <iconfigp/value-parser.hpp>
+
 
 
 class surface_expression_condition {
@@ -50,6 +52,15 @@ class surface_expression_condition {
 
 
 using surface_expression = expression::boolean<surface_expression_condition>;
+
+
+
+template<> struct iconfigp::value_parser<surface_expression> {
+  static constexpr std::string_view name {"surface expression"};
+
+  static std::string_view                  format();
+  static std::optional<surface_expression> parse(std::string_view);
+};
 
 
 #endif // WALLPABLUR_SURFACE_EXPRESSION_HPP_INCLUDED

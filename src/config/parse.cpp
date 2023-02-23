@@ -4,6 +4,7 @@
 #include "wallpablur/config/output.hpp"
 #include "wallpablur/config/panel.hpp"
 #include "wallpablur/config/types.hpp"
+#include "wallpablur/surface-expression.hpp"
 
 #include <iostream>
 #include <optional>
@@ -350,7 +351,8 @@ namespace {
     using offset_type = config::border_effect::offset_type;
 
     return config::border_effect {
-      .condition = defaults.condition,
+      .condition = iconfigp::parse<surface_expression>(group.unique_key("enable-if"))
+                     .value_or(defaults.condition),
       .thickness = iconfigp::parse<config::margin_type>(group.unique_key("thickness"))
                      .value_or(defaults.thickness),
       .position  = iconfigp::parse<config::border_position>(group.unique_key("position"))
@@ -553,11 +555,22 @@ namespace {
     }
     auto wallpaper = parse_brush(wallpaper_section, {});
 
+
+
     auto background_section = section.subsection("background");
     if (!background_section && fallback) {
       background_section = fallback->subsection("background");
     }
     auto background = parse_brush(background_section, wallpaper);
+
+    surface_expression background_condition{true};
+    if (background_section) {
+      if (auto key = background_section->unique_key("enable-if")) {
+        background_condition = iconfigp::parse<surface_expression>(*key);
+      }
+    }
+
+
 
     auto panel_section = section.subsection("panels");
     if (!panel_section && fallback) {
@@ -569,11 +582,13 @@ namespace {
       border_effects_section = fallback->subsection("surface-effects");
     }
 
+
+
     return config::output {
       .name                 = std::string{section.name()},
       .wallpaper            = std::move(wallpaper),
       .background           = std::move(background),
-      .background_condition = true,
+      .background_condition = std::move(background_condition),
       .fixed_panels         = parse_panels(panel_section),
       .border_effects       = parse_border_effects(border_effects_section)
     };
