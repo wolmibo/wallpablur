@@ -5,6 +5,8 @@
 #include "iconfigp/located-string.hpp"
 
 #include <string_view>
+#include <tuple>
+
 #include <cctype>
 
 
