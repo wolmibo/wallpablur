@@ -23,6 +23,11 @@ class surface_expression_condition {
 
 
 
+    [[nodiscard]] static std::optional<surface_expression_condition>
+      from_string(std::string_view);
+
+
+
     [[nodiscard]] bool evaluate(const surface& surf) const {
       if (std::holds_alternative<flag>(cond_)) {
         switch (std::get<flag>(cond_)) {
@@ -47,6 +52,13 @@ class surface_expression_condition {
     struct app_id { std::string value; };
 
     std::variant<flag, app_id> cond_ = flag::focused;
+
+
+
+    template<typename... Args>
+    surface_expression_condition(Args&&... args) :
+      cond_{std::forward<Args>(args)...}
+    {}
 };
 
 

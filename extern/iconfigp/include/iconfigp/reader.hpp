@@ -20,7 +20,7 @@ class reader {
 
 
 
-    [[nodiscard]] task_type   task()   const { return task_; }
+    [[nodiscard]] task_type task() const { return task_; }
 
     void task(task_type t) {
       task_ = t;
@@ -28,10 +28,12 @@ class reader {
 
 
 
-    [[nodiscard]] const char* ptr()    const { return source_.data();  }
-    [[nodiscard]] size_t      offset() const { return ptr() - start_;  }
-    [[nodiscard]] bool        eof()    const { return source_.empty(); }
-    [[nodiscard]] char        peek()   const { return source_.front(); }
+    [[nodiscard]] const char*      ptr()       const { return source_.data();  }
+    [[nodiscard]] size_t           offset()    const { return ptr() - start_;  }
+    [[nodiscard]] bool             eof()       const { return source_.empty(); }
+    [[nodiscard]] char             peek()      const { return source_.front(); }
+
+    [[nodiscard]] std::string_view remaining() const { return source_; }
 
 
 
@@ -50,6 +52,42 @@ class reader {
         }
       }
     }
+
+    void skip_whitespace() {
+      while (!eof() && isspace(peek()) != 0) {
+        skip();
+      }
+    }
+
+
+
+    void skip_until(std::string_view controls) {
+      while (!eof() && controls.find(peek()) == std::string_view::npos) {
+        if (peek() == '\\') {
+          skip();
+          if (eof()) {
+            raise_exception(syntax_error_type::invalid_escape_sequence, offset() - 1);
+          }
+          skip();
+        } else if (peek() == '\'' || peek() == '"') {
+          auto start = offset();
+          std::ignore = read_up_until_closing_quotation_mark();
+
+          if (eof()) {
+            raise_exception(syntax_error_type::missing_quotation_mark, start);
+          }
+          if (peek() == '\n') {
+            raise_exception(syntax_error_type::missing_quotation_mark_eol, start);
+          }
+          skip();
+        } else {
+          skip();
+        }
+      }
+    }
+
+
+
 
 
 
@@ -111,14 +149,6 @@ class reader {
 
     void skip_line() {
       while (!eof() && peek() != '\n') {
-        skip();
-      }
-    }
-
-
-
-    void skip_whitespace() {
-      while (!eof() && isspace(peek()) != 0) {
         skip();
       }
     }
