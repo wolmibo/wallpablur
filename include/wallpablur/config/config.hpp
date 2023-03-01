@@ -30,6 +30,7 @@ class config {
     [[nodiscard]] std::chrono::milliseconds fade_in()   const { return fade_in_;   }
 
     [[nodiscard]] bool disable_i3ipc() const { return disable_i3ipc_; }
+    [[nodiscard]] bool as_overlay()    const { return as_overlay_;    }
 
 
 
@@ -38,6 +39,7 @@ class config {
     void fade_in  (std::chrono::milliseconds ms) { fade_in_   = ms; }
 
     void disable_i3ipc(bool disable) { disable_i3ipc_ = disable || disable_i3ipc_; }
+    void as_overlay   (bool overlay) { as_overlay_ = overlay; }
 
 
 
@@ -46,6 +48,7 @@ class config {
     std::chrono::milliseconds fade_out_     {0};
     std::chrono::milliseconds fade_in_      {0};
     bool                      disable_i3ipc_{false};
+    bool                      as_overlay_   {false};
     std::vector<output>       outputs_;
     output                    default_output_;
 };

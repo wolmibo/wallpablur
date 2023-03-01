@@ -617,6 +617,10 @@ config::config::config(std::string_view input) {
     disable_i3ipc_ = iconfigp::parse<bool>(root.unique_key("disable-i3ipc"))
       .value_or(false);
 
+    as_overlay_ = iconfigp::parse<bool>(root.unique_key("as-overlay"))
+      .value_or(false);
+
+
 
     default_output_ = parse_output(root, {});
 

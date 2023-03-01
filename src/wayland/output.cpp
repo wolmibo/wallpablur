@@ -1,5 +1,6 @@
-#include "wallpablur/wayland/output.hpp"
+#include "wallpablur/config/config.hpp"
 #include "wallpablur/wayland/client.hpp"
+#include "wallpablur/wayland/output.hpp"
 
 #include <stdexcept>
 
@@ -74,9 +75,11 @@ namespace {
       wl_output*           output,
       wl_surface*          surface
   ) {
+    const uint32_t layer = config::global_config().as_overlay() ?
+      ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY : ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
+
     wl_ptr<zwlr_layer_surface_v1> layer_surface(zwlr_layer_shell_v1_get_layer_surface(
-                                                  layer_shell, surface, output,
-                                                  ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND,
+                                                  layer_shell, surface, output, layer,
                                                   "wallpablur-wallpaper"));
 
     if (!layer_surface) {

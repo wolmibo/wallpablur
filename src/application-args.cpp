@@ -9,6 +9,7 @@
 #include <logging/log.hpp>
 
 #include <getopt.h>
+#include <utility>
 
 
 
@@ -48,6 +49,11 @@ Alternatively, you can set a configuration via the following options:
 
 
 
+  enum class flags : int {
+    as_overlay = 1000,
+  };
+
+
   const std::array long_options = {
     option{"help",          no_argument,       nullptr, 'h'},
     option{"version",       no_argument,       nullptr, 'v'},
@@ -64,6 +70,8 @@ Alternatively, you can set a configuration via the following options:
     option{"fade-in",       required_argument, nullptr, 'F'},
 
     option{"blur",          required_argument, nullptr, 'b'},
+
+    option{"as-overlay", no_argument, nullptr, std::to_underlying(flags::as_overlay)},
 
     option{nullptr,         0,                 nullptr,   0}
   };
@@ -110,6 +118,10 @@ Alternatively, you can set a configuration via the following options:
         case 'F': args.fade_in   = std::chrono::milliseconds{std::stoi(optarg)}; break;
 
         case 'b': args.blur = blur_args_from_string(optarg); break;
+
+
+
+        case std::to_underlying(flags::as_overlay): args.as_overlay = true; break;
 
         default: break;
       }
@@ -176,9 +188,10 @@ Alternatively, you can set a configuration via the following options:
       config::config          cfg,
       const application_args& arg
   ) {
-    if (arg.fade_in)   { cfg.fade_in(*arg.fade_in);     }
-    if (arg.fade_out)  { cfg.fade_out(*arg.fade_out);   }
-    if (arg.poll_rate) { cfg.poll_rate(*arg.poll_rate); }
+    if (arg.fade_in)    { cfg.fade_in(*arg.fade_in);     }
+    if (arg.fade_out)   { cfg.fade_out(*arg.fade_out);   }
+    if (arg.poll_rate)  { cfg.poll_rate(*arg.poll_rate); }
+    if (arg.as_overlay) { cfg.as_overlay(true); }
 
     cfg.disable_i3ipc(arg.disable_i3ipc);
 
