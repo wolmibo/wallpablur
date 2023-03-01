@@ -406,7 +406,16 @@ void layout_painter::draw_layout(
 
   glViewport(0, 0, geometry_.pixel_width(), geometry_.pixel_height());
 
+  draw_wallpaper();
+  draw_surface_effects(layout);
+  draw_background(layout);
 
+  set_buffer_alpha(alpha);
+}
+
+
+
+void layout_painter::draw_wallpaper() const {
   if (wallpaper_) {
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -420,9 +429,11 @@ void layout_painter::draw_layout(
     invoke_append_color(glClearColor, config_.wallpaper.solid);
     glClear(GL_COLOR_BUFFER_BIT);
   }
+}
 
 
 
+void layout_painter::draw_surface_effects(const wm::layout& layout) const {
   for (const auto& be: config_.border_effects) {
     for (const auto& surface: layout) {
       if (be.condition.evaluate(surface)) {
@@ -435,10 +446,12 @@ void layout_painter::draw_layout(
       }
     }
   }
+}
 
+
+
+void layout_painter::draw_background(const wm::layout& layout) const {
   glDisable(GL_BLEND);
-
-
 
   draw_stenciled([&]() {
     solid_color_shader_.use();
@@ -471,8 +484,11 @@ void layout_painter::draw_layout(
       quad_.draw();
     }
   });
+}
 
 
+
+void layout_painter::set_buffer_alpha(float alpha) const {
   solid_color_shader_.use();
   glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
 

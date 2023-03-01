@@ -65,6 +65,11 @@ class layout_painter {
     void draw_rectangle(const rectangle&) const;
     void draw_border_element(float x, float y, const rectangle&) const;
     void draw_border_effect(const config::border_effect&, const surface&) const;
+
+    void draw_wallpaper()                        const;
+    void draw_surface_effects(const wm::layout&) const;
+    void draw_background     (const wm::layout&) const;
+    void set_buffer_alpha    (float alpha)       const;
 };
 
 
