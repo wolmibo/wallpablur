@@ -410,7 +410,9 @@ void layout_painter::draw_layout(
   draw_surface_effects(layout);
   draw_background(layout);
 
-  set_buffer_alpha(alpha);
+  if (alpha < 254.f / 255.f) {
+    set_buffer_alpha(alpha);
+  }
 }
 
 
