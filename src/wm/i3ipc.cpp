@@ -1,3 +1,4 @@
+#include "wallpablur/config/config.hpp"
 #include "wallpablur/json/utils.hpp"
 #include "wallpablur/surface.hpp"
 #include "wallpablur/wm/change-token.hpp"
@@ -9,13 +10,12 @@
 
 
 wm::i3ipc::i3ipc(
-  const std::filesystem::path& path,
-  std::chrono::milliseconds    poll_rate
+  const std::filesystem::path& path
 ) :
   poll_socket_ {path},
   event_socket_{path},
 
-  poll_rate_   {poll_rate},
+  poll_rate_   {config::global_config().poll_rate()},
 
   event_loop_thread_{[this] (const std::stop_token& stoken){
     logging::thread_name("event");

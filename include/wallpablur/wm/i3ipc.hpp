@@ -22,7 +22,7 @@ class i3ipc {
 
     ~i3ipc();
 
-    i3ipc(const std::filesystem::path&, std::chrono::milliseconds);
+    i3ipc(const std::filesystem::path&);
 
 
 

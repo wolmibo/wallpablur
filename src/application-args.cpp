@@ -1,9 +1,11 @@
 #include "wallpablur/application-args.hpp"
 #include "wallpablur/application.hpp"
+#include "wallpablur/config/config.hpp"
 
 #include <array>
-
 #include <iostream>
+#include <fstream>
+
 #include <logging/log.hpp>
 
 #include <getopt.h>
@@ -134,6 +136,77 @@ Alternatively, you can set a configuration via the following options:
       logging::output_level(logging::severity::debug);
     }
   }
+
+
+
+
+  [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
+      std::ifstream input(path, std::ios::ate);
+      if (!input) {
+        throw std::runtime_error{logging::format("unable to read file at \"{}\"",
+            path.string())};
+      }
+
+      auto size = input.tellg();
+      std::string buffer;
+      buffer.resize(size);
+
+      input.seekg(0);
+
+      input.read(buffer.data(), buffer.size());
+
+      return buffer;
+  }
+
+
+
+  void try_set_working_directory(const std::filesystem::path& path) {
+    std::error_code ec;
+    std::filesystem::current_path(path, ec);
+
+    if (ec) {
+      logging::warn("unable to set working directory:\n\"{}\": {}",
+          path.string(), ec.message());
+    }
+  }
+
+
+
+  [[nodiscard]] config::config apply_args_config(
+      config::config          cfg,
+      const application_args& arg
+  ) {
+    if (arg.fade_in)   { cfg.fade_in(*arg.fade_in);     }
+    if (arg.fade_out)  { cfg.fade_out(*arg.fade_out);   }
+    if (arg.poll_rate) { cfg.poll_rate(*arg.poll_rate); }
+
+    cfg.disable_i3ipc(arg.disable_i3ipc);
+
+    return cfg;
+  }
+
+
+
+  [[nodiscard]] config::config config_from_args(const application_args& arg) {
+    if (arg.image) {
+      logging::verbose("using generic config");
+      return config::config{arg.blur.to_config(*arg.image)};
+    }
+
+    if (arg.config_string) {
+      logging::verbose("using config string from arguments");
+      return config::config(*arg.config_string);
+    }
+
+    if (auto path = arg.config_path.or_else([](){ return config::find_config_file();})) {
+      logging::verbose("using config located at \"{}\"", path->string());
+      try_set_working_directory(std::filesystem::absolute(*path).parent_path());
+      return config::config(read_file(*path));
+    }
+
+    logging::verbose("using default config");
+    return config::config{};
+  }
 }
 
 
@@ -164,6 +237,8 @@ std::optional<application_args> application_args::parse(std::span<char*> arg) {
   }
 
   init_logging(args.verbose);
+
+  config::global_config(apply_args_config(config_from_args(args), args));
 
   return args;
 }

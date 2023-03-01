@@ -4,7 +4,6 @@
 #include "wallpablur/wm/i3ipc-socket.hpp"
 
 #include <chrono>
-#include <fstream>
 
 #include <cstdlib>
 #include <csignal>
@@ -14,81 +13,10 @@
 
 
 namespace {
-  [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
-      std::ifstream input(path, std::ios::ate);
-      if (!input) {
-        throw std::runtime_error{logging::format("unable to read file at \"{}\"",
-            path.string())};
-      }
-
-      auto size = input.tellg();
-      std::string buffer;
-      buffer.resize(size);
-
-      input.seekg(0);
-
-      input.read(buffer.data(), buffer.size());
-
-      return buffer;
-  }
-
-
-
-  void try_set_working_directory(const std::filesystem::path& path) {
-    std::error_code ec;
-    std::filesystem::current_path(path, ec);
-
-    if (ec) {
-      logging::warn("unable to set working directory:\n\"{}\": {}",
-          path.string(), ec.message());
-    }
-  }
-
-
-
-  [[nodiscard]] config::config apply_args_config(
-      config::config          cfg,
+  [[nodiscard]] std::optional<wm::i3ipc> i3ipc_from_args_and_config(
       const application_args& arg
   ) {
-    if (arg.fade_in)   { cfg.fade_in(*arg.fade_in);     }
-    if (arg.fade_out)  { cfg.fade_out(*arg.fade_out);   }
-    if (arg.poll_rate) { cfg.poll_rate(*arg.poll_rate); }
-
-    cfg.disable_i3ipc(arg.disable_i3ipc);
-
-    return cfg;
-  }
-
-
-
-  [[nodiscard]] config::config config_from_args(const application_args& arg) {
-    if (arg.image) {
-      logging::verbose("using generic config");
-      return config::config{arg.blur.to_config(*arg.image)};
-    }
-
-    if (arg.config_string) {
-      logging::verbose("using config string from arguments");
-      return config::config(*arg.config_string);
-    }
-
-    if (auto path = arg.config_path.or_else([](){ return config::find_config_file();})) {
-      logging::verbose("using config located at \"{}\"", path->string());
-      try_set_working_directory(std::filesystem::absolute(*path).parent_path());
-      return config::config(read_file(*path));
-    }
-
-    logging::verbose("using default config");
-    return config::config{};
-  }
-
-
-
-  [[nodiscard]] std::optional<wm::i3ipc> i3ipc_from_args_and_config(
-      const application_args& arg,
-      const config::config&   conf
-  ) {
-    if (conf.disable_i3ipc()) {
+    if (config::global_config().disable_i3ipc()) {
       return {};
     }
 
@@ -101,8 +29,7 @@ namespace {
     }
 
     try {
-      return std::make_optional<wm::i3ipc>(
-          *path, arg.poll_rate.value_or(conf.poll_rate()));
+      return std::make_optional<wm::i3ipc>(*path);
     } catch (std::exception& ex) {
       logging::error(ex.what());
       return {};
@@ -133,8 +60,7 @@ namespace {
 
 
 application::application(const application_args& args) :
-  config_{apply_args_config(config_from_args(args), args)},
-  i3ipc_ {i3ipc_from_args_and_config(args, config_)},
+  i3ipc_ {i3ipc_from_args_and_config(args)},
   texture_provider_{std::make_shared<texture_provider>(wayland_client_.share_context())},
 
   app_start_{std::chrono::high_resolution_clock::now()}
@@ -149,7 +75,7 @@ application::application(const application_args& args) :
     output_data data {
       .name          = std::string{output.name()},
       .painter       = layout_painter{
-                         config_.output_config_for(output.name()),
+                         config::global_config().output_config_for(output.name()),
                          output.share_context(),
                          texture_provider_
                        },
@@ -224,11 +150,11 @@ namespace {
 
 
 float application::alpha() const {
-  if (config_.fade_in() > std::chrono::milliseconds{0}) {
+  if (config::global_config().fade_in() > std::chrono::milliseconds{0}) {
     auto run = elapsed_since(app_start_);
-    if (run < config_.fade_in()) {
+    if (run < config::global_config().fade_in()) {
       return static_cast<float>(run.count()) /
-        static_cast<float>(config_.fade_in().count());
+        static_cast<float>(config::global_config().fade_in().count());
     }
   }
   if (!exit_start_) {
@@ -237,13 +163,13 @@ float application::alpha() const {
 
   auto elapsed = elapsed_since(*exit_start_);
 
-  if (elapsed > config_.fade_out()) {
+  if (elapsed > config::global_config().fade_out()) {
     exit_signal_received = true;
     return 0.f;
   }
 
   return 1.f - (static_cast<float>(elapsed.count())
-                 / static_cast<float>(config_.fade_out().count()));
+                 / static_cast<float>(config::global_config().fade_out().count()));
 }
 
 
@@ -253,7 +179,7 @@ int application::run() {
 
   while (wayland_client_.dispatch() != -1 && !exit_signal_received) {}
 
-  if (config_.fade_out() == std::chrono::milliseconds{0}) {
+  if (config::global_config().fade_out() == std::chrono::milliseconds{0}) {
     return EXIT_SUCCESS;
   }
 

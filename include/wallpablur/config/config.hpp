@@ -50,6 +50,9 @@ class config {
     output                    default_output_;
 };
 
+[[nodiscard]] config& global_config();
+void global_config(config&&);
+
 
 
 [[nodiscard]] std::optional<std::filesystem::path> find_config_file();
