@@ -27,12 +27,6 @@ struct application_args {
   std::optional<std::string_view>          config_string;
 
   std::optional<std::filesystem::path>     socket_path;
-  bool                                     disable_i3ipc{false};
-  bool                                     as_overlay{false};
-
-  std::optional<std::chrono::milliseconds> poll_rate;
-  std::optional<std::chrono::milliseconds> fade_out;
-  std::optional<std::chrono::milliseconds> fade_in;
 
   blur_args                                blur;
   std::optional<std::filesystem::path>     image;

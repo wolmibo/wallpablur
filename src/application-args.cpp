@@ -111,17 +111,8 @@ Alternatively, you can set a configuration via the following options:
         case 'i': args.config_string = optarg; break;
 
         case 's': args.socket_path   = optarg; break;
-        case 'W': args.disable_i3ipc = true;   break;
-
-        case 'p': args.poll_rate = std::chrono::milliseconds{std::stoi(optarg)}; break;
-        case 'f': args.fade_out  = std::chrono::milliseconds{std::stoi(optarg)}; break;
-        case 'F': args.fade_in   = std::chrono::milliseconds{std::stoi(optarg)}; break;
 
         case 'b': args.blur = blur_args_from_string(optarg); break;
-
-
-
-        case std::to_underlying(flags::as_overlay): args.as_overlay = true; break;
 
         default: break;
       }
@@ -133,6 +124,31 @@ Alternatively, you can set a configuration via the following options:
     }
 
     return args;
+  }
+
+
+
+  void overwrite_global_config_from_args(std::span<char*> arg) {
+    int c{0};
+    auto& cfg = config::global_config();
+    optind = 1;
+
+    while ((c = getopt_long(arg.size(), arg.data(),
+            short_options, long_options.data(), nullptr)) != -1) {
+
+      switch (c) {
+        case 'W': cfg.disable_i3ipc(true);   break;
+
+        case 'p': cfg.poll_rate(std::chrono::milliseconds{std::stoi(optarg)}); break;
+        case 'f': cfg.fade_out (std::chrono::milliseconds{std::stoi(optarg)}); break;
+        case 'F': cfg.fade_in  (std::chrono::milliseconds{std::stoi(optarg)}); break;
+
+
+        case std::to_underlying(flags::as_overlay): cfg.as_overlay(true); break;
+
+        default: break;
+      }
+    }
   }
 
 
@@ -180,22 +196,6 @@ Alternatively, you can set a configuration via the following options:
       logging::warn("unable to set working directory:\n\"{}\": {}",
           path.string(), ec.message());
     }
-  }
-
-
-
-  [[nodiscard]] config::config apply_args_config(
-      config::config          cfg,
-      const application_args& arg
-  ) {
-    if (arg.fade_in)    { cfg.fade_in(*arg.fade_in);     }
-    if (arg.fade_out)   { cfg.fade_out(*arg.fade_out);   }
-    if (arg.poll_rate)  { cfg.poll_rate(*arg.poll_rate); }
-    if (arg.as_overlay) { cfg.as_overlay(true); }
-
-    cfg.disable_i3ipc(arg.disable_i3ipc);
-
-    return cfg;
   }
 
 
@@ -251,7 +251,9 @@ std::optional<application_args> application_args::parse(std::span<char*> arg) {
 
   init_logging(args.verbose);
 
-  config::global_config(apply_args_config(config_from_args(args), args));
+  config::global_config(config_from_args(args));
+
+  overwrite_global_config_from_args(arg);
 
   return args;
 }
