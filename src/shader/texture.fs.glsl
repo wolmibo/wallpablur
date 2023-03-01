@@ -5,7 +5,6 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 uniform sampler2D textureSampler;
-uniform float     alpha;
 
 
 
@@ -17,5 +16,5 @@ vec4 noise(vec2 position) {
 
 
 void main() {
-  fragColor = alpha * texture(textureSampler, texCoord) + noise(texCoord);
+  fragColor = texture(textureSampler, texCoord) + noise(texCoord);
 }

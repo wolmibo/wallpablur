@@ -84,9 +84,9 @@ namespace {
 
 
   template<typename FNC, typename ...ARGS>
-  void invoke_append_color(FNC&& f, const config::color& c, float a, ARGS&&... args) {
+  void invoke_append_color(FNC&& f, const config::color& c, ARGS&&... args) {
     std::forward<FNC>(f)(std::forward<ARGS>(args)...,
-        c[0] * c[3] * a, c[1] * c[3] * a, c[2] * c[3] * a, c[3] * a);
+        c[0] * c[3], c[1] * c[3], c[2] * c[3], c[3]);
   }
 
 
@@ -200,8 +200,7 @@ layout_painter::layout_painter(
   solid_color_shader_ {resources::solid_color_vs(), resources::solid_color_fs()},
   solid_color_uniform_{solid_color_shader_.uniform("color_rgba")},
 
-  texture_shader_     {resources::texture_vs(), resources::texture_fs()},
-  texture_a_uniform_  {texture_shader_.uniform("alpha")}
+  texture_shader_     {resources::texture_vs(), resources::texture_fs()}
 {}
 
 
@@ -376,7 +375,7 @@ void layout_painter::draw_border_effect(
       break;
   }
 
-  invoke_append_color(glUniform4f, effect.col, 1.f, 10);
+  invoke_append_color(glUniform4f, effect.col, 10);
 
   auto center = center_tile(surf.rect(), effect);
 
@@ -413,13 +412,12 @@ void layout_painter::draw_layout(
     glClear(GL_COLOR_BUFFER_BIT);
 
     texture_shader_.use();
-    glUniform1f(texture_a_uniform_, alpha);
 
     wallpaper_->bind();
     quad_.draw();
 
   } else {
-    invoke_append_color(glClearColor, config_.wallpaper.solid, alpha);
+    invoke_append_color(glClearColor, config_.wallpaper.solid);
     glClear(GL_COLOR_BUFFER_BIT);
   }
 
@@ -460,7 +458,6 @@ void layout_painter::draw_layout(
   }, [&](){
     if (background_) {
       texture_shader_.use();
-      glUniform1f(texture_a_uniform_, alpha);
 
       background_->bind();
       quad_.draw();
@@ -468,13 +465,22 @@ void layout_painter::draw_layout(
     } else {
       solid_color_shader_.use();
 
-      invoke_append_color(glUniform4f,
-          config_.background.solid, alpha, solid_color_uniform_);
+      invoke_append_color(glUniform4f, config_.background.solid, solid_color_uniform_);
 
       glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
       quad_.draw();
     }
   });
+
+
+  solid_color_shader_.use();
+  glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
+
+  glEnable(GL_BLEND);
+  glBlendColor(alpha, alpha, alpha, alpha);
+  glBlendFunc(GL_CONSTANT_COLOR, GL_CONSTANT_COLOR);
+
+  quad_.draw();
 }
 
 

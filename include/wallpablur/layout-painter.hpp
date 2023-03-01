@@ -46,7 +46,6 @@ class layout_painter {
     gl::program                           solid_color_shader_;
     GLint                                 solid_color_uniform_;
     gl::program                           texture_shader_;
-    GLint                                 texture_a_uniform_;
 
     enum class shader {
       border_step,
