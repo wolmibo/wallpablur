@@ -51,6 +51,7 @@ Alternatively, you can set a configuration via the following options:
 
   enum class flags : int {
     as_overlay = 1000,
+    opacity    = 1001,
   };
 
 
@@ -71,7 +72,8 @@ Alternatively, you can set a configuration via the following options:
 
     option{"blur",          required_argument, nullptr, 'b'},
 
-    option{"as-overlay", no_argument, nullptr, std::to_underlying(flags::as_overlay)},
+    option{"as-overlay", no_argument,       nullptr, std::to_underlying(flags::as_overlay)},
+    option{"opacity",    required_argument, nullptr, std::to_underlying(flags::opacity)},
 
     option{nullptr,         0,                 nullptr,   0}
   };
@@ -144,7 +146,13 @@ Alternatively, you can set a configuration via the following options:
         case 'F': cfg.fade_in  (std::chrono::milliseconds{std::stoi(optarg)}); break;
 
 
-        case std::to_underlying(flags::as_overlay): cfg.as_overlay(true); break;
+        case std::to_underlying(flags::as_overlay):
+          cfg.as_overlay(true);
+          break;
+
+        case std::to_underlying(flags::opacity):
+          cfg.opacity(std::stof(optarg));
+          break;
 
         default: break;
       }

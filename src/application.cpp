@@ -153,12 +153,13 @@ float application::alpha() const {
   if (config::global_config().fade_in() > std::chrono::milliseconds{0}) {
     auto run = elapsed_since(app_start_);
     if (run < config::global_config().fade_in()) {
-      return static_cast<float>(run.count()) /
-        static_cast<float>(config::global_config().fade_in().count());
+      return static_cast<float>(run.count())
+        / static_cast<float>(config::global_config().fade_in().count())
+        * config::global_config().opacity();
     }
   }
   if (!exit_start_) {
-    return 1.f;
+    return config::global_config().opacity();
   }
 
   auto elapsed = elapsed_since(*exit_start_);
@@ -168,8 +169,9 @@ float application::alpha() const {
     return 0.f;
   }
 
-  return 1.f - (static_cast<float>(elapsed.count())
-                 / static_cast<float>(config::global_config().fade_out().count()));
+  return (1.f - (static_cast<float>(elapsed.count())
+                 / static_cast<float>(config::global_config().fade_out().count())))
+         * config::global_config().opacity();
 }
 
 
