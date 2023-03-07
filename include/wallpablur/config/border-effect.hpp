@@ -42,7 +42,7 @@ struct border_effect {
 
   surface_expression condition;
 
-  margin_type        thickness;
+  uint32_t           thickness{};
   border_position    position {border_position::outside};
   offset_type        offset;
 

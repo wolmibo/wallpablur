@@ -293,16 +293,16 @@ namespace {
 
     switch (effect.position) {
       case config::border_position::inside:
-        rect.x += effect.thickness.left;
-        rect.y += effect.thickness.top;
-        saturate_dec(rect.width, effect.thickness.left + effect.thickness.right);
-        saturate_dec(rect.height, effect.thickness.top + effect.thickness.bottom);
+        rect.x += effect.thickness;
+        rect.y += effect.thickness;
+        saturate_dec(rect.width, 2 * effect.thickness);
+        saturate_dec(rect.height, 2 * effect.thickness);
         break;
       case config::border_position::centered:
-        rect.x += effect.thickness.left / 2;
-        rect.y += effect.thickness.top  / 2;
-        saturate_dec(rect.width,  (effect.thickness.left + effect.thickness.right)  / 2);
-        saturate_dec(rect.height, (effect.thickness.top  + effect.thickness.bottom) / 2);
+        rect.x += effect.thickness / 2;
+        rect.y += effect.thickness / 2;
+        saturate_dec(rect.width,  effect.thickness);
+        saturate_dec(rect.height, effect.thickness);
         break;
       case config::border_position::outside:
         break;
@@ -358,8 +358,7 @@ void layout_painter::draw_border_effect(
       shader_cache_.find_or_create(shader::border_step,
           resources::border_vs(), resources::border_step_fs()).use();
 
-      auto m = std::max({effect.thickness.left, effect.thickness.right,
-            effect.thickness.top,  effect.thickness.bottom, 1});
+      float m = std::max<uint32_t>(effect.thickness, 1);
       glUniform1f(30, 0.75f / m);
       break;
     }
@@ -381,16 +380,16 @@ void layout_painter::draw_border_effect(
 
   draw_border_element(0.f, 0.f, center);
 
-  auto [l, r, t, b] = effect.thickness;
-
-  if (l > 0)          { draw_border_element(-1.f,  0.f, left(center, l));             }
-  if (l > 0 && t > 0) { draw_border_element(-1.f, -1.f, top(left(center, l), t));     }
-  if (t > 0)          { draw_border_element( 0.f, -1.f, top(center, t));              }
-  if (t > 0 && r > 0) { draw_border_element( 1.f, -1.f, right(top(center, t), r));    }
-  if (r > 0)          { draw_border_element( 1.f,  0.f, right(center, r));            }
-  if (r > 0 && b > 0) { draw_border_element( 1.f,  1.f, bottom(right(center, r), b)); }
-  if (b > 0)          { draw_border_element( 0.f,  1.f, bottom(center, b));           }
-  if (b > 0 && l > 0) { draw_border_element(-1.f,  1.f, left(bottom(center, b), l));  }
+  if (auto t = effect.thickness; t > 0) {
+    draw_border_element(-1.f,  0.f, left(center, t));
+    draw_border_element(-1.f, -1.f, top(left(center, t), t));
+    draw_border_element( 0.f, -1.f, top(center, t));
+    draw_border_element( 1.f, -1.f, right(top(center, t), t));
+    draw_border_element( 1.f,  0.f, right(center, t));
+    draw_border_element( 1.f,  1.f, bottom(right(center, t), t));
+    draw_border_element( 0.f,  1.f, bottom(center, t));
+    draw_border_element(-1.f,  1.f, left(bottom(center, t), t));
+  }
 }
 
 
