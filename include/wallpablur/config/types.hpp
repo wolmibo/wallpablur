@@ -2,6 +2,7 @@
 #define WALLPABLUR_CONFIG_TYPES_HPP_INCLUDED
 
 #include <array>
+#include <bitset>
 
 #include <cstdint>
 
@@ -26,6 +27,35 @@ struct margin_type {
     left{l}, right{r}, top{t}, bottom{b}
   {}
 };
+
+
+
+
+
+class anchor_type {
+  public:
+    [[nodiscard]] bool left()   const { return value.test(a_left);   }
+    [[nodiscard]] bool right()  const { return value.test(a_right);  }
+    [[nodiscard]] bool top()    const { return value.test(a_top);    }
+    [[nodiscard]] bool bottom() const { return value.test(a_bottom); }
+
+    void left  (bool v) { value.set(a_left,   v); }
+    void right (bool v) { value.set(a_right,  v); }
+    void top   (bool v) { value.set(a_top,    v); }
+    void bottom(bool v) { value.set(a_bottom, v); }
+
+
+
+  private:
+    static constexpr size_t a_left   {0};
+    static constexpr size_t a_right  {1};
+    static constexpr size_t a_top    {2};
+    static constexpr size_t a_bottom {3};
+
+    std::bitset<4> value;
+};
+
+
 
 
 

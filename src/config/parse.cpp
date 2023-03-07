@@ -227,18 +227,18 @@ template<> struct iconfigp::value_parser<config::margin_type> {
 
 
 
-template<> struct iconfigp::value_parser<config::panel::anchor_type> {
+template<> struct iconfigp::value_parser<config::anchor_type> {
   static constexpr std::string_view name {"anchor"};
   static constexpr std::string_view format() {
     return "string made up of l, r, b and t";
   }
-  static std::optional<config::panel::anchor_type> parse(std::string_view input) {
-    config::panel::anchor_type anchor;
+  static std::optional<config::anchor_type> parse(std::string_view input) {
+    config::anchor_type anchor;
     for (auto character: input) {
-      if      (character == 'l') { anchor.value |= config::panel::anchor_type::left;   }
-      else if (character == 'r') { anchor.value |= config::panel::anchor_type::right;  }
-      else if (character == 'b') { anchor.value |= config::panel::anchor_type::bottom; }
-      else if (character == 't') { anchor.value |= config::panel::anchor_type::top;    }
+      if      (character == 'l') { anchor.left(true);   }
+      else if (character == 'r') { anchor.right(true);  }
+      else if (character == 'b') { anchor.bottom(true); }
+      else if (character == 't') { anchor.top(true);    }
       else {
         return {};
       }
@@ -396,8 +396,8 @@ namespace {
 
   [[nodiscard]] config::panel parse_panel(const iconfigp::group& group) {
     return config::panel {
-      .anchor = iconfigp::parse<config::panel::anchor_type>(group.unique_key("anchor"))
-                  .value_or(config::panel::anchor_type{}),
+      .anchor = iconfigp::parse<config::anchor_type>(group.unique_key("anchor"))
+                  .value_or(config::anchor_type{}),
       .size   = iconfigp::parse<config::panel::size_type>(group.unique_key("size"))
                   .value_or(config::panel::size_type{}),
       .margin = iconfigp::parse<config::margin_type>(group.unique_key("margin"))

@@ -125,7 +125,6 @@ namespace {
 
 
   surface panel_to_surface(const config::panel& panel, const wayland::geometry& geo) {
-    using an = config::panel::anchor_type;
 
     auto anchor = panel.anchor;
     auto size   = panel.size;
@@ -133,18 +132,14 @@ namespace {
 
     rectangle rect;
 
-    if (size.width == 0 &&
-        (anchor.value & an::left) != 0 && (anchor.value & an::right) != 0) {
-
+    if (size.width == 0 && anchor.left() && anchor.right()) {
       rect.width = saturate_sub<uint32_t>(geo.logical_width(),
                       margin.left + margin.right);
     } else {
       rect.width = size.width;
     }
 
-    if (size.height == 0 &&
-        (anchor.value & an::top) != 0 && (anchor.value & an::bottom) != 0) {
-
+    if (size.height == 0 && anchor.top() && anchor.bottom()) {
       rect.height = saturate_sub<uint32_t>(geo.logical_height(),
                       margin.top + margin.bottom);
     } else {
@@ -153,18 +148,18 @@ namespace {
 
 
 
-    if ((anchor.value & an::left) != 0 && (anchor.value & an::right) == 0) {
+    if (anchor.left() && !anchor.right()) {
       rect.x = margin.left;
-    } else if ((anchor.value & an::right) != 0 && (anchor.value & an::left) == 0) {
+    } else if (anchor.right() && !anchor.left()) {
       rect.x = saturate_sub(geo.logical_width(), margin.right + rect.width);
     } else {
       rect.x = saturate_sub(geo.logical_width() / 2,
           (rect.width + margin.left + margin.right) / 2) + margin.left;
     }
 
-    if ((anchor.value & an::top) != 0 && (anchor.value & an::bottom) == 0) {
+    if (anchor.top() && !anchor.bottom()) {
       rect.y = margin.top;
-    } else if ((anchor.value & an::bottom) != 0 && (anchor.value & an::top) == 0) {
+    } else if (anchor.bottom() && !anchor.top()) {
       rect.y = saturate_sub(geo.logical_height(), margin.bottom + rect.height);
     } else {
       rect.y = saturate_sub(geo.logical_height() / 2,
