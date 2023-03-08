@@ -403,6 +403,8 @@ namespace {
       .margin = iconfigp::parse<config::margin_type>(group.unique_key("margin"))
                   .value_or(config::margin_type{}),
 
+      .radius = iconfigp::parse<float>(group.unique_key("border-radius")).value_or(0.f),
+
       .app_id  = std::string{
                   iconfigp::parse<std::string_view>(group.unique_key("app-id"))
                     .value_or("")

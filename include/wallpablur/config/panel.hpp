@@ -23,6 +23,8 @@ struct panel {
   size_type   size;
   margin_type margin;
 
+  float       radius;
+
 
   std::string app_id;
   bool        focused{false};

@@ -36,10 +36,12 @@ class surface {
         surface_type type,
         std::string  app_id,
         bool         focused = false,
-        bool         urgent  = false
+        bool         urgent  = false,
+        float        radius  = 0.f
     ) :
-      rect_{rect},
-      type_{type},
+      rect_  {rect},
+      radius_{radius},
+      type_  {type},
 
       app_id_ {std::move(app_id)},
       focused_{focused},
@@ -53,6 +55,8 @@ class surface {
     [[nodiscard]] rectangle&       rect()          { return rect_; }
     [[nodiscard]] const rectangle& rect()    const { return rect_; }
 
+    [[nodiscard]] float            radius()  const { return radius_; }
+
     [[nodiscard]] surface_type     type()    const { return type_; }
 
     [[nodiscard]] std::string_view app_id()  const { return app_id_;  }
@@ -64,6 +68,7 @@ class surface {
 
   private:
     rectangle    rect_;
+    float        radius_;
     surface_type type_;
 
     std::string  app_id_;

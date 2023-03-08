@@ -172,7 +172,14 @@ namespace {
       }
     }
 
-    return surface{rect, surface_type::panel, panel.app_id, panel.focused, panel.urgent};
+    return surface{
+      rect,
+      surface_type::panel,
+      panel.app_id,
+      panel.focused,
+      panel.urgent,
+      panel.radius
+    };
   }
 }
 
