@@ -24,7 +24,8 @@ struct rectangle {
 enum class surface_type {
   panel,
   floating,
-  tiled
+  tiled,
+  decoration,
 };
 
 

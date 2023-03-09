@@ -18,7 +18,8 @@ class surface_expression_condition {
       urgent,
       panel,
       floating,
-      tiled
+      tiled,
+      decoration,
     };
 
 
@@ -34,9 +35,10 @@ class surface_expression_condition {
           case flag::focused:  return surf.focused();
           case flag::urgent:   return surf.urgent();
 
-          case flag::panel:    return surf.type() == surface_type::panel;
-          case flag::floating: return surf.type() == surface_type::floating;
-          case flag::tiled:    return surf.type() == surface_type::tiled;
+          case flag::panel:      return surf.type() == surface_type::panel;
+          case flag::floating:   return surf.type() == surface_type::floating;
+          case flag::tiled:      return surf.type() == surface_type::tiled;
+          case flag::decoration: return surf.type() == surface_type::decoration;
         }
 
       } else if (std::holds_alternative<app_id>(cond_)) {

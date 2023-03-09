@@ -106,28 +106,44 @@ namespace {
 
 
 
-  [[nodiscard]] std::optional<surface> surface_from_json(
+  void load_surface_from_json(
+      wm::layout&             surfaces,
       const rapidjson::Value& value,
       surface_type            type
   ) {
     if (!json::member_to_bool(value, "visible").value_or(false)) {
-      return {};
+      return;
     }
 
     auto json_rect = json::find_member(value, "rect");
     if (!json_rect) {
-      return {};
+      return;
     }
 
-    surface surf{
-      rectangle_from_json(*json_rect),
-      type,
-      std::string{json::member_to_str(value, "app_id").value_or("")},
-      json::member_to_bool(value, "focused").value_or(false),
-      json::member_to_bool(value, "urgent").value_or(false)
-    };
+    std::string app_id {json::member_to_str (value, "app_id" ).value_or("")};
+    bool        focused{json::member_to_bool(value, "focused").value_or(false)};
+    bool        urgent {json::member_to_bool(value, "urgent" ).value_or(false)};
 
-    return surf;
+    auto base_rect{rectangle_from_json(*json_rect)};
+
+    surfaces.emplace_back(base_rect, type, app_id, focused, urgent);
+
+
+    json_rect = json::find_member(value, "deco_rect");
+    if (!json_rect) {
+      return;
+    }
+
+    auto deco_rect{rectangle_from_json(*json_rect)};
+
+    if (deco_rect.height == 0 || deco_rect.width == 0) {
+      return;
+    }
+
+    deco_rect.x += base_rect.x;
+    deco_rect.y += base_rect.y - static_cast<int>(deco_rect.height);
+
+    //surfaces.emplace_back(deco_rect, surface_type::decoration, app_id, focused, urgent);
   }
 
 
@@ -143,9 +159,7 @@ namespace {
       auto floating = json::member_to_array(container, "floating_nodes");
 
       if ((!nodes || nodes->Empty()) && (!floating || floating->Empty())) {
-        if (auto surf = surface_from_json(container, type)) {
-          surfaces.emplace_back(*surf);
-        }
+        load_surface_from_json(surfaces, container, type);
       } else {
         if (nodes) {
           load_node_leaves(surfaces, *nodes, surface_type::tiled);
