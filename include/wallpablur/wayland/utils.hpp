@@ -45,6 +45,8 @@ DEFINE_WAYLAND_INTERFACE(wl_output);
 
 DEFINE_WAYLAND_DELETER(wl_callback, destroy);
 
+DEFINE_WAYLAND_DELETER(wl_region, destroy);
+
 #ifdef WAYLAND_EGL_H
 DEFINE_WAYLAND_DELETER(wl_egl_window, destroy);
 #endif

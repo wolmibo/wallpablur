@@ -106,6 +106,14 @@ void wayland::output::create_layer_surface() {
 
 
 
+  if (wl_ptr<wl_region> input{wl_compositor_create_region(client_->compositor())}) {
+    wl_surface_set_input_region(surface_.get(), input.get());
+  } else {
+    logging::warn("unable to clear input region");
+  }
+
+
+
   logging::debug("{}: creating viewport", name());
   viewport_.reset(wp_viewporter_get_viewport(client_->viewporter(), surface_.get()));
   if (!viewport_) {
