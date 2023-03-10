@@ -111,10 +111,6 @@ namespace {
       const rapidjson::Value& value,
       surface_type            type
   ) {
-    if (!json::member_to_bool(value, "visible").value_or(false)) {
-      return;
-    }
-
     auto json_rect = json::find_member(value, "rect");
     if (!json_rect) {
       return;
@@ -126,7 +122,9 @@ namespace {
 
     auto base_rect{rectangle_from_json(*json_rect)};
 
-    surfaces.emplace_back(base_rect, type, app_id, focused, urgent);
+    if (json::member_to_bool(value, "visible").value_or(false)) {
+      surfaces.emplace_back(base_rect, type, app_id, focused, urgent);
+    }
 
 
     json_rect = json::find_member(value, "deco_rect");
@@ -143,7 +141,7 @@ namespace {
     deco_rect.x += base_rect.x;
     deco_rect.y += base_rect.y - static_cast<int>(deco_rect.height);
 
-    //surfaces.emplace_back(deco_rect, surface_type::decoration, app_id, focused, urgent);
+    surfaces.emplace_back(deco_rect, surface_type::decoration, app_id, focused, urgent);
   }
 
 
