@@ -27,9 +27,9 @@ fade-in-ms    = 0
 disable-i3ipc = false
 
 [panels]
-# - anchor =; size = 0:0; margin = 0:0:0:0
+# - anchor =; size = 0:0; margin = 0:0:0:0; focused = false; urgent = false; app-id = ""
 
-[background]
+[wallpaper]
 color  = #00000000
 # path =
 scale  = zoom
@@ -40,16 +40,18 @@ scale-filter = linear
 # - filter = blur;     iterations = 2; radius = 96; dithering = 1.0
 # - filter = box-blur; iterations = 1; radius = 96; dithering = 1.0
 
-[wallpaper]
-# same as [background]
+[background]
+# same as [wallpaper] and additionally:
+enable-if = true
 
 [surface-effects]
 # - type = border; thickness = 2; position = outside; offset = 0,0;
-    color = #000000; blend = alpha; falloff = step; exponent = 1
+#   color = #000000; blend = alpha; falloff = step; exponent = 1; enable-if = true
 # - type = shadow; thickness = 30; position = centered; offset = 2,2;
-    color = #000000cc; blend = alpha; falloff = sinusoidal; exponent = 1.5
+#   color = #000000cc; blend = alpha; falloff = sinusoidal; exponent = 1.5;
+#   enable-if = true
 # - type = glow; thickness = 20; position = outside; offset = 0,0;
-    color = #ffffff; blend = add; falloff = linear; exponent = 3
+#   color = #ffffff; blend = add; falloff = linear; exponent = 3; enable-if = true
 
 # [OUTPUT.panels]
 # override panels for OUTPUT
@@ -168,6 +170,21 @@ specified as a uniform margin `<int>` or explicitly for each side as
 `<left>:<right>:<top>:<bottom>`.
 
 Default value: `0`
+
+#### `focused`
+Sets the `focused` flag for this panel.
+
+Default value: `false`
+
+#### `urgent`
+Sets the `urgent` flag for this panel.
+
+Default value: `false`
+
+#### `app-id`
+Sets the `app-id` for this panel.
+
+Default value: `""`
 
 #### Multiple Panels
 
@@ -302,12 +319,83 @@ the filters are applied **on top** of the *wallpaper*
 If you explicitly do not want an image as *background* but as *wallpaper*,
 set `path =` to be empty.
 
+Additionally, `enable-if` can be used to restrict the background to specific surfaces
+(See section about conditions below).
+
 
 ### `[surface-effects]`
-Effects that are applied on a per surface basis
+Effects that are applied on a per surface (window or panel) basis
 (currently rendered between wallpaper and background).
+They are specified as list where each item requires a `type` property.
 
-TBD.
+Furthermore, each item may contain an `enable-if` property (defaulted to `true`) to
+restrict the effect to specific surfaces (See section about conditions below).
+
+##### `type = border`
+Draws a border effect around surfaces. Additional properties:
+* `thickness`: thickness of the border in pixels. Default: `2`
+* `position`: where to draw the border with respect to the surface border.
+  Possible values: `outside`, `centered`. Default: `outside`
+* `offset`: translate the border by the given 2-dim vector. Default: `0,0`
+* `color`: color of the border. Default: `#000000`
+* `blend`: how to mix the color of the border with the wallpaper. Possible values:
+  `alpha`, `add`. Default: `alpha`
+* `falloff`: How to fade the color accross the thickness. Possible values:
+  `step`, `linear`, `sinusoidal`. Default: `step`
+* `exponent`: Raise the falloff to this power. Default: `1`
+
+##### `type = shadow`
+Same as `type = border`, but with changed defaults:
+`thickness = 30`, `position = centered`, `offset = 2,2`, `color = #000000cc`,
+`falloff = sinusoidal`, `exponent = 1.5`.
+
+##### `type = glow`
+Same as `type = border`, but with changed defaults:
+`thickness = 20`, `color = #ffffff`, `blend = add`, `falloff = linear`, `exponent = 3`.
+
+
+
+
+#### Example
+To enable shadows for all surfaces and highlight the focused window with a blue glow:
+```ini
+[surface-effects]
+- type = shadow
+- type = glow; color = #4488ff; enable-if = focused
+```
+
+
+### Surface Conditions
+A surface condition is a statement that evaluates to true or false for any given surface.
+It is formed from one of the following terms:
+
+* `true`: always true
+* `false`: always false
+* `focused`: whether the surface is focused
+* `urgent`: whether the surface is urgent
+* `panel`: whether the surface is a panel (i.e. defined in `[panels]`)
+* `floating`: whether the surface is a floating window
+* `tiled`: whether the surface is a tiled window
+
+These terms can be combined using the following operators (in descending precendence):
+
+* parentheses `(<expression>)`
+* logical not `!<expression>`
+* logical and `<left expression> && <right expression>`
+* logical or `<left expression> || <right expression>`
+
+#### Examples
+
+```
+enable-if = true
+```
+```
+enable-if = !floating
+```
+```
+enable-if = !panel && (urgent || focused)
+```
+
 
 ## Configuring Individual Outputs
 The sections above can be overwritten for a specific output `NAME`
