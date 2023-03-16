@@ -50,6 +50,7 @@ sources = [
   'egl/context.cpp',
 
   'gl/quad.cpp',
+  'gl/sector.cpp',
   'gl/utils.cpp',
 
   'wayland/client.cpp',
