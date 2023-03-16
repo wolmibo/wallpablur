@@ -49,6 +49,8 @@ sources = [
 
   'egl/context.cpp',
 
+  'gl/quad.cpp',
+
   'wayland/client.cpp',
   'wayland/output.cpp',
 

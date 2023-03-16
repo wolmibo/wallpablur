@@ -1,4 +1,4 @@
-#include "gl/plane.hpp"
+#include "wallpablur/gl/quad.hpp"
 
 #include <array>
 
@@ -66,16 +66,6 @@ namespace {
 
 
 
-gl::plane::plane() :
-  vao_{generate_vertex_array()},
-  vbo_{generate_vertex_buffer()},
-  ibo_{generate_index_buffer()}
+gl::quad::quad() :
+  mesh_{generate_vertex_array(), generate_vertex_buffer(), generate_index_buffer()}
 {}
-
-
-
-void gl::plane::draw() const {
-  glBindVertexArray(vao_.get());
-  glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, nullptr);
-}
-

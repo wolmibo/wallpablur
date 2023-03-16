@@ -197,7 +197,7 @@ layout_painter::layout_painter(
   texture_provider_   {std::move(provider)},
   quad_               {[](const auto& cx) {
                          cx.make_current();
-                         return gl::plane{};
+                         return gl::quad{};
                        }(*context_)},
   solid_color_shader_ {resources::solid_color_vs(), resources::solid_color_fs()},
   solid_color_uniform_{solid_color_shader_.uniform("color_rgba")},

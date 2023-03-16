@@ -16,7 +16,7 @@
 
 namespace {
   gl::texture line_blur(const gl::texture& texture, int samples, float dx, float dy,
-      float dithering, const gl::program& shader, const gl::plane& quad) {
+      float dithering, const gl::program& shader, const gl::quad& quad) {
 
 
     texture.bind();
@@ -48,7 +48,7 @@ namespace {
 
   gl::texture box_blur(const gl::texture& texture, const config::box_blur_filter& filter,
       const wayland::geometry& /*geometry*/,
-      const gl::program& shader, const gl::plane& quad
+      const gl::program& shader, const gl::quad& quad
   ) {
     if (filter.iterations == 0) {
       throw std::runtime_error{"unable to apply box blur filter with 0 iterations"};

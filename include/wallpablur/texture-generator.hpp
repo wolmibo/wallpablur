@@ -4,13 +4,13 @@
 #include "wallpablur/egl/context.hpp"
 #include "wallpablur/config/output.hpp"
 #include "wallpablur/flat-map.hpp"
+#include "wallpablur/gl/quad.hpp"
 #include "wallpablur/wayland/geometry.hpp"
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <gl/plane.hpp>
 #include <gl/program.hpp>
 #include <gl/texture.hpp>
 
@@ -40,7 +40,7 @@ class texture_generator {
   private:
     std::shared_ptr<egl::context>         context_;
 
-    gl::plane                             quad_;
+    gl::quad                              quad_;
     gl::program                           draw_texture_;
 
     enum class shader {

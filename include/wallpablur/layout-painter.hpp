@@ -4,13 +4,13 @@
 #include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/config/output.hpp"
 #include "wallpablur/egl/context.hpp"
+#include "wallpablur/gl/quad.hpp"
 #include "wallpablur/texture-provider.hpp"
 #include "wallpablur/wm/layout-manager.hpp"
 #include "wallpablur/wayland/output.hpp"
 
 #include <memory>
 
-#include <gl/plane.hpp>
 #include <gl/program.hpp>
 
 
@@ -42,7 +42,7 @@ class layout_painter {
     config::output                        config_;
     std::shared_ptr<egl::context>         context_;
     std::shared_ptr<texture_provider>     texture_provider_;
-    gl::plane                             quad_;
+    gl::quad                              quad_;
     gl::program                           solid_color_shader_;
     GLint                                 solid_color_uniform_;
     gl::program                           texture_shader_;

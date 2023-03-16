@@ -1,6 +1,6 @@
 sources = [
   'src/framebuffer.cpp',
-  'src/plane.cpp',
+  'src/mesh.cpp',
   'src/program.cpp',
   'src/texture.cpp'
 ]
