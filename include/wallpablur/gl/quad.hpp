@@ -11,7 +11,7 @@ class quad {
   public:
     quad();
 
-    void draw() const { mesh_.draw(); };
+    void draw() const { mesh_.draw(); }
 
 
 
