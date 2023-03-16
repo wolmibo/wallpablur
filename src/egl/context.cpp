@@ -1,4 +1,3 @@
-#include <epoxy/gl.h>
 #include <wayland-egl.h>
 #include "wallpablur/egl/context.hpp"
 
@@ -193,7 +192,8 @@ namespace {
     };
 
     EGLConfig config{};
-    if (eglChooseConfig(display, attrib.data(), &config, 1, &count) != EGL_TRUE || count != 1) {
+    if (eglChooseConfig(display, attrib.data(), &config, 1, &count) != EGL_TRUE
+        || count != 1) {
       throw egl::error("unable to choose egl configuration");
     }
 
@@ -202,7 +202,11 @@ namespace {
 
 
 
-  [[nodiscard]] EGLSurface create_egl_surface(EGLDisplay display, EGLConfig config, NativeWindowType window) {
+  [[nodiscard]] EGLSurface create_egl_surface(
+      EGLDisplay       display,
+      EGLConfig        config,
+      NativeWindowType window
+  ) {
     EGLSurface surface = eglCreateWindowSurface(display, config, window, nullptr);
 
     if (surface == EGL_NO_SURFACE) {
@@ -214,7 +218,11 @@ namespace {
 
 
 
-  [[nodiscard]] EGLContext create_egl_context(EGLDisplay display, EGLConfig config, EGLContext shared) {
+  [[nodiscard]] EGLContext create_egl_context(
+      EGLDisplay display,
+      EGLConfig  config,
+      EGLContext shared
+  ) {
     static constexpr std::array<EGLint, 6> cx = {
       EGL_CONTEXT_MAJOR_VERSION, 3,
       EGL_CONTEXT_MINOR_VERSION, 2,
@@ -243,7 +251,12 @@ egl::context::context(NativeDisplayType display) :
 
 
 
-egl::context::context(EGLDisplay display, EGLConfig config, EGLSurface surface, EGLContext context) :
+egl::context::context(
+    EGLDisplay display,
+    EGLConfig  config,
+    EGLSurface surface,
+    EGLContext context
+) :
   display_{display},
   config_ {config},
   surface_{surface},
