@@ -29,9 +29,10 @@ class config {
     [[nodiscard]] std::chrono::milliseconds fade_out()  const { return fade_out_;  }
     [[nodiscard]] std::chrono::milliseconds fade_in()   const { return fade_in_;   }
 
-    [[nodiscard]] bool  disable_i3ipc() const { return disable_i3ipc_; }
-    [[nodiscard]] bool  as_overlay()    const { return as_overlay_;    }
-    [[nodiscard]] float opacity()       const { return opacity_;       }
+    [[nodiscard]] bool     disable_i3ipc() const { return disable_i3ipc_; }
+    [[nodiscard]] bool     as_overlay()    const { return as_overlay_;    }
+    [[nodiscard]] float    opacity()       const { return opacity_;       }
+    [[nodiscard]] uint16_t gl_samples()    const { return gl_samples_;    }
 
 
 
@@ -52,6 +53,9 @@ class config {
     bool                      disable_i3ipc_{false};
     bool                      as_overlay_   {false};
     float                     opacity_      {1.f};
+    uint16_t                  gl_samples_   {1};
+
+
 
     std::vector<output>       outputs_;
     output                    default_output_;

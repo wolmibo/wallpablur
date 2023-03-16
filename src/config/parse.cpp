@@ -620,8 +620,8 @@ config::config::config(std::string_view input) {
       .value_or(false);
 
     as_overlay_ = iconfigp::parse<bool>(root.unique_key("as-overlay")).value_or(false);
-
-    opacity_ = iconfigp::parse<float>(root.unique_key("opacity")).value_or(1.f);
+    opacity_    = iconfigp::parse<float>(root.unique_key("opacity")).value_or(1.f);
+    gl_samples_ = iconfigp::parse<uint16_t>(root.unique_key("gl-samples")).value_or(1);
 
 
 

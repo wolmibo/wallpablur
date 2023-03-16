@@ -1,4 +1,5 @@
 #include <wayland-egl.h>
+#include "wallpablur/config/config.hpp"
 #include "wallpablur/egl/context.hpp"
 
 #include <array>
@@ -180,7 +181,7 @@ namespace {
       throw egl::error("unable to find egl configuration");
     }
 
-    static constexpr std::array<EGLint, 16> attrib = {
+    const std::array<EGLint, 18> attrib = {
       EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
       EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
       EGL_RED_SIZE,        8,
@@ -188,6 +189,7 @@ namespace {
       EGL_BLUE_SIZE,       8,
       EGL_ALPHA_SIZE,      8,
       EGL_STENCIL_SIZE,    8,
+      EGL_SAMPLES,         config::global_config().gl_samples(),
       EGL_NONE,            EGL_NONE,
     };
 
