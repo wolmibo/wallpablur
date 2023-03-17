@@ -53,7 +53,7 @@ class config {
     bool                      disable_i3ipc_{false};
     bool                      as_overlay_   {false};
     float                     opacity_      {1.f};
-    uint16_t                  gl_samples_   {1};
+    uint16_t                  gl_samples_   {0};
 
 
 
