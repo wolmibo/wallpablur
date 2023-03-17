@@ -265,15 +265,13 @@ void layout_painter::draw_border_effect(
 
 
   if (float t = effect.thickness; t > 0) {
-    draw_border_element(center.border_y( t));
-    draw_border_element(center.border_x( t).rotate_cw90(1));
-    draw_border_element(center.border_y(-t).rotate_cw90(2));
-    draw_border_element(center.border_x(-t).rotate_cw90(3));
+    for (const auto& rect: center.border_rectangles(t)) {
+      draw_border_element(rect);
+    }
 
-    draw_corner_element(center.border_x( t).border_y( t));
-    draw_corner_element(center.border_x( t).border_y(-t).rotate_cw90(1));
-    draw_corner_element(center.border_x(-t).border_y(-t).rotate_cw90(2));
-    draw_corner_element(center.border_x(-t).border_y( t).rotate_cw90(3));
+    for (const auto& rect: center.corner_rectangles(t)) {
+      draw_corner_element(rect);
+    }
   }
 }
 

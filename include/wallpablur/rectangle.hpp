@@ -55,25 +55,24 @@ class rectangle {
 
 
 
-    [[nodiscard]] rectangle border_x(float amount) const {
-      if (amount < 0) {
-        return rectangle{x_ + amount, y_, -amount, height_, rot_cw90_};
-      }
-      return rectangle{x_ + width_, y_, amount, height_, rot_cw90_};
+    [[nodiscard]] std::array<rectangle, 4> border_rectangles(float thickness) const {
+      return {
+        rectangle{x_,             y_ - thickness, width_,    thickness, rot_cw90_},
+        rectangle{x_ + width_,    y_,             thickness, height_,   rot_cw90_ + 1},
+        rectangle{x_,             y_ + height_,   width_,    thickness, rot_cw90_ + 2},
+        rectangle{x_ - thickness, y_,             thickness, height_,   rot_cw90_ + 3}
+      };
     }
 
 
 
-    [[nodiscard]] rectangle border_y(float amount) const {
-      if (amount >= 0) {
-        return rectangle{x_, y_ - amount, width_, amount, rot_cw90_};
-      }
-      return rectangle{x_, y_ + height_, width_, -amount, rot_cw90_};
-    }
-
-
-    [[nodiscard]] rectangle rotate_cw90(int rot) const {
-      return rectangle{x_, y_, width_, height_, (rot_cw90_ + rot % 4 + 4) % 4};
+    [[nodiscard]] std::array<rectangle, 4> corner_rectangles(float thickness) const {
+      return {
+        rectangle{x_ + width_,    y_ - thickness, thickness, thickness, rot_cw90_},
+        rectangle{x_ + width_,    y_ + height_,   thickness, thickness, rot_cw90_ + 1},
+        rectangle{x_ - thickness, y_ + height_,   thickness, thickness, rot_cw90_ + 2},
+        rectangle{x_ - thickness, y_ - thickness, thickness, thickness, rot_cw90_ + 3}
+      };
     }
 
 
