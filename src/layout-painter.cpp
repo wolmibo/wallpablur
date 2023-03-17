@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <array>
+#include <limits>
 
 #include <logging/log.hpp>
 
@@ -165,6 +166,30 @@ void layout_painter::draw_rectangle(const rectangle& rect) const {
       rect.to_matrix(geometry_.logical_width(), geometry_.logical_height()).data());
 
   quad_.draw();
+}
+
+
+
+void layout_painter::draw_rounded_rectangle(const rectangle& rect, float radius) const {
+  radius = std::min({radius, rect.width(), rect.height()});
+
+  if (radius < std::numeric_limits<float>::epsilon()) {
+    draw_rectangle(rect);
+    return;
+  }
+
+  auto center = rect;
+  center.inset(radius);
+
+  draw_rectangle(center);
+
+  for (const auto& bord: center.border_rectangles(radius)) {
+    draw_border_element(bord);
+  }
+
+  for (const auto& corn: center.corner_rectangles(radius)) {
+    draw_corner_element(corn);
+  }
 }
 
 
@@ -342,13 +367,13 @@ void layout_painter::draw_background(const wm::layout& layout) const {
 
     for (const auto& surface: layout) {
       if (config_.background_condition.evaluate(surface)) {
-        draw_rectangle(surface.rect());
+        draw_rounded_rectangle(surface.rect(), surface.radius());
       }
     }
 
     for (const auto& surface: fixed_panels_) {
       if (config_.background_condition.evaluate(surface)) {
-        draw_rectangle(surface.rect());
+        draw_rounded_rectangle(surface.rect(), surface.radius());
       }
     }
 

@@ -64,7 +64,8 @@ class layout_painter {
 
 
 
-    void draw_rectangle(const rectangle&) const;
+    void draw_rectangle        (const rectangle&)        const;
+    void draw_rounded_rectangle(const rectangle&, float) const;
 
     void draw_border_element(const rectangle&) const;
     void draw_corner_element(const rectangle&) const;
