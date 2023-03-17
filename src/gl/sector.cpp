@@ -22,11 +22,11 @@ namespace {
     std::vector<GLfloat> output;
     output.reserve(4 * (2 + res));
 
-    append_vec2(output, 0, 0);
+    append_vec2(output, -1, -1);
 
     for (size_t i = 0; i <= res; ++i) {
       float phi = static_cast<float>(i) / static_cast<float>(res) * std::numbers::pi / 2;
-      append_vec2(output, std::cos(phi), std::sin(phi));
+      append_vec2(output, 2 * std::cos(phi) - 1, 2 * std::sin(phi) - 1);
     }
 
     return output;
