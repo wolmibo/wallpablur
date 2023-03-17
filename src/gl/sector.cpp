@@ -1,6 +1,7 @@
 #include "wallpablur/gl/sector.hpp"
 #include "wallpablur/gl/utils.hpp"
 
+#include <numbers>
 #include <vector>
 
 #include <cmath>
@@ -17,14 +18,14 @@ namespace {
 
 
 
-  [[nodiscard]] std::vector<GLfloat> triangle_fan_vertices(float angle, size_t res) {
+  [[nodiscard]] std::vector<GLfloat> triangle_fan_vertices(size_t res) {
     std::vector<GLfloat> output;
     output.reserve(4 * (2 + res));
 
     append_vec2(output, 0, 0);
 
     for (size_t i = 0; i <= res; ++i) {
-      float phi = static_cast<float>(i) / static_cast<float>(res) * angle;
+      float phi = static_cast<float>(i) / static_cast<float>(res) * std::numbers::pi / 2;
       append_vec2(output, std::cos(phi), std::sin(phi));
     }
 
@@ -51,10 +52,9 @@ namespace {
 
 
 
-gl::sector::sector(float angle, size_t resolution) :
-  angle_     {angle},
+gl::sector::sector(size_t resolution) :
   resolution_{resolution},
 
-  mesh_{mesh_from_vertices_indices(triangle_fan_vertices(angle, resolution),
+  mesh_{mesh_from_vertices_indices(triangle_fan_vertices(resolution),
           triangle_fan_indices(resolution))}
 {}
