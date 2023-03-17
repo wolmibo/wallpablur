@@ -3,16 +3,6 @@
 
 
 
-namespace {
-  void swap_with_neg(float& a, float& b) {
-    auto c = -a;
-    b = a;
-    a = c;
-  }
-}
-
-
-
 std::array<float, 16> rectangle::to_matrix(float width, float height) const {
   auto sx = width_  / width;
   auto sy = height_ / height;
