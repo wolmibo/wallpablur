@@ -1,5 +1,5 @@
-#ifndef GL_SECTOR_HPP_INCLUDED
-#define GL_SECTOR_HPP_INCLUDED
+#ifndef WALLPABLUR_GL_SECTOR_HPP_INCLUDED
+#define WALLPABLUR_GL_SECTOR_HPP_INCLUDED
 
 #include <gl/mesh.hpp>
 
@@ -29,4 +29,4 @@ class sector {
 
 }
 
-#endif // GL_SECTOR_HPP_INCLUDED
+#endif // WALLPABLUR_GL_SECTOR_HPP_INCLUDED

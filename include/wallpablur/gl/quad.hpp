@@ -1,5 +1,5 @@
-#ifndef GL_QUAD_HPP_INCLUDED
-#define GL_QUAD_HPP_INCLUDED
+#ifndef WALLPABLUR_GL_QUAD_HPP_INCLUDED
+#define WALLPABLUR_GL_QUAD_HPP_INCLUDED
 
 #include <gl/mesh.hpp>
 
@@ -21,4 +21,4 @@ class quad {
 
 }
 
-#endif // GL_QUAD_HPP_INCLUDED
+#endif // WALLPABLUR_GL_QUAD_HPP_INCLUDED
