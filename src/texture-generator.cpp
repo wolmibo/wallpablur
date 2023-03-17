@@ -1,4 +1,5 @@
 #include "wallpablur/config/filter.hpp"
+#include "wallpablur/gl/utils.hpp"
 #include "wallpablur/texture-generator.hpp"
 #include "shader/shader.hpp"
 
@@ -29,6 +30,7 @@ namespace {
 
 texture_generator::texture_generator(std::shared_ptr<egl::context> context) :
   context_     {make_current(std::move(context))},
+  quad_        {gl::create_quad()},
   draw_texture_{resources::rescale_texture_vs(), resources::rescale_texture_fs()}
 {}
 

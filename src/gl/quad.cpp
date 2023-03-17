@@ -1,4 +1,3 @@
-#include "wallpablur/gl/quad.hpp"
 #include "wallpablur/gl/utils.hpp"
 
 #include <array>
@@ -21,6 +20,8 @@ namespace {
 
 
 
-gl::quad::quad() :
-  mesh_{mesh_from_vertices_indices(vertices, indices)}
-{}
+
+
+gl::mesh gl::create_quad() {
+  return mesh_from_vertices_indices(vertices, indices);
+}

@@ -1,4 +1,3 @@
-#include "wallpablur/gl/sector.hpp"
 #include "wallpablur/gl/utils.hpp"
 
 #include <numbers>
@@ -52,9 +51,7 @@ namespace {
 
 
 
-gl::sector::sector(size_t resolution) :
-  resolution_{resolution},
-
-  mesh_{mesh_from_vertices_indices(triangle_fan_vertices(resolution),
-          triangle_fan_indices(resolution))}
-{}
+gl::mesh gl::create_sector(size_t resolution) {
+  return mesh_from_vertices_indices(triangle_fan_vertices(resolution),
+          triangle_fan_indices(resolution));
+}
