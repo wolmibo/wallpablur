@@ -9,10 +9,10 @@
 
 
 namespace {
-  void append_vec2(std::vector<GLfloat>& con, GLfloat x, GLfloat y) {
+  void append_vec2_weight(std::vector<GLfloat>& con, GLfloat x, GLfloat y, GLfloat w) {
     con.push_back(x);
     con.push_back(y);
-    con.push_back(0.f);
+    con.push_back(w);
     con.push_back(1.f);
   }
 
@@ -22,11 +22,11 @@ namespace {
     std::vector<GLfloat> output;
     output.reserve(4 * (2 + res));
 
-    append_vec2(output, -1, -1);
+    append_vec2_weight(output, -1, -1, 1);
 
     for (size_t i = 0; i <= res; ++i) {
       float phi = static_cast<float>(i) / static_cast<float>(res) * std::numbers::pi / 2;
-      append_vec2(output, 2 * std::cos(phi) - 1, 2 * std::sin(phi) - 1);
+      append_vec2_weight(output, 2 * std::cos(phi) - 1, 2 * std::sin(phi) - 1, 0);
     }
 
     return output;

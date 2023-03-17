@@ -45,6 +45,7 @@ class rectangle {
       y_ += y;
     }
 
+
     void inset(float thickness) {
       x_ += thickness;
       y_ += thickness;
@@ -64,10 +65,15 @@ class rectangle {
 
 
     [[nodiscard]] rectangle border_y(float amount) const {
-      if (amount < 0) {
-        return rectangle{x_, y_ + amount, width_, -amount, rot_cw90_};
+      if (amount >= 0) {
+        return rectangle{x_, y_ - amount, width_, amount, rot_cw90_};
       }
-      return rectangle{x_, y_ + height_, width_, amount, rot_cw90_};
+      return rectangle{x_, y_ + height_, width_, -amount, rot_cw90_};
+    }
+
+
+    [[nodiscard]] rectangle rotate_cw90(int rot) const {
+      return rectangle{x_, y_, width_, height_, (rot_cw90_ + rot % 4 + 4) % 4};
     }
 
 

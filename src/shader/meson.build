@@ -13,7 +13,6 @@ shader_files = [
   ['filter_line_blur_fs',  'filter-line-blur.fs.glsl'],
 
   ['border_vs',            'border.vs.glsl'],
-  ['border_step_fs',       'border-step.fs.glsl'],
   ['border_linear_fs',     'border-linear.fs.glsl'],
   ['border_sinusoidal_fs', 'border-sinusoidal.fs.glsl']
 ]

@@ -5,6 +5,7 @@
 #include "wallpablur/config/output.hpp"
 #include "wallpablur/egl/context.hpp"
 #include "wallpablur/gl/quad.hpp"
+#include "wallpablur/gl/sector.hpp"
 #include "wallpablur/texture-provider.hpp"
 #include "wallpablur/wm/layout-manager.hpp"
 #include "wallpablur/wayland/output.hpp"
@@ -43,6 +44,7 @@ class layout_painter {
     std::shared_ptr<egl::context>         context_;
     std::shared_ptr<texture_provider>     texture_provider_;
     gl::quad                              quad_;
+    gl::sector                            sector_;
     gl::program                           solid_color_shader_;
     GLint                                 solid_color_uniform_;
     gl::program                           texture_shader_;
@@ -63,7 +65,10 @@ class layout_painter {
 
 
     void draw_rectangle(const rectangle&) const;
-    void draw_border_element(float x, float y, const rectangle&) const;
+
+    void draw_border_element(const rectangle&) const;
+    void draw_corner_element(const rectangle&) const;
+
     void draw_border_effect(const config::border_effect&, const surface&) const;
 
     void draw_wallpaper()                        const;

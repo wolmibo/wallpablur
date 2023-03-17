@@ -1,6 +1,6 @@
 #version 450
 
-in vec2 borderCoord;
+in float falloff;
 
 out vec4 fragColor;
 
@@ -10,7 +10,5 @@ layout (location = 20) uniform float exponent;
 
 
 void main() {
-  float r = 1.f - length(borderCoord);
-
-  fragColor = color_rgba * pow(r, exponent);
+  fragColor = color_rgba * pow(falloff, exponent);
 }

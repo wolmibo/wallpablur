@@ -1,5 +1,6 @@
 #include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/layout-painter.hpp"
+#include "wallpablur/rectangle.hpp"
 #include "shader/shader.hpp"
 
 #include <algorithm>
@@ -94,6 +95,7 @@ layout_painter::layout_painter(
                          cx.make_current();
                          return gl::quad{};
                        }(*context_)},
+  sector_             {16},
   solid_color_shader_ {resources::solid_color_vs(), resources::solid_color_fs()},
   solid_color_uniform_{solid_color_shader_.uniform("color_rgba")},
 
@@ -210,9 +212,20 @@ namespace {
 
 
 
-void layout_painter::draw_border_element(float x, float y, const rectangle& rect) const {
-  glUniform2f(1, x, -y);
-  draw_rectangle(rect);
+void layout_painter::draw_border_element(const rectangle& rect) const {
+  glUniformMatrix4fv(0, 1, GL_FALSE,
+      rect.to_matrix(geometry_.logical_width(), geometry_.logical_height()).data());
+
+  quad_.draw();
+}
+
+
+
+void layout_painter::draw_corner_element(const rectangle& rect) const {
+  glUniformMatrix4fv(0, 1, GL_FALSE,
+      rect.to_matrix(geometry_.logical_width(), geometry_.logical_height()).data());
+
+  sector_.draw();
 }
 
 
@@ -223,42 +236,44 @@ void layout_painter::draw_border_effect(
 ) const {
   set_blend_mode(effect.blend);
 
-  switch (effect.foff) {
-    case config::falloff::step: {
-      shader_cache_.find_or_create(shader::border_step,
-          resources::border_vs(), resources::border_step_fs()).use();
+  solid_color_shader_.use();
+  invoke_append_color(glUniform4f, effect.col, solid_color_uniform_);
 
-      float m = std::max<uint32_t>(effect.thickness, 1);
-      glUniform1f(30, 0.75f / m);
+  auto center = center_tile(surf.rect(), effect);
+  draw_rectangle(center);
+
+
+  switch (effect.foff) {
+    case config::falloff::step:
       break;
-    }
+
     case config::falloff::linear:
       shader_cache_.find_or_create(shader::border_linear,
           resources::border_vs(), resources::border_linear_fs()).use();
       glUniform1f(20, effect.exponent);
+      invoke_append_color(glUniform4f, effect.col, 10);
       break;
+
     case config::falloff::sinusoidal:
       shader_cache_.find_or_create(shader::border_sinusoidal,
           resources::border_vs(), resources::border_sinusoidal_fs()).use();
       glUniform1f(20, effect.exponent);
+      invoke_append_color(glUniform4f, effect.col, 10);
       break;
   }
 
-  invoke_append_color(glUniform4f, effect.col, 10);
 
-  auto center = center_tile(surf.rect(), effect);
-
-  draw_border_element(0.f, 0.f, center);
 
   if (float t = effect.thickness; t > 0) {
-    draw_border_element(-1.f,  0.f, center.border_x(-t));
-    draw_border_element(-1.f, -1.f, center.border_x(-t).border_y(-t));
-    draw_border_element( 0.f, -1.f, center.border_y(-t));
-    draw_border_element( 1.f, -1.f, center.border_x(t).border_y(-t));
-    draw_border_element( 1.f,  0.f, center.border_x(t));
-    draw_border_element( 1.f,  1.f, center.border_x(t).border_y(t));
-    draw_border_element( 0.f,  1.f, center.border_y(t));
-    draw_border_element(-1.f,  1.f, center.border_x(-t).border_y(t));
+    draw_border_element(center.border_y( t));
+    draw_border_element(center.border_x( t).rotate_cw90(1));
+    draw_border_element(center.border_y(-t).rotate_cw90(2));
+    draw_border_element(center.border_x(-t).rotate_cw90(3));
+
+    draw_corner_element(center.border_x( t).border_y( t));
+    draw_corner_element(center.border_x( t).border_y(-t).rotate_cw90(1));
+    draw_corner_element(center.border_x(-t).border_y(-t).rotate_cw90(2));
+    draw_corner_element(center.border_x(-t).border_y( t).rotate_cw90(3));
   }
 }
 
@@ -361,6 +376,8 @@ void layout_painter::draw_background(const wm::layout& layout) const {
 
 void layout_painter::set_buffer_alpha(float alpha) const {
   solid_color_shader_.use();
+  glUniform4f(solid_color_uniform_, 0, 0, 0, 0);
+
   glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
 
   glEnable(GL_BLEND);

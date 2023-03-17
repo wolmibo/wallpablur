@@ -6,11 +6,11 @@
 
 
 namespace {
-  constexpr std::array<GLfloat, 16> vertices {
+  constexpr std::array<GLfloat, 20> vertices {
     -1.f,  1.f, 0.f, 1.f,
      1.f,  1.f, 0.f, 1.f,
-    -1.f, -1.f, 0.f, 1.f,
-     1.f, -1.f, 0.f, 1.f
+    -1.f, -1.f, 1.f, 1.f,
+     1.f, -1.f, 1.f, 1.f,
   };
 
   constexpr std::array<GLushort, 6> indices {
