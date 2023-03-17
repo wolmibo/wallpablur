@@ -162,11 +162,11 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 
 
-void layout_painter::draw_rectangle(const rectangle& rect) const {
+void layout_painter::draw_mesh(const rectangle& rect, const gl::mesh& mesh) const {
   glUniformMatrix4fv(0, 1, GL_FALSE,
       rect.to_matrix(geometry_.logical_width(), geometry_.logical_height()).data());
 
-  quad_.draw();
+  mesh.draw();
 }
 
 
@@ -175,21 +175,21 @@ void layout_painter::draw_rounded_rectangle(const rectangle& rect, float radius)
   radius = std::min({radius, rect.width(), rect.height()});
 
   if (radius < std::numeric_limits<float>::epsilon()) {
-    draw_rectangle(rect);
+    draw_mesh(rect, quad_);
     return;
   }
 
   auto center = rect;
   center.inset(radius);
 
-  draw_rectangle(center);
+  draw_mesh(center, quad_);
 
   for (const auto& bord: center.border_rectangles(radius)) {
-    draw_border_element(bord);
+    draw_mesh(bord, quad_);
   }
 
   for (const auto& corn: center.corner_rectangles(radius)) {
-    draw_corner_element(corn);
+    draw_mesh(corn, sector_);
   }
 }
 
@@ -238,23 +238,6 @@ namespace {
 
 
 
-void layout_painter::draw_border_element(const rectangle& rect) const {
-  glUniformMatrix4fv(0, 1, GL_FALSE,
-      rect.to_matrix(geometry_.logical_width(), geometry_.logical_height()).data());
-
-  quad_.draw();
-}
-
-
-
-void layout_painter::draw_corner_element(const rectangle& rect) const {
-  glUniformMatrix4fv(0, 1, GL_FALSE,
-      rect.to_matrix(geometry_.logical_width(), geometry_.logical_height()).data());
-
-  sector_.draw();
-}
-
-
 
 void layout_painter::draw_border_effect(
     const config::border_effect& effect,
@@ -266,7 +249,7 @@ void layout_painter::draw_border_effect(
   invoke_append_color(glUniform4f, effect.col, solid_color_uniform_);
 
   auto center = center_tile(surf.rect(), effect);
-  draw_rectangle(center);
+  draw_mesh(center, quad_);
 
 
   switch (effect.foff) {
@@ -292,11 +275,11 @@ void layout_painter::draw_border_effect(
 
   if (float t = effect.thickness; t > 0) {
     for (const auto& rect: center.border_rectangles(t)) {
-      draw_border_element(rect);
+      draw_mesh(rect, quad_);
     }
 
     for (const auto& rect: center.corner_rectangles(t)) {
-      draw_corner_element(rect);
+      draw_mesh(rect, sector_);
     }
   }
 }
