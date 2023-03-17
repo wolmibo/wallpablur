@@ -88,19 +88,18 @@ void wm::i3ipc::event_loop(const std::stop_token& stoken) {
 namespace {
   void translate_surfaces(std::span<surface> surf, int dx, int dy) {
     for (auto& r: surf) {
-      r.rect().x += dx;
-      r.rect().y += dy;
+      r.rect().translate(dx, dy);
     }
   }
 
 
 
   [[nodiscard]] rectangle rectangle_from_json(const rapidjson::Value& value) {
-    return rectangle {
-      .x      = json::member_to_int (value, "x"     ).value_or(0),
-      .y      = json::member_to_int (value, "y"     ).value_or(0),
-      .width  = json::member_to_uint(value, "width" ).value_or(0),
-      .height = json::member_to_uint(value, "height").value_or(0)
+    return {
+      static_cast<float>(json::member_to_int (value, "x"     ).value_or(0)),
+      static_cast<float>(json::member_to_int (value, "y"     ).value_or(0)),
+      static_cast<float>(json::member_to_uint(value, "width" ).value_or(0)),
+      static_cast<float>(json::member_to_uint(value, "height").value_or(0))
     };
   }
 
@@ -134,12 +133,11 @@ namespace {
 
     auto deco_rect{rectangle_from_json(*json_rect)};
 
-    if (deco_rect.height == 0 || deco_rect.width == 0) {
+    if (deco_rect.empty()) {
       return;
     }
 
-    deco_rect.x += base_rect.x;
-    deco_rect.y += base_rect.y - static_cast<int>(deco_rect.height);
+    deco_rect.translate(base_rect.x(), base_rect.y() - deco_rect.height());
 
     surfaces.emplace_back(deco_rect, surface_type::decoration, app_id, focused, urgent);
   }

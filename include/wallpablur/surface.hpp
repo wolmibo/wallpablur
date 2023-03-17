@@ -1,23 +1,10 @@
 #ifndef WALLPABLUR_SURFACE_HPP_INCLUDED
 #define WALLPABLUR_SURFACE_HPP_INCLUDED
 
+#include "wallpablur/rectangle.hpp"
+
 #include <string>
 #include <string_view>
-
-
-
-struct rectangle {
-  int          x     {0};
-  int          y     {0};
-  unsigned int width {0};
-  unsigned int height{0};
-
-
-
-  bool operator==(const rectangle&) const = default;
-};
-
-
 
 
 

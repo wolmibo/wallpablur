@@ -61,7 +61,10 @@ sources = [
   'wm/i3ipc.cpp',
 
   'config/config.cpp',
+  'config/panel.cpp',
   'config/parse.cpp',
+
+  'rectangle.cpp',
 
   'surface-expression-parse.cpp',
 

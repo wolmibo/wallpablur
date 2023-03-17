@@ -2,6 +2,7 @@
 #define WALLPABLUR_CONFIG_PANEL_HPP_INCLUDED
 
 #include "wallpablur/config/types.hpp"
+#include "wallpablur/rectangle.hpp"
 
 #include <string>
 
@@ -29,6 +30,10 @@ struct panel {
   std::string app_id;
   bool        focused{false};
   bool        urgent {false};
+
+
+
+  [[nodiscard]] rectangle to_rect(float, float) const;
 };
 
 }

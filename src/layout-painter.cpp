@@ -23,29 +23,6 @@ namespace {
 
 
 
-  constexpr mat4 rectangle_to_matrix(rectangle in, GLfloat width, GLfloat height) {
-    auto sx = static_cast<GLfloat>(in.width)  / width;
-    auto sy = static_cast<GLfloat>(in.height) / height;
-
-    auto dx = (width  - static_cast<GLfloat>(in.width));
-    auto dy = (height - static_cast<GLfloat>(in.height));
-
-    auto x = 2.f * static_cast<GLfloat>(in.x) - dx;
-    auto y = dy - 2.f * static_cast<GLfloat>(in.y);
-
-    auto a = x / width;
-    auto b = y / height;
-
-    return {
-       sx, 0.f, 0.f, 0.f,
-      0.f,  sy, 0.f, 0.f,
-      0.f, 0.f, 1.f, 0.f,
-        a,   b, 0.f, 1.f,
-    };
-  }
-
-
-
 
 
   template<typename MASK, typename DRAW>
@@ -99,88 +76,6 @@ namespace {
     }
     return cx;
   }
-
-
-
-
-
-  template<typename T>
-  T saturate_sub(T a, T b) {
-    if (b > a) {
-      return 0;
-    }
-    return a - b;
-  }
-
-  template<typename T, typename S>
-  void saturate_dec(T& a, S b) {
-    T c = static_cast<T>(std::max<S>(b, 0));
-    if (c > a) {
-      a = 0;
-    } else {
-      a -= c;
-    }
-  }
-
-
-
-  surface panel_to_surface(const config::panel& panel, const wayland::geometry& geo) {
-
-    auto anchor = panel.anchor;
-    auto size   = panel.size;
-    auto margin = panel.margin;
-
-    rectangle rect;
-
-    if (size.width == 0 && anchor.left() && anchor.right()) {
-      rect.width = saturate_sub<uint32_t>(geo.logical_width(),
-                      margin.left + margin.right);
-    } else {
-      rect.width = size.width;
-    }
-
-    if (size.height == 0 && anchor.top() && anchor.bottom()) {
-      rect.height = saturate_sub<uint32_t>(geo.logical_height(),
-                      margin.top + margin.bottom);
-    } else {
-      rect.height = size.height;
-    }
-
-
-
-    if (anchor.left() && !anchor.right()) {
-      rect.x = margin.left;
-    } else if (anchor.right() && !anchor.left()) {
-      rect.x = saturate_sub(geo.logical_width(), margin.right + rect.width);
-    } else {
-      rect.x = saturate_sub(geo.logical_width() / 2,
-          (rect.width + margin.left + margin.right) / 2) + margin.left;
-    }
-
-    if (anchor.top() && !anchor.bottom()) {
-      rect.y = margin.top;
-    } else if (anchor.bottom() && !anchor.top()) {
-      rect.y = saturate_sub(geo.logical_height(), margin.bottom + rect.height);
-    } else {
-      rect.y = saturate_sub(geo.logical_height() / 2,
-          (rect.height + margin.bottom + margin.top) / 2) + margin.top;
-    }
-
-    if (!geo.empty()) {
-      if (rect.width * rect.height == 0) {
-        logging::warn("fixed panel has size {}x{}", rect.width, rect.height);
-      }
-    }
-
-    return surface{
-      rect,
-      surface_type::panel,
-      panel.app_id,
-      panel.focused,
-      panel.urgent,
-      panel.radius
-    };
-  }
 }
 
 
@@ -227,7 +122,14 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
   fixed_panels_.reserve(config_.fixed_panels.size());
 
   for (const auto& panel : config_.fixed_panels) {
-    fixed_panels_.push_back(panel_to_surface(panel, geometry_));
+    fixed_panels_.emplace_back(
+        panel.to_rect(geometry_.logical_width(), geometry_.logical_height()),
+        surface_type::panel,
+        panel.app_id,
+        panel.focused,
+        panel.urgent,
+        panel.radius
+    );
   }
 
 
@@ -258,8 +160,7 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 void layout_painter::draw_rectangle(const rectangle& rect) const {
   glUniformMatrix4fv(0, 1, GL_FALSE,
-      rectangle_to_matrix(rect,
-        geometry_.logical_width(), geometry_.logical_height()).data());
+      rect.to_matrix(geometry_.logical_width(), geometry_.logical_height()).data());
 
   quad_.draw();
 }
@@ -290,52 +191,19 @@ namespace {
 
 
   rectangle center_tile(rectangle rect, const config::border_effect& effect) {
-    rect.x += effect.offset.x;
-    rect.y += effect.offset.y;
+    rect.translate(effect.offset.x, effect.offset.y);
 
     switch (effect.position) {
       case config::border_position::inside:
-        rect.x += effect.thickness;
-        rect.y += effect.thickness;
-        saturate_dec(rect.width, 2 * effect.thickness);
-        saturate_dec(rect.height, 2 * effect.thickness);
+        rect.inset(effect.thickness);
         break;
       case config::border_position::centered:
-        rect.x += effect.thickness / 2;
-        rect.y += effect.thickness / 2;
-        saturate_dec(rect.width,  effect.thickness);
-        saturate_dec(rect.height, effect.thickness);
+        rect.inset(effect.thickness / 2.f);
         break;
       case config::border_position::outside:
         break;
     }
 
-    return rect;
-  }
-
-
-
-  [[nodiscard]] rectangle left(rectangle rect, int amount) {
-    rect.x    -= amount;
-    rect.width = amount;
-    return rect;
-  }
-
-  [[nodiscard]] rectangle right(rectangle rect, int amount) {
-    rect.x    += rect.width;
-    rect.width = amount;
-    return rect;
-  }
-
-  [[nodiscard]] rectangle top(rectangle rect, int amount) {
-    rect.y     -= amount;
-    rect.height = amount;
-    return rect;
-  }
-
-  [[nodiscard]] rectangle bottom(rectangle rect, int amount) {
-    rect.y     += rect.height;
-    rect.height = amount;
     return rect;
   }
 }
@@ -382,15 +250,15 @@ void layout_painter::draw_border_effect(
 
   draw_border_element(0.f, 0.f, center);
 
-  if (auto t = effect.thickness; t > 0) {
-    draw_border_element(-1.f,  0.f, left(center, t));
-    draw_border_element(-1.f, -1.f, top(left(center, t), t));
-    draw_border_element( 0.f, -1.f, top(center, t));
-    draw_border_element( 1.f, -1.f, right(top(center, t), t));
-    draw_border_element( 1.f,  0.f, right(center, t));
-    draw_border_element( 1.f,  1.f, bottom(right(center, t), t));
-    draw_border_element( 0.f,  1.f, bottom(center, t));
-    draw_border_element(-1.f,  1.f, left(bottom(center, t), t));
+  if (float t = effect.thickness; t > 0) {
+    draw_border_element(-1.f,  0.f, center.border_x(-t));
+    draw_border_element(-1.f, -1.f, center.border_x(-t).border_y(-t));
+    draw_border_element( 0.f, -1.f, center.border_y(-t));
+    draw_border_element( 1.f, -1.f, center.border_x(t).border_y(-t));
+    draw_border_element( 1.f,  0.f, center.border_x(t));
+    draw_border_element( 1.f,  1.f, center.border_x(t).border_y(t));
+    draw_border_element( 0.f,  1.f, center.border_y(t));
+    draw_border_element(-1.f,  1.f, center.border_x(-t).border_y(t));
   }
 }
 
