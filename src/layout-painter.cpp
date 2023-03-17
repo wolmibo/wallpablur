@@ -253,7 +253,7 @@ void layout_painter::draw_border_effect(
 
 
   switch (effect.foff) {
-    case config::falloff::step:
+    case config::falloff::none:
       break;
 
     case config::falloff::linear:

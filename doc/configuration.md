@@ -46,7 +46,7 @@ enable-if = true
 
 [surface-effects]
 # - type = border; thickness = 2; position = outside; offset = 0,0;
-#   color = #000000; blend = alpha; falloff = step; exponent = 1; enable-if = true
+#   color = #000000; blend = alpha; falloff = none; exponent = 1; enable-if = true
 # - type = shadow; thickness = 30; position = centered; offset = 2,2;
 #   color = #000000cc; blend = alpha; falloff = sinusoidal; exponent = 1.5;
 #   enable-if = true
@@ -341,7 +341,7 @@ Draws a border effect around surfaces. Additional properties:
 * `blend`: how to mix the color of the border with the wallpaper. Possible values:
   `alpha`, `add`. Default: `alpha`
 * `falloff`: How to fade the color accross the thickness. Possible values:
-  `step`, `linear`, `sinusoidal`. Default: `step`
+  `none`, `linear`, `sinusoidal`. Default: `none`
 * `exponent`: Raise the falloff to this power. Default: `1`
 
 ##### `type = shadow`

@@ -17,7 +17,7 @@ enum class blend_mode {
 
 
 enum class falloff {
-  step,
+  none,
   linear,
   sinusoidal
 };
@@ -48,7 +48,7 @@ struct border_effect {
 
   color              col      {};
   blend_mode         blend    {blend_mode::alpha};
-  falloff            foff     {falloff::step};
+  falloff            foff     {falloff::none};
   float              exponent {1.f};
 };
 

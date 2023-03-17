@@ -89,7 +89,7 @@ template<> struct iconfigp::case_insensitive_parse_lut<config::blend_mode> {
 template<> struct iconfigp::case_insensitive_parse_lut<config::falloff> {
   static constexpr std::string_view name{"falloff"};
   static constexpr std::array<std::pair<std::string_view, config::falloff>, 3> lut {
-    std::make_pair("step",       config::falloff::step),
+    std::make_pair("none",       config::falloff::none),
     std::make_pair("linear",     config::falloff::linear),
     std::make_pair("sinusoidal", config::falloff::sinusoidal)
   };
@@ -130,7 +130,7 @@ static const config::border_effect surface_effect_e_border {
   .offset    = config::border_effect::offset_type{},
   .col       = {0.f, 0.f, 0.f, 1.f},
   .blend     = config::blend_mode::alpha,
-  .foff      = config::falloff::step,
+  .foff      = config::falloff::none,
   .exponent  = 1.f
 };
 
