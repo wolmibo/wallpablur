@@ -218,6 +218,14 @@ namespace {
 
 
 
+  void set_border_uniforms(const config::border_effect& effect, float radius) {
+    glUniform1f(20, effect.exponent);
+    glUniform1f(21, 1.f + radius / effect.thickness);
+    invoke_append_color(glUniform4f, effect.col, 10);
+  }
+
+
+
   rectangle center_tile(rectangle rect, const config::border_effect& effect) {
     rect.translate(effect.offset.x, effect.offset.y);
 
@@ -249,6 +257,7 @@ void layout_painter::draw_border_effect(
   invoke_append_color(glUniform4f, effect.col, solid_color_uniform_);
 
   auto center = center_tile(surf.rect(), effect);
+  center.inset(surf.radius());
   draw_mesh(center, quad_);
 
 
@@ -259,21 +268,19 @@ void layout_painter::draw_border_effect(
     case config::falloff::linear:
       shader_cache_.find_or_create(shader::border_linear,
           resources::border_vs(), resources::border_linear_fs()).use();
-      glUniform1f(20, effect.exponent);
-      invoke_append_color(glUniform4f, effect.col, 10);
+      set_border_uniforms(effect, surf.radius());
       break;
 
     case config::falloff::sinusoidal:
       shader_cache_.find_or_create(shader::border_sinusoidal,
           resources::border_vs(), resources::border_sinusoidal_fs()).use();
-      glUniform1f(20, effect.exponent);
-      invoke_append_color(glUniform4f, effect.col, 10);
+      set_border_uniforms(effect, surf.radius());
       break;
   }
 
 
 
-  if (float t = effect.thickness; t > 0) {
+  if (float t = effect.thickness + surf.radius(); t > 0) {
     for (const auto& rect: center.border_rectangles(t)) {
       draw_mesh(rect, quad_);
     }
