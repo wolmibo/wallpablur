@@ -2,7 +2,7 @@
 
 #include <rapidjson/error/en.h>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -13,7 +13,7 @@ void json::assert_parse_success(rapidjson::ParseResult code) {
 
   const auto *message = rapidjson::GetParseError_En(code.Code());
 
-  throw std::runtime_error{logging::format("rapidjson error: {} ({})",
+  throw std::runtime_error{logcerr::format("rapidjson error: {} ({})",
       message, code.Offset())};
 }
 

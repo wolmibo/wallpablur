@@ -6,12 +6,12 @@
 #include <string_view>
 #include <utility>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
 namespace {
-  template<typename T = void> requires (logging::debugging_enabled())
+  template<typename T = void> requires (logcerr::debugging_enabled())
   [[nodiscard]] std::string_view gl_message_source(GLenum source) {
     switch (source) {
       case GL_DEBUG_SOURCE_API:             return "API";
@@ -28,7 +28,7 @@ namespace {
 
 
 
-  template<typename T = void> requires (logging::debugging_enabled())
+  template<typename T = void> requires (logcerr::debugging_enabled())
   [[nodiscard]] std::string_view gl_message_type(GLenum type) {
     switch (type) {
       case GL_DEBUG_TYPE_ERROR:               return "an error";
@@ -47,25 +47,25 @@ namespace {
 
 
 
-  template<typename T = void> requires (logging::debugging_enabled())
-  [[nodiscard]] logging::severity gl_severity(GLenum severity) {
+  template<typename T = void> requires (logcerr::debugging_enabled())
+  [[nodiscard]] logcerr::severity gl_severity(GLenum severity) {
     switch (severity) {
-      case GL_DEBUG_SEVERITY_HIGH:         return logging::severity::error;
-      case GL_DEBUG_SEVERITY_MEDIUM:       return logging::severity::warning;
+      case GL_DEBUG_SEVERITY_HIGH:         return logcerr::severity::error;
+      case GL_DEBUG_SEVERITY_MEDIUM:       return logcerr::severity::warning;
 
       case GL_DEBUG_SEVERITY_LOW:
       case GL_DEBUG_SEVERITY_NOTIFICATION:
-      default:                             return logging::severity::debug;
+      default:                             return logcerr::severity::debug;
     }
   }
 
 
 
-  template<typename T = void> requires (logging::debugging_enabled())
+  template<typename T = void> requires (logcerr::debugging_enabled())
   void gl_debug_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
       GLsizei /*length*/, const GLchar* message, const void* /*userptr*/) {
 
-    logging::print(gl_severity(severity), "GL {} reports {} ({}):\n{}",
+    logcerr::print(gl_severity(severity), "GL {} reports {} ({}):\n{}",
         gl_message_source(source), gl_message_type(type), id, message);
   }
 
@@ -102,7 +102,7 @@ namespace {
     EGLint               code,
     std::source_location location
   ) {
-    return logging::format("{}: eglError({}, {:#X})\n in: {}:{}:{} `{}`",
+    return logcerr::format("{}: eglError({}, {:#X})\n in: {}:{}:{} `{}`",
       message,
       egl_error_to_string(code), code,
       location.file_name(), location.line(), location.column(), location.function_name()
@@ -139,7 +139,7 @@ void egl::context::swap_buffers() const {
 
 
 void egl::context::enable_debugging() const {
-  if constexpr (logging::debugging_enabled()) {
+  if constexpr (logcerr::debugging_enabled()) {
     make_current();
 
     glEnable(GL_DEBUG_OUTPUT);
@@ -163,7 +163,7 @@ namespace {
     if (eglInitialize(egl_display, &major, &minor) == 0) {
       throw egl::error("unable to initialize egl");
     }
-    logging::verbose("egl version {}.{}", major, minor);
+    logcerr::verbose("egl version {}.{}", major, minor);
 
 
     eglBindAPI(EGL_OPENGL_API);
@@ -304,14 +304,14 @@ egl::context::~context() {
   if (context_ != EGL_NO_CONTEXT) {
     if (eglDestroyContext(display_, context_) == 0) {
       error err{"unable to destroy egl context"};
-      logging::warn(err.what());
+      logcerr::warn(err.what());
     }
   }
 
   if (surface_ != EGL_NO_SURFACE) {
     if (eglDestroySurface(display_, surface_) == 0) {
       error err{"unable to destroy egl surface"};
-      logging::warn(err.what());
+      logcerr::warn(err.what());
     }
   }
 }

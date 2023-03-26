@@ -1,7 +1,7 @@
 #include "wallpablur/application.hpp"
 #include "wallpablur/application-args.hpp"
 #include <cstdlib>
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
       return app.run();
     }
   } catch (std::exception& ex) {
-    logging::error(ex.what());
+    logcerr::error(ex.what());
     return EXIT_FAILURE;
   } catch (bool) {
     return EXIT_FAILURE;

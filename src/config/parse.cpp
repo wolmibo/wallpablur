@@ -19,7 +19,7 @@
 #include <iconfigp/section.hpp>
 #include <iconfigp/value-parser.hpp>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -641,15 +641,15 @@ config::config::config(std::string_view input) {
     }
 
     if (auto message =
-        iconfigp::generate_unused_message(root, input, logging::is_colored())) {
+        iconfigp::generate_unused_message(root, input, logcerr::is_colored())) {
 
-      logging::warn("config file contains unused keys");
-      logging::print_raw_sync(std::cout, *message);
+      logcerr::warn("config file contains unused keys");
+      logcerr::print_raw_sync(std::cout, *message);
     }
   } catch (const iconfigp::exception& ex) {
-    logging::error(ex.what());
-    logging::print_raw_sync(std::cout,
-        iconfigp::format_exception(ex, input, logging::is_colored()));
+    logcerr::error(ex.what());
+    logcerr::print_raw_sync(std::cout,
+        iconfigp::format_exception(ex, input, logcerr::is_colored()));
     throw false;
   }
 }

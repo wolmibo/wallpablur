@@ -5,7 +5,7 @@
 #include "wallpablur/wm/i3ipc.hpp"
 #include "wallpablur/wm/layout-manager.hpp"
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -18,17 +18,17 @@ wm::i3ipc::i3ipc(
   poll_rate_   {config::global_config().poll_rate()},
 
   event_loop_thread_{[this] (const std::stop_token& stoken){
-    logging::thread_name("event");
-    logging::debug("entering event loop");
+    logcerr::thread_name("event");
+    logcerr::debug("entering event loop");
     event_loop(stoken);
-    logging::debug("exiting event loop");
+    logcerr::debug("exiting event loop");
   }},
 
   timer_loop_thread_{[this] (const std::stop_token& stoken) {
-    logging::thread_name("timer");
-    logging::debug("entering timer loop");
+    logcerr::thread_name("timer");
+    logcerr::debug("entering timer loop");
     timer_loop(stoken);
-    logging::debug("exiting timer loop");
+    logcerr::debug("exiting timer loop");
   }}
 {}
 
@@ -56,9 +56,9 @@ void wm::i3ipc::timer_loop(const std::stop_token& stoken) {
       }
     }
   } catch (std::exception& ex) {
-    logging::error(ex.what());
+    logcerr::error(ex.what());
   } catch (...) {
-    logging::error("unhandled exception");
+    logcerr::error("unhandled exception");
   }
 }
 
@@ -75,9 +75,9 @@ void wm::i3ipc::event_loop(const std::stop_token& stoken) {
       }
     }
   } catch (std::exception& ex) {
-    logging::error(ex.what());
+    logcerr::error(ex.what());
   } catch (...) {
-    logging::error("unhandled exception");
+    logcerr::error("unhandled exception");
   }
 }
 
@@ -189,7 +189,7 @@ namespace {
   [[nodiscard]] wm::layout parse_output_layout(const rapidjson::Value& value) {
     auto current = json::member_to_str(value, "current_workspace");
     if (!current) {
-      logging::warn("no active workspace on output");
+      logcerr::warn("no active workspace on output");
       return {};
     }
 
@@ -219,7 +219,7 @@ namespace {
       return layout;
     }
 
-    logging::warn("active workspace not found");
+    logcerr::warn("active workspace not found");
     return {};
   }
 
@@ -245,7 +245,7 @@ namespace {
       if (auto name = json::member_to_str(output, "name")) {
         manager.update_layout(*name, parse_output_layout(output));
       } else {
-        logging::warn("found active output without name");
+        logcerr::warn("found active output without name");
       }
     }
   }
@@ -267,6 +267,6 @@ void wm::i3ipc::update_layouts() {
   try {
     parse_layout(manager_, layouts_json_);
   } catch (std::exception& ex) {
-    logging::error("unable to parse json: {}", ex.what());
+    logcerr::error("unable to parse json: {}", ex.what());
   }
 }

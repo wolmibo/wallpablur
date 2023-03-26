@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -97,7 +97,7 @@ namespace {
 
 
 void wayland::output::create_layer_surface() {
-  logging::verbose("{}: creating surface", name());
+  logcerr::verbose("{}: creating surface", name());
   surface_.reset(wl_compositor_create_surface(client_->compositor()));
 
   if (!surface_) {
@@ -109,20 +109,20 @@ void wayland::output::create_layer_surface() {
   if (wl_ptr<wl_region> input{wl_compositor_create_region(client_->compositor())}) {
     wl_surface_set_input_region(surface_.get(), input.get());
   } else {
-    logging::warn("unable to clear input region");
+    logcerr::warn("unable to clear input region");
   }
 
 
 
-  logging::debug("{}: creating viewport", name());
+  logcerr::debug("{}: creating viewport", name());
   viewport_.reset(wp_viewporter_get_viewport(client_->viewporter(), surface_.get()));
   if (!viewport_) {
-    logging::warn("{}: unable to create viewport", name());
+    logcerr::warn("{}: unable to create viewport", name());
   }
 
 
 
-  logging::debug("{}: creating layer surface", name());
+  logcerr::debug("{}: creating layer surface", name());
   layer_surface_ =
     ::create_layer_surface(client_->layer_shell(), output_.get(), surface_.get());
 
@@ -137,7 +137,7 @@ void wayland::output::create_layer_surface() {
 
 
 void wayland::output::create_context() {
-  logging::debug("{}: creating egl context", name());
+  logcerr::debug("{}: creating egl context", name());
 
   egl_window_.reset(wl_egl_window_create(surface_.get(),
         current_geometry_.pixel_width(), current_geometry_.pixel_height()));

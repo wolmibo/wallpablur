@@ -33,8 +33,8 @@ endforeach
 subdir('shader')
 
 dependencies = [
+  logcerr_dep,
   iconfigp_lib_dep,
-  logging_lib_dep,
   gl_lib_dep,
   dependency('wayland-client'),
   dependency('wayland-egl'),

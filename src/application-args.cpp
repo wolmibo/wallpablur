@@ -6,7 +6,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 #include <getopt.h>
 #include <utility>
@@ -20,7 +20,7 @@ R"(Usage: {0} [OPTIONS...] [<image>]
 Available options:
   -h, --help                  show this help and exit
   -v, --version               show version information and exit
-  -V, --verbose               enable verbose logging (use twice for debug output)
+  -V, --verbose               enable verbose logcerr (use twice for debug output)
 
   -s, --socket <path>         connect to <socket> instead of $SWAYSOCK or $I3SOCK
   -W, --disable-i3ipc         disable i3ipc and only draw the wallpaper
@@ -161,15 +161,15 @@ Alternatively, you can set a configuration via the following options:
 
 
 
-  void init_logging(int verbose) {
-    logging::merge_after(0);
+  void init_logcerr(int verbose) {
+    logcerr::merge_after(0);
 
     if (verbose == 0) {
-      logging::output_level(logging::severity::log);
+      logcerr::output_level(logcerr::severity::log);
     } else if (verbose == 1) {
-      logging::output_level(logging::severity::verbose);
+      logcerr::output_level(logcerr::severity::verbose);
     } else {
-      logging::output_level(logging::severity::debug);
+      logcerr::output_level(logcerr::severity::debug);
     }
   }
 
@@ -179,7 +179,7 @@ Alternatively, you can set a configuration via the following options:
   [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
       std::ifstream input(path, std::ios::ate);
       if (!input) {
-        throw std::runtime_error{logging::format("unable to read file at \"{}\"",
+        throw std::runtime_error{logcerr::format("unable to read file at \"{}\"",
             path.string())};
       }
 
@@ -201,7 +201,7 @@ Alternatively, you can set a configuration via the following options:
     std::filesystem::current_path(path, ec);
 
     if (ec) {
-      logging::warn("unable to set working directory:\n\"{}\": {}",
+      logcerr::warn("unable to set working directory:\n\"{}\": {}",
           path.string(), ec.message());
     }
   }
@@ -210,22 +210,22 @@ Alternatively, you can set a configuration via the following options:
 
   [[nodiscard]] config::config config_from_args(const application_args& arg) {
     if (arg.image) {
-      logging::verbose("using generic config");
+      logcerr::verbose("using generic config");
       return config::config{arg.blur.to_config(*arg.image)};
     }
 
     if (arg.config_string) {
-      logging::verbose("using config string from arguments");
+      logcerr::verbose("using config string from arguments");
       return config::config(*arg.config_string);
     }
 
     if (auto path = arg.config_path.or_else([](){ return config::find_config_file();})) {
-      logging::verbose("using config located at \"{}\"", path->string());
+      logcerr::verbose("using config located at \"{}\"", path->string());
       try_set_working_directory(std::filesystem::absolute(*path).parent_path());
       return config::config(read_file(*path));
     }
 
-    logging::verbose("using default config");
+    logcerr::verbose("using default config");
     return config::config{};
   }
 }
@@ -233,7 +233,7 @@ Alternatively, you can set a configuration via the following options:
 
 
 [[nodiscard]] std::string blur_args::to_config(const std::filesystem::path& path) const {
-  return logging::format(
+  return logcerr::format(
       R"([wallpaper]path="{}"[background]filter=blur;radius={};iterations={})",
       path.string(), radius, iterations);
 }
@@ -247,17 +247,17 @@ std::optional<application_args> application_args::parse(std::span<char*> arg) {
   auto args = parse_args(arg);
 
   if (args.help) {
-    logging::print_raw_sync(std::cout, logging::format(help_text,
+    logcerr::print_raw_sync(std::cout, logcerr::format(help_text,
           std::filesystem::path{arg[0]}.filename().string()));
     return {};
   }
 
   if (args.version) {
-    logging::print_raw_sync(std::cout, version_info());
+    logcerr::print_raw_sync(std::cout, version_info());
     return {};
   }
 
-  init_logging(args.verbose);
+  init_logcerr(args.verbose);
 
   config::global_config(config_from_args(args));
 

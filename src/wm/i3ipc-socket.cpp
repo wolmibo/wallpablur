@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 #include <rapidjson/document.h>
 
@@ -217,7 +217,7 @@ namespace {
       auto fname = path.path().filename().string();
       if (fname.starts_with("sway-ipc.") && fname.ends_with(".sock")) {
         if (candidate) {
-          logging::verbose("not guessing socket due to multiple candidates");
+          logcerr::verbose("not guessing socket due to multiple candidates");
           return {};
         }
 
@@ -233,17 +233,17 @@ namespace {
 
 std::optional<std::filesystem::path> wm::find_i3_socket() {
   if (const char* env = getenv("SWAYSOCK"); env != nullptr && *env != 0) {
-    logging::verbose("found socket SWAYSOCK=\"{}\"", env);
+    logcerr::verbose("found socket SWAYSOCK=\"{}\"", env);
     return env;
   }
 
   if (const char* env = getenv("I3SOCK"); env != nullptr && *env != 0) {
-    logging::verbose("found socket I3SOCK=\"{}\"", env);
+    logcerr::verbose("found socket I3SOCK=\"{}\"", env);
     return env;
   }
 
   if (auto socket = guess_socket()) {
-    logging::warn("guessed socket \"{}\";\n"
+    logcerr::warn("guessed socket \"{}\";\n"
         "make sure SWAYSOCK or I3SOCK is set correctly or use --socket",
         socket->string());
 

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <span>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -20,7 +20,7 @@ namespace {
       if (++i % 20 == 0) {
         output += "\"\n  \"";
       }
-      output += logging::format("\\x{:02x}", input.get());
+      output += logcerr::format("\\x{:02x}", input.get());
     }
     output += "\"";
     return output;
@@ -29,7 +29,7 @@ namespace {
 
 
   std::string define_file(const std::filesystem::path& path, std::string_view id) {
-    return logging::format("\n"
+    return logcerr::format("\n"
       "namespace {{ constexpr std::string_view content_{}_ {{\n"
       "{}\n"
       "}};}}\n"
@@ -41,7 +41,7 @@ namespace {
 
 
   std::string declare_file(std::string_view id) {
-    return logging::format("[[nodiscard]] std::string_view {}();\n", id);
+    return logcerr::format("[[nodiscard]] std::string_view {}();\n", id);
   }
 }
 

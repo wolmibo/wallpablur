@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <csignal>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -22,7 +22,7 @@ namespace {
 
     auto path = arg.socket_path.or_else([](){ return wm::find_i3_socket(); });
     if (!path) {
-      logging::warn("Unable to find i3ipc socket\n"
+      logcerr::warn("Unable to find i3ipc socket\n"
         "Make sure --socket, SWAYSOCK, or I3SOCK is set correctly.\n"
         "Alternatively, use --disable-i3ipc to disable i3ipc.");
       return {};
@@ -31,7 +31,7 @@ namespace {
     try {
       return std::make_optional<wm::i3ipc>(*path);
     } catch (std::exception& ex) {
-      logging::error(ex.what());
+      logcerr::error(ex.what());
       return {};
     }
   }
@@ -70,7 +70,7 @@ application::application(const application_args& args) :
 
 
   wayland_client_.set_output_add_cb([this](auto& output) {
-    logging::verbose("added output {}", output.name());
+    logcerr::verbose("added output {}", output.name());
 
     output_data data {
       .name          = std::string{output.name()},
@@ -115,13 +115,13 @@ application::application(const application_args& args) :
 
   wayland_client_.set_output_remove_cb([this](auto& output) {
     if (!output.ready()) {
-      logging::debug("removing output before it got a name");
+      logcerr::debug("removing output before it got a name");
       return;
     }
 
     auto name = output.name();
 
-    logging::verbose("removed output {}", name);
+    logcerr::verbose("removed output {}", name);
 
     if (auto it = std::ranges::find_if(data_, [name](const auto& ptr){
           return ptr->name == name;
@@ -129,7 +129,7 @@ application::application(const application_args& args) :
       std::swap(*it, data_.back());
       data_.pop_back();
     } else {
-      logging::warn("unable to remove output {} from list: not found", name);
+      logcerr::warn("unable to remove output {} from list: not found", name);
     }
   });
 
@@ -185,7 +185,7 @@ int application::run() {
     return EXIT_SUCCESS;
   }
 
-  logging::log("stop signal received; send again to cancel fade out");
+  logcerr::log("stop signal received; send again to cancel fade out");
 
   register_signal_handler();
   exit_start_ = std::chrono::high_resolution_clock::now();

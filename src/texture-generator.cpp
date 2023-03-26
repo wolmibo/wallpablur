@@ -7,7 +7,7 @@
 #include <array>
 #include <stdexcept>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 #include <gl/framebuffer.hpp>
 
@@ -95,7 +95,7 @@ namespace {
         return scale_matrix(1.f, 1.f);
     }
 
-    logging::warn("unsupported image scale mode");
+    logcerr::warn("unsupported image scale mode");
     return scale_matrix(1.f, 1.f);
   }
 }
@@ -116,7 +116,7 @@ gl::texture texture_generator::create_base_texture(
     return texture;
   }
 
-  logging::verbose("rescaling image {}x{} -> {}x{} ontop of ({:.2},{:.2},{:.2},{:.2})",
+  logcerr::verbose("rescaling image {}x{} -> {}x{} ontop of ({:.2},{:.2},{:.2},{:.2})",
       size.width, size.height,
       geometry.pixel_width(), geometry.pixel_height(),
       brush.solid[0], brush.solid[1], brush.solid[2], brush.solid[3]);
@@ -161,7 +161,7 @@ gl::texture texture_generator::generate_from_existing(
   if (remaining_filters.empty()) {
     throw std::runtime_error{"trying to create texture which already exists"};
   }
-  logging::verbose("creating texture from existing with {} filter(s) remaining",
+  logcerr::verbose("creating texture from existing with {} filter(s) remaining",
       remaining_filters.size());
 
   setup_context();
@@ -184,7 +184,7 @@ gl::texture texture_generator::generate(
     throw std::runtime_error{"missing filter_graph in brush"};
   }
 
-  logging::verbose("creating texture from scratch");
+  logcerr::verbose("creating texture from scratch");
 
   setup_context();
 
@@ -206,6 +206,6 @@ texture_generator::~texture_generator() {
       context_->make_current();
     }
   } catch (std::exception& ex) {
-    logging::error(ex.what());
+    logcerr::error(ex.what());
   }
 }

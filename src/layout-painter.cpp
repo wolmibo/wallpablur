@@ -8,7 +8,7 @@
 #include <array>
 #include <limits>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -115,7 +115,7 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
   geometry_ = geometry;
 
-  logging::verbose("{}: update geometry to logical = {}x{}@{}, pixel = {}x{}",
+  logcerr::verbose("{}: update geometry to logical = {}x{}@{}, pixel = {}x{}",
       config_.name,
       geometry_.logical_width(), geometry_.logical_height(), geometry_.scale(),
       geometry_.pixel_width(), geometry_.pixel_height());
@@ -142,14 +142,14 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
     wallpaper_ = texture_provider_->get(geometry, config_.wallpaper);
 
     if (!wallpaper_) {
-      logging::warn("{}: retrieved empty wallpaper image", config_.name);
+      logcerr::warn("{}: retrieved empty wallpaper image", config_.name);
     }
   }
 
   if (config_.background.fgraph) {
     background_ = texture_provider_->get(geometry, config_.background);
     if (!background_) {
-      logging::warn("{}: retrieved empty background image", config_.name);
+      logcerr::warn("{}: retrieved empty background image", config_.name);
     }
   }
 
@@ -299,7 +299,7 @@ void layout_painter::draw_layout(
   const wm::layout&   layout,
   float               alpha
 ) const {
-  logging::debug("{}: rendering", config_.name);
+  logcerr::debug("{}: rendering", config_.name);
   context_->make_current();
 
   glViewport(0, 0, geometry_.pixel_width(), geometry_.pixel_height());
@@ -411,6 +411,6 @@ layout_painter::~layout_painter() {
       context_->make_current();
     }
   } catch (std::exception& ex) {
-    logging::error(ex.what());
+    logcerr::error(ex.what());
   }
 }

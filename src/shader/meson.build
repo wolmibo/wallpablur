@@ -33,7 +33,7 @@ endforeach
 
 
 resource_compiler = executable('static-resources',
-  'static-resources.cpp', dependencies: logging_lib_dep)
+  'static-resources.cpp', dependencies: logcerr_dep)
 
 shader_resource = custom_target(
   'shader-resource',

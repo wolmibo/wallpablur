@@ -10,7 +10,7 @@
 #include <gl/texture.hpp>
 #include <gl/framebuffer.hpp>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -54,7 +54,7 @@ namespace {
       throw std::runtime_error{"unable to apply box blur filter with 0 iterations"};
     }
 
-    logging::verbose("applying box blur filter with scale {}x{} and {} iterations",
+    logcerr::verbose("applying box blur filter with scale {}x{} and {} iterations",
         filter.width * 2 + 1, filter.height * 2 + 1, filter.iterations);
 
     auto output = line_blur(line_blur(texture, filter.width, 1.f, 0.f,
@@ -96,7 +96,7 @@ gl::texture texture_generator::apply_filter(
     texture.bind();
 
     if (std::holds_alternative<config::invert_filter>(filter)) {
-      logging::verbose("applying invert filter");
+      logcerr::verbose("applying invert filter");
       filter_shader_cache_.find_or_create(shader::invert,
           resources::filter_vs(), resources::filter_invert_fs()).use();
 

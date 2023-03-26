@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <tuple>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 
 
@@ -26,7 +26,7 @@ std::shared_ptr<gl::texture> texture_provider::get(
   const config::brush&     brush
 ) {
   if (!brush.fgraph) {
-    logging::warn("trying to retrieve texture from brush without filter_graph");
+    logcerr::warn("trying to retrieve texture from brush without filter_graph");
     return {};
   }
 
@@ -117,7 +117,7 @@ std::shared_ptr<gl::texture> texture_provider::create_texture(
       );
 
   } catch (std::exception& ex) {
-    logging::error("unable to create texture:\n{}", ex.what());
+    logcerr::error("unable to create texture:\n{}", ex.what());
     return {};
   }
 }
