@@ -11,7 +11,11 @@ project(
 # Manually set C++ version until meson supports 'cpp_std=c++2b'
 add_project_arguments('-std=c++2b', language: 'cpp')
 
-logcerr_dep = dependency('logcerr', fallback: ['logcerr', 'logcerr_dep'])
+logcerr_dep = dependency(
+  'logcerr',
+  fallback: ['logcerr', 'logcerr_dep'],
+  default_options: ['default_library=static']
+)
 
 
 subdir('extern/iconfigp')
