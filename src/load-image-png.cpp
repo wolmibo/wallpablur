@@ -8,7 +8,7 @@
 
 #include <gl/texture.hpp>
 
-#include <logging/log.hpp>
+#include <logcerr/log.hpp>
 
 #include <png.h>
 
@@ -16,11 +16,11 @@
 
 namespace {
   [[noreturn]] void png_error(png_structp /*png*/, png_const_charp msg) {
-    throw std::runtime_error{logging::format("unable to decode png: {}", msg)};
+    throw std::runtime_error{logcerr::format("unable to decode png: {}", msg)};
   }
 
   void png_warning(png_structp /*png*/, png_const_charp msg) {
-    logging::warn("during decoding of png:\n{}", msg);
+    logcerr::warn("during decoding of png:\n{}", msg);
   }
 
 
@@ -85,7 +85,7 @@ namespace {
     file_ptr fp{fopen(path.string().c_str(), "rb")};
     if (!fp) {
       throw std::runtime_error{
-        logging::format("unable to open \"{}\" for reading", path.string())};
+        logcerr::format("unable to open \"{}\" for reading", path.string())};
     }
 
     return fp;
@@ -104,7 +104,7 @@ namespace {
 
 
   [[nodiscard]] image load_png(const std::filesystem::path& path) {
-    logging::verbose("loading png file \"{}\"", path.string());
+    logcerr::verbose("loading png file \"{}\"", path.string());
     png_guard png;
 
     auto fp = open_file(path);
