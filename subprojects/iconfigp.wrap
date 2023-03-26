@@ -1,0 +1,4 @@
+[wrap-git]
+url = https://github.com/wolmibo/iconfigp.git
+revision = main
+depth = 1

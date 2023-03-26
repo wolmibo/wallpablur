@@ -34,7 +34,8 @@ subdir('shader')
 
 dependencies = [
   logcerr_dep,
-  iconfigp_lib_dep,
+  iconfigp_dep,
+
   gl_lib_dep,
   dependency('wayland-client'),
   dependency('wayland-egl'),

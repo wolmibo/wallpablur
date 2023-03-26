@@ -17,8 +17,12 @@ logcerr_dep = dependency(
   default_options: ['default_library=static', 'install_as_subproject=false']
 )
 
+iconfigp_dep = dependency(
+  'iconfigp',
+  fallback: ['iconfigp', 'iconfigp_dep'],
+  default_options: ['default_library=static', 'install_as_subproject=false']
+)
 
-subdir('extern/iconfigp')
 subdir('extern/gl')
 
 subdir('src')
