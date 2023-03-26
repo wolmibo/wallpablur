@@ -14,7 +14,7 @@ add_project_arguments('-std=c++2b', language: 'cpp')
 logcerr_dep = dependency(
   'logcerr',
   fallback: ['logcerr', 'logcerr_dep'],
-  default_options: ['default_library=static']
+  default_options: ['default_library=static', 'install_as_subproject=false']
 )
 
 
