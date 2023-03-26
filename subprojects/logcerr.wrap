@@ -1,4 +1,4 @@
 [wrap-git]
 url = https://github.com/wolmibo/logcerr.git
-revision = head
+revision = HEAD
 depth = 1
