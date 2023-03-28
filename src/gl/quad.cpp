@@ -5,7 +5,7 @@
 
 
 namespace {
-  constexpr std::array<GLfloat, 20> vertices {
+  constexpr std::array<GLfloat, 16> vertices {
     -1.f,  1.f, 0.f, 1.f,
      1.f,  1.f, 0.f, 1.f,
     -1.f, -1.f, 1.f, 1.f,
