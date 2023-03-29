@@ -208,7 +208,7 @@ template<> struct iconfigp::value_parser<std::filesystem::path> {
 template<> struct iconfigp::value_parser<config::margin_type> {
   static constexpr std::string_view name {"margin"};
   static constexpr std::string_view format() {
-    return "<int> or <left>:<right>:<top>:<bottom>";
+    return "<all:i32> or <left:i32>:<right:i32>:<top:i32>:<bottom:i32>";
   }
   static std::optional<config::margin_type> parse(std::string_view input) {
     if (auto value = iconfigp::value_parser<int32_t>::parse(input)) {
@@ -251,7 +251,7 @@ template<> struct iconfigp::value_parser<config::anchor_type> {
 
 template<> struct iconfigp::value_parser<config::panel::size_type> {
   static constexpr std::string_view name {"size"};
-  static constexpr std::string_view format() { return "<width>:<height>"; }
+  static constexpr std::string_view format() { return "<width:u32>:<height:u32>"; }
 
   static std::optional<config::panel::size_type> parse(std::string_view input) {
     auto list = split(input, ':');
@@ -271,7 +271,7 @@ template<> struct iconfigp::value_parser<config::panel::size_type> {
 
 template<> struct iconfigp::value_parser<config::border_effect::offset_type> {
   static constexpr std::string_view name {"size"};
-  static constexpr std::string_view format() { return "<width>:<height>"; }
+  static constexpr std::string_view format() { return "<x:i32>,<y:i32>"; }
 
   static std::optional<config::border_effect::offset_type> parse(std::string_view in) {
     auto list = split(in, ',');
