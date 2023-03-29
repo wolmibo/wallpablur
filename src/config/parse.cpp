@@ -14,8 +14,10 @@
 
 #include <unistd.h>
 
+#include <iconfigp/color.hpp>
 #include <iconfigp/exception.hpp>
 #include <iconfigp/parser.hpp>
+#include <iconfigp/path.hpp>
 #include <iconfigp/section.hpp>
 #include <iconfigp/value-parser.hpp>
 
@@ -185,26 +187,6 @@ template<> struct iconfigp::case_insensitive_parse_lut<filter_e> {
 
 
 
-template<> struct iconfigp::value_parser<std::filesystem::path> {
-  static constexpr std::string_view name {"path"};
-  static constexpr std::string_view format() {
-    return "path where leading ~ gets replaced with the content of $HOME";
-  }
-  static std::optional<std::filesystem::path> parse(std::string_view input) {
-    if (!input.starts_with("~/")) {
-      return input;
-    }
-
-    input.remove_prefix(2);
-    if (auto *home = getenv("HOME"); home != nullptr && *home != 0 && !input.empty()) {
-      return std::filesystem::path{home} / input;
-    }
-    return {};
-  }
-};
-
-
-
 template<> struct iconfigp::value_parser<config::margin_type> {
   static constexpr std::string_view name {"margin"};
   static constexpr std::string_view format() {
@@ -285,58 +267,6 @@ template<> struct iconfigp::value_parser<config::border_effect::offset_type> {
       .y = intlist[1]
     };
   }
-};
-
-
-
-template<> struct iconfigp::value_parser<config::color> {
-  static constexpr std::string_view name {"color"};
-  static constexpr std::string_view format() {
-    return "[#]rrggbb[aa] or [#]rgb[a] // case insensitive";
-  }
-
-  static std::optional<config::color> parse(std::string_view input) {
-    if (input.starts_with('#')) {
-      input.remove_prefix(1);
-    }
-    config::color out{0.f};
-    size_t bpcc = input.size() / 4;
-    if (bpcc * 4 == input.size()) {
-      out[3] = hex_to_value(input.substr(3 * bpcc));
-      input.remove_suffix(bpcc);
-    } else {
-      out[3] = 1.f;
-    }
-
-    bpcc = input.size() / 3;
-    if (bpcc * 3 == input.size()) {
-      out[0] = hex_to_value(input.substr(       0, bpcc));
-      out[1] = hex_to_value(input.substr(    bpcc, bpcc));
-      out[2] = hex_to_value(input.substr(2 * bpcc, bpcc));
-      return out;
-    }
-    return {};
-  }
-
-
-
-  private:
-    [[nodiscard]] static int hex_to_value(char c) {
-      if ('0' <= c && c <= '9') { return c - '0'; }
-      if ('a' <= c && c <= 'f') { return c - 'a' + 10; }
-      if ('A' <= c && c <= 'F') { return c - 'A' + 10; }
-      throw false;
-    }
-
-    [[nodiscard]] static float hex_to_value(std::string_view str) {
-      if (str.size() == 2) {
-        return (hex_to_value(str[0]) << 4 | hex_to_value(str[1])) / 255.f;
-      }
-      if (str.size() == 1) {
-        return hex_to_value(str[0]) / 15.f;
-      }
-      throw false;
-    }
 };
 
 
