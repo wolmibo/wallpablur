@@ -45,8 +45,8 @@ class flat_map {
 
 
 
-    [[nodiscard]] std::span<Key>   keys()   { return keys_; }
-    [[nodiscard]] std::span<Value> values() { return keys_; }
+    [[nodiscard]] std::span<Key>   keys()   { return keys_;   }
+    [[nodiscard]] std::span<Value> values() { return values_; }
 
     [[nodiscard]] const Key& key(size_t index) const {
       return keys_.at(index);
