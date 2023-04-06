@@ -158,16 +158,19 @@ static const config::border_effect surface_effect_e_glow {
   .exponent  = 3.f
 };
 
-[[nodiscard]] static const config::border_effect& surface_effect_e_default(
-    surface_effect_e var
-) {
-  switch (var) {
-    case surface_effect_e::border: return surface_effect_e_border;
-    case surface_effect_e::shadow: return surface_effect_e_shadow;
-    case surface_effect_e::glow:   return surface_effect_e_glow;
+namespace {
+  [[nodiscard]] const config::border_effect& surface_effect_e_default(
+      surface_effect_e var
+  ) {
+    switch (var) {
+      case surface_effect_e::border: return surface_effect_e_border;
+      case surface_effect_e::shadow: return surface_effect_e_shadow;
+      case surface_effect_e::glow:   return surface_effect_e_glow;
+    }
+    return surface_effect_e_border;
   }
-  return surface_effect_e_border;
 }
+
 
 
 enum class filter_e {
