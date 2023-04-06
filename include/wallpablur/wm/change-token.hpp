@@ -21,20 +21,20 @@ class change_token {
     class locked_ref {
       public:
         locked_ref(T& ref, std::unique_lock<std::mutex>&& lock) :
-          ref_{ref},
+          ref_ {&ref},
           lock_{std::move(lock)}
         {}
 
 
-        const T& operator*() const { return ref_; }
-              T& operator*()       { return ref_; }
+        const T& operator*() const { return *ref_; }
+              T& operator*()       { return *ref_; }
 
-        const T* operator->() const { return &ref_; }
-              T* operator->()       { return &ref_; }
+        const T* operator->() const { return ref_; }
+              T* operator->()       { return ref_; }
 
 
       private:
-        T&                           ref_;
+        T*                           ref_;
         std::unique_lock<std::mutex> lock_;
     };
 
