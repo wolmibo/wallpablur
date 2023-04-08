@@ -2,6 +2,7 @@
 #define WALLPABLUR_SURFACE_EXPRESSION_HPP_INCLUDED
 
 #include "wallpablur/expression/boolean.hpp"
+#include "wallpablur/expression/string-compare.hpp"
 #include "wallpablur/surface.hpp"
 
 #include <string>
@@ -22,6 +23,12 @@ class surface_expression_condition {
       decoration,
     };
 
+    enum class string_var {
+      app_id,
+    };
+
+    using string_expr = std::pair<expression::string_compare, string_var>;
+
 
 
     [[nodiscard]] static std::optional<surface_expression_condition>
@@ -29,31 +36,15 @@ class surface_expression_condition {
 
 
 
-    [[nodiscard]] bool evaluate(const surface& surf) const {
-      if (std::holds_alternative<flag>(cond_)) {
-        switch (std::get<flag>(cond_)) {
-          case flag::focused:  return surf.focused();
-          case flag::urgent:   return surf.urgent();
-
-          case flag::panel:      return surf.type() == surface_type::panel;
-          case flag::floating:   return surf.type() == surface_type::floating;
-          case flag::tiled:      return surf.type() == surface_type::tiled;
-          case flag::decoration: return surf.type() == surface_type::decoration;
-        }
-
-      } else if (std::holds_alternative<app_id>(cond_)) {
-        return std::get<app_id>(cond_).value == surf.app_id();
-      }
-
-      std::unreachable();
-    }
+    [[nodiscard]] bool evaluate(const surface& surf) const;
 
 
 
   private:
-    struct app_id { std::string value; };
-
-    std::variant<flag, app_id> cond_ = flag::focused;
+    std::variant<
+      flag,
+      string_expr
+    > cond_ = flag::focused;
 
 
 

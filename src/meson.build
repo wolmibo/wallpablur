@@ -67,6 +67,7 @@ sources = [
 
   'rectangle.cpp',
 
+  'surface-expression.cpp',
   'surface-expression-parse.cpp',
 
   'texture-generator.cpp',

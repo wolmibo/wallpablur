@@ -377,6 +377,21 @@ It is formed from one of the following terms:
 * `floating`: whether the surface is a floating window
 * `tiled`: whether the surface is a tiled window
 
+Furthermore it can be a string comparison of the form:
+
+* `var == <string>`: variable `var` equals `<string>`
+* `var == <string>*`: variable `var` starts with `<string>`
+* `var == *<string>`: variable `var` ends with `<string>`
+* `var == *<string>*`: variable `var` contains `<string>`
+
+where `<string>` is any string subject to the same quoting/escaping rules as every string
+in this config. Note that `*`, `(`, `)`, `|`, `!`, and `=` in a string need to be escaped
+(or the string put in quotation marks).
+Available string variables:
+
+* `app_id`: the app id of the current surface
+
+
 These terms can be combined using the following operators (in descending precendence):
 
 * parentheses `(<expression>)`
@@ -394,6 +409,9 @@ enable-if = !floating
 ```
 ```
 enable-if = !panel && (urgent || focused)
+```
+```
+enable-if = !(app_id == foot)
 ```
 
 
