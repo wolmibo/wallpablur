@@ -2,7 +2,7 @@
 #define WALLPABLUR_WM_LAYOUT_MANAGER_HPP_INCLUDED
 
 #include "wallpablur/flat-map.hpp"
-#include "wallpablur/surface.hpp"
+#include "wallpablur/workspace.hpp"
 #include "wallpablur/wm/change-token.hpp"
 
 #include <mutex>
@@ -11,7 +11,7 @@
 
 namespace wm {
 
-using layout = std::vector<surface>;
+using layout = workspace;
 
 class layout_manager {
   public:

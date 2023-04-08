@@ -335,7 +335,7 @@ void layout_painter::draw_wallpaper() const {
 
 void layout_painter::draw_surface_effects(const wm::layout& layout) const {
   for (const auto& be: config_.border_effects) {
-    for (const auto& surface: layout) {
+    for (const auto& surface: layout.surfaces()) {
       if (be.condition.evaluate(surface)) {
         draw_border_effect(be, surface);
       }
@@ -356,7 +356,7 @@ void layout_painter::draw_background(const wm::layout& layout) const {
   draw_stenciled([&]() {
     solid_color_shader_.use();
 
-    for (const auto& surface: layout) {
+    for (const auto& surface: layout.surfaces()) {
       if (config_.background_condition.evaluate(surface)) {
         draw_rounded_rectangle(surface.rect(), surface.radius());
       }
