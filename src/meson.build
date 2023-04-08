@@ -69,6 +69,7 @@ sources = [
 
   'surface-expression.cpp',
   'surface-expression-parse.cpp',
+  'expression/string-compare.cpp',
 
   'texture-generator.cpp',
   'texture-generator-filter.cpp',

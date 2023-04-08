@@ -1,6 +1,7 @@
 #ifndef WALLPABLUR_EXPRESSION_STRING_COMPARE_HPP_INCLUDED
 #define WALLPABLUR_EXPRESSION_STRING_COMPARE_HPP_INCLUDED
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -44,6 +45,11 @@ class string_compare {
     std::string value_;
     mode        mode_;
 };
+
+
+
+[[nodiscard]] std::optional<std::pair<string_compare, std::string_view>>
+parse_string_compare(std::string_view);
 
 };
 
