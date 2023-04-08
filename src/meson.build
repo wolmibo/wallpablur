@@ -68,7 +68,6 @@ sources = [
   'rectangle.cpp',
 
   'surface-expression.cpp',
-  'surface-expression-parse.cpp',
   'expression/string-compare.cpp',
 
   'texture-generator.cpp',
