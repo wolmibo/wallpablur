@@ -168,21 +168,21 @@ version as background. Additional options in this case:
 
 
   [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
-      std::ifstream input(path, std::ios::ate);
-      if (!input) {
-        throw std::runtime_error{logcerr::format("unable to read file at \"{}\"",
-            path.string())};
-      }
+    std::ifstream input(path, std::ios::ate);
+    if (!input) {
+      throw std::runtime_error{logcerr::format("unable to read file at \"{}\"",
+          path.string())};
+    }
 
-      auto size = input.tellg();
-      std::string buffer;
-      buffer.resize(size);
+    auto size = input.tellg();
+    std::string buffer;
+    buffer.resize(size);
 
-      input.seekg(0);
+    input.seekg(0);
 
-      input.read(buffer.data(), buffer.size());
+    input.read(buffer.data(), buffer.size());
 
-      return buffer;
+    return buffer;
   }
 
 
