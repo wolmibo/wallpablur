@@ -1,9 +1,11 @@
 # WallpaBlur
 
 Wallpaper provider which fakes window blur and other effects on Wayland based,
-i3ipc-enabled window managers like [Sway](https://swaywm.org).
+i3ipc-enabled window managers like Sway.
 
 ![screenshot](doc/screenshot_small.jpg)
+
+
 
 # Overview
 
@@ -35,30 +37,20 @@ in combination with upstream Sway.
 * resizing windows and moving floating windows are not provided as events through
   the i3ipc, for these cases `GET_TREE` must be called in frequent intervals
 
-## Currently Supported Features
+## Features
 
 * multi-monitor support including monitor hot-plugging and individual configuration
 * fractional output scaling
 * *wallpaper* and *background* can be independent images
 * filter for *wallpaper* and *background*: blur, box-blur, color inversion
 * (optional) alpha fade-in and fade-out on startup and `SIGTERM`, respectively
+* border effects like shadows, glow, etc. depending on window properties
 
-## Features Being Worked On
+## Non-Features
 
-* border effects like shadows, glow, etc.
-* conditional filter/effects (e.g. use glow only for the focused window)
+* animated background images
 
-## Future Ideas / Personal Wishlist
 
-* custom shader (for filter and effects), including animated shader
-* rounded corners
-* dynamic layer surfaces
-* more responsive layout changes
-
-## Non-Goals
-
-* animated background images / gifs / videos
-* forked Sway version
 
 # Getting Started
 
@@ -66,16 +58,17 @@ in combination with upstream Sway.
 
 To build WallpaBlur you will need:
 * GCC C++ 12 or newer
-* [meson](https://mesonbuild.com)
+* meson
 * wayland development libraries
-* [libepoxy](https://github.com/anholt/libepoxy)
-* [rapidjson](https://rapidjson.org)
-* [gdk-pixbuf](https://gitlab.gnome.org/GNOME/gdk-pixbuf) (>= 2.32)
-  or as fallback [libpng](http://www.libpng.org/pub/png/libpng.html)
+* libepoxy
+* rapidjson
+* gdk-pixbuf or as fallback libpng
+* fmt (if compiler does not provide `std::format`)
 
-
-If your compiler does not provide `std::format` you'll additionally need:
-* [fmt](https://fmt.dev)
+As well as the following libraries which will be pulled as meson subprojects and compiled
+if they are not available:
+* [logcerr](https://github.com/wolmibo/logcerr)
+* [iconfigp](https://github.com/wolmibo/iconfigp)
 
 To install all dependencies on Fedora 37 run:
 ```sh
@@ -84,11 +77,19 @@ wayland-devel wayland-protocols-devel gdk-pixbuf2-devel
 ```
 
 ## Build Instructions
+
 To install WallpaBlur run the following commands in the project's root directory:
 ```sh
-meson build
+meson setup -Dbuildtype=release build
 meson compile -C build
 sudo meson install -C build
+```
+
+## Updating the Source
+When updating the source code, remember to also update all meson subprojects:
+```sh
+git pull
+meson subprojects update
 ```
 
 ## Try It Out
@@ -100,5 +101,5 @@ Then execute:
 wallpablur <path-to-image>
 ```
 
-To add a status bar or changing other properties, check out how to
+To add a status bar, shadows, or changing other properties, check out how to
 [configure WallpaBlur](doc/configuration.md).
