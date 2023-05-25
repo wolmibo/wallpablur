@@ -29,22 +29,13 @@ Available options:
   -f, --fade-out <ms>         how long to fade out after receiving SIGTERM or SIGINT
   -F, --fade-in <ms>          how long to fade in
 
+  -c, --config <path>         load configuration from file at <path>
+  -i, --config-string <conf>  load configuration from string <conf>
 
 If an image path is provided, all outputs will use this image as wallpaper and a blurred
 version as background. Additional options in this case:
 
   -b, --blur <rad>[:<iter>]   perform <iter> blur steps with radius <rad> (default: 96:2)
-
-
-If no image path is provided, a config file is searched in the following locations:
-  1. $WALLPABLUR_CONFIG
-  2. $XDG_CONFIG_HOME/wallpablur/config.ini
-  3. $HOME/.config/wallpablur/config.ini
-
-Alternatively, you can set a configuration via the following options:
-
-  -c, --config <path>         load configuration from file at <path>
-  -i, --config-string <conf>  load configuration from string <conf>
 )";
 
 
