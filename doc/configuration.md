@@ -1,6 +1,8 @@
 # Configuration Of WallpaBlur
 
-WallpaBlur uses an INI-derived configuration. It can be passed either as a string via the
+WallpaBlur uses an INI-derived configuration (a detailed description of the file format
+can be found [here](https://github.com/wolmibo/iconfigp/blob/main/doc/format.md)).
+The configuration can be passed either as a string via the
 `--config-string` flag or as a file via `--config`.
 If no configuration is provided via parameters, the following places will be checked:
 
@@ -18,6 +20,9 @@ path = <imagefile>
 [wallpaper]
 filter = blur
 ```
+
+
+
 
 ## Full Example Using Default Values
 ```ini
@@ -64,131 +69,58 @@ enable-if = true
 
 # [OUTPUT.surface-effects]
 # override surface-effects for OUTPUT
-
-
 ```
 
-## Syntax
-The configuration consists of the following syntactical elements:
-* Comments: introduced by `#` at the beginning of a line until the end of that line
-* (Named) sections: introduced by a section header `[name of section]` until the next
-  section header or until cleared by returning to the global section via `[]`.
-  Subsections are denoted by `[section.subsection]`.
-* (Anonymous) groups: introduced by `-` inside a section or by a repeating the section
-  header (they mimic lists and are described in `[panels]` below)
-* Key-value pairs: introduced by a string, separated by `=` and ended at the end of line,
-  at a section header, at a group divider `-`, or with a semicolon `;`.
 
-All keys, values, and (sub)section names are syntactically strings and are subject to the
-following rules:
 
-* when started with a single quotation mark `'` everything after this character up until
-  the next `'` is the content of the string
-* when started with a double quotation mark `"` everything after this character up until
-  the next `"` is the content of the string, escape sequences get resolved
-* for unquoted strings leading and trailing spaces get trimmed and escape sequences
-  get resolved
-* the escape sequence `\n` is resolved as new line, while any other sequence `\<char>` is
-  resolved as `<char>`
 
-In particular, the following are equivalent:
-```ini
-number=10
-number = 10
-number = \1\0
-number = "1\0"
-number = '10'
-```
-
-Note that these rules (unless your using comments) allow the configuration file to be
-written in a single line to be passed as argument via `--config-string`.
-
-### File Paths
-File paths can be specified as:
-* absolute path
-* $HOME-relative paths starting with `~/`
-* relative paths:
-  - relative to the configuration file if it exists
-  - relative to the execution directory of wallpablur otherwise
-
-## Options
-
-### Global Options
+## Global Options
 The following options are defined in the global section, e.g. on top of the file.
+* `poll-rate-ms`: How often to poll the i3ipc for unsubscribable changes
+* `disable-i3ipc`: Do not try to connect to i3ipc and simply draw the wallpaper on the
+  respective output
+* `fade-in-ms`: How long to perform an alpha cross-fade on startup
+* `fade-out-ms`: How long to perform an alpha cross-fade on receiving `SIGTERM` or
+  `SIGINT` (e.g. `kill` or C-c in a terminal)
 
-#### `poll-rate-ms`
-How frequently to poll the i3ipc for changes related to window resizing and window moving
-(all other events are subscription based and unaffected by this setting).
 
-Default value: `250`
 
-#### `fade-in-ms`
-How long to fade in on startup for a smoother experience.
 
-Default value: `0`
-
-#### `fade-out-ms`
-How long to fade out on receiving a `SIGTERM` or `SIGINT` (e.g. `kill` or C-c in a
-terminal).
-
-Default value: `0`
-
-#### `disable-i3ipc`
-Disable i3ipc and only use the wallpaper.
-
-Default value: `false`
-
-### `[panels]`
+## Defining `[panels]`
 Panels are used to mark regions of the screen as "always use the background", e.g. to
-draw the background of your status bar.
+draw the background of a status bar.
 All sizes are in pixels and refer to the respective size at output scale 1.
 Each panel has the following properties (which are meant to reflect the corresponding
-properties of the
-[layer-shell protocol](https://wayland.app/protocols/wlr-layer-shell-unstable-v1):
+properties of the layer-shell protocol:
+* `anchor`:
+  Describes to which sides of the screen the panel is attached to.
+  It is specified as a (potentially empty) string consisting of 'l', 'r', 'b' and 't' to
+  indicated if the panel is attached to the **l**eft, **r**ight, **b**ottom or **t**op of
+  the screen.
+  The order (or multiplicity) does not matter.
+  For instance, a status bar on the bottom and spanning the width of the screen is attached
+  to the left, bottom, and right, i.e. `anchor = lbr`.
+* `size`:
+  Specifies the size of the panel as `<width>:<height>`. If you want the panel to span the
+  width or height of the screen use `0` for the respective dimension and the appropriate
+  `anchor`.
+* `margin`:
+  How much space to leave between the screen edges and the panel. It can be either
+  specified as a uniform margin `<int>` or explicitly for each side as
+  `<left>:<right>:<top>:<bottom>`.
 
-#### `anchor`
-Describes to which sides of the screen the panel is attached to.
-It is specified as a (potentially empty) string consisting of 'l', 'r', 'b' and 't' to
-indicated if the panel is attached to the **l**eft, **r**ight, **b**ottom or **t**op of
-the screen.
-The order (or multiplicity) does not matter.
-For instance, a status bar on the bottom and spanning the width of the screen is attached
-to the left, bottom, and right, i.e. `anchor = lbr`.
 
-Default value: `""`
+### Surface Properties
+Surfaces have various properties which can be used in surface expressions (see below).
+You can set them manually for panels using the following keys
+* `focused`
+* `urgent`
+* `app-id`
 
-#### `size`
-Specifies the size of the panel as `<width>:<height>`. If you want the panel to span the
-width or height of the screen use `0` for the respective dimension and the appropriate
-`anchor`.
 
-Default value: `0:0`
+### Multiple Panels
 
-#### `margin`
-How much space to leave between the screen edges and the panel. It can be either
-specified as a uniform margin `<int>` or explicitly for each side as
-`<left>:<right>:<top>:<bottom>`.
-
-Default value: `0`
-
-#### `focused`
-Sets the `focused` flag for this panel.
-
-Default value: `false`
-
-#### `urgent`
-Sets the `urgent` flag for this panel.
-
-Default value: `false`
-
-#### `app-id`
-Sets the `app-id` for this panel.
-
-Default value: `""`
-
-#### Multiple Panels
-
-Each of the above properties is only allowed once per panel. To specify multiple panels
+Each of the above keys is only allowed once per panel. To specify multiple panels
 the key-value pairs need to be grouped. A new group is either started by creating another
 section with the same name or by writing `-`.
 For example:
@@ -220,9 +152,12 @@ or, more compact:
 - anchor = ltr; size = 0:22
 ```
 (the first `-` is optional for readability, the second one is required to separate the
-same keys)
+duplicate keys)
 
-### `[wallpaper]`
+
+
+
+## Setting the `[wallpaper]`
 The wallpaper is created as follows:
 
 If a *path* is specified and the file can be decoded:
@@ -232,74 +167,54 @@ If a *path* is specified and the file can be decoded:
 * apply the filters in the specified order
 Otherwise *color* is used as background color as-is.
 
-#### `color`
-The color with which the *wallpaper* is initialized. The color is specified as
-case-insensitive hexadecimal string of the form `[#]rrggbb[aa]` or `[#]rgb[a]`.
 
-Default value: `#00000000`
+### Properties
+* `color`:
+  The color with which the *wallpaper* is initialized. The color is specified as
+  case-insensitive hexadecimal string of the form `[#]rrggbb[aa]` or `[#]rgb[a]`
+* `path`:
+  The file path of the image to use as *wallpaper*
+* `scale`:
+  How to scale the image if its resolution does not match the monitors. Possible values:
+    - `fit`: aspect ratio is preserved while the image has the largest possible size
+      without being cropped
+    - `zoom`: aspect ratio is preserved while the image has the smallest possible size
+      while covering the entire screen
+    - `stretch`: stretch the image to fit the screen
+    - `centered`: do not rescale the image
+* `scale-filter`:
+  How to sample pixels when rescaling the image. Possible values:
+    - `linear`: use (bi)linear interpolation
+    - `nearest`: use nearest-neighbor interpolation
+* `wrap` or `wrap-x` and `wrap-y`:
+  What to do, when the rescaled image does not cover the whole screen.
+  Use `wrap` to specify both the horizontal and vertical behavior at the same time or
+  `wrap-x` and `wrap-y` to specify them separately.
+  Possible values:
+    - `none`: use the background color
+    - `stretch-edge`: paint the remaining space using the pixels on the edge
+    - `tiled`: repeat the image
+    - `tiled-mirror`: repeat the image but flipped along the common edge
 
-#### `path`
-The file path of the image to use as *wallpaper*.
 
-Default value: not specified
-
-#### `scale`
-How to scale the image if its resolution does not match the monitors. Possible values:
-
-* `fit`: aspect ratio is preserved while the image has the largest possible size without
-  being cropped
-* `zoom`: aspect ratio is preserved while the image has the smallest possible size while
-  covering the entire screen
-* `stretch`: stretch the image to fit the screen
-* `centered`: do not rescale the image
-
-Default value: `zoom`
-
-#### `scale-filter`
-How to sample pixels when rescaling the image. Possible values:
-
-* `linear`: use (bi)linear interpolation
-* `nearest`: use nearest-neighbor interpolation
-
-Default value: `linear`
-
-#### `wrap` or `wrap-x` and `wrap-y`
-What to do, when the rescaled image does not cover the whole screen. Possible values:
-
-* `none`: use the background color
-* `stretch-edge`: paint the remaining space using the pixels on the edge
-* `tiled`: repeat the image
-* `tiled-mirror`: repeat the image but flipped along the common edge
-
-Use `wrap` to specify both the horizontal and vertical behavior at the same time or
-`wrap-x` and `wrap-y` to specify them separately.
-
-Default value: `none`
-
-#### `filter`
+### Available Filter
 Filters to apply to the *wallpaper*. Multiple filters can be specified when they are
-separated into individual groups (compare `[panels]`).
+separated into individual groups using `-` (compare `[panels]`).
 
-##### `filter = invert`
-
-Inverts the colors of the image.
-
-##### `filter = box-blur`
-Apply a box blur to the image. Additional properties:
-* `radius`: how much to blur in horizontal or vertical direction. Default: `96`
-* `width`: override how much to blur in the horizontal direction.
-  Default: uses value of `radius`
-* `height`: override how much to blur in the vertical direction.
-  Default: uses value of `radius`
-* `iterations`: how often to apply the filter. Default: `1`
-* `dithering`: how much noise to add to reduce color banding. Default: `1.0`
+* `filter = invert`:
+  Inverts the colors of the image.
+* `filter = box-blur`:
+  Apply a box blur to the image. Additional properties:
+    - `radius`: how much to blur in horizontal or vertical direction
+    - `width`: override `radius` for how much to blur in the horizontal direction
+    - `height`: override `radius` for how much to blur in the vertical direction
+    - `iterations`: how often to apply the filter
+    - `dithering`: how much noise to add to reduce color banding
+* `filter = blur`:
+  Same as `filter = box-blur`, but with `iterations = 2` as default.
 
 
-##### `filter = blur`
-Same as `filter = box-blur`, but with `iterations = 2` as default.
-
-
-#### Example
+### Example
 To invert the colors and apply a rectangular blur:
 ```ini
 [wallpaper]
@@ -310,109 +225,20 @@ path = <filepath>
 ```
 
 
-### `[background]`
-`[background]` is identical to `[wallpaper]` with the following exception:
-If no `path` is specified, but one is specified in `[wallpaper]`,
-all properties except the filters are ignored and
-the filters are applied **on top** of the *wallpaper*
-(compare the example for `wallpablur <image>` in the introduction).
-If you explicitly do not want an image as *background* but as *wallpaper*,
-set `path =` to be empty.
-
-Additionally, `enable-if` can be used to restrict the background to specific surfaces
-(See section about conditions below).
 
 
-### `[surface-effects]`
-Effects that are applied on a per surface (window or panel) basis
-(currently rendered between wallpaper and background).
-They are specified as list where each item requires a `type` property.
+## Setting the `[background]`
+`[background]` is similar to `[wallpaper]` with the following exceptions:
+* If no `path` is specified, but one is specified in `[wallpaper]`,
+  all properties except the filters are ignored and
+  the filters are applied **on top** of the *wallpaper*
+  (compare the example for `wallpablur <image>` in the introduction).
+  If *background* is supposed to not have an image, set `path =` to be empty.
 
-Furthermore, each item may contain an `enable-if` property (defaulted to `true`) to
-restrict the effect to specific surfaces (See section about conditions below).
-
-##### `type = border`
-Draws a border effect around surfaces. Additional properties:
-* `thickness`: thickness of the border in pixels. Default: `2`
-* `position`: where to draw the border with respect to the surface border.
-  Possible values: `outside`, `centered`. Default: `outside`
-* `offset`: translate the border by the given 2-dim vector. Default: `0,0`
-* `color`: color of the border. Default: `#000000`
-* `blend`: how to mix the color of the border with the wallpaper. Possible values:
-  `alpha`, `add`. Default: `alpha`
-* `falloff`: How to fade the color accross the thickness. Possible values:
-  `none`, `linear`, `sinusoidal`. Default: `none`
-* `exponent`: Raise the falloff to this power. Default: `1`
-
-##### `type = shadow`
-Same as `type = border`, but with changed defaults:
-`thickness = 30`, `position = centered`, `offset = 2,2`, `color = #000000cc`,
-`falloff = sinusoidal`, `exponent = 1.5`.
-
-##### `type = glow`
-Same as `type = border`, but with changed defaults:
-`thickness = 20`, `color = #ffffff`, `blend = add`, `falloff = linear`, `exponent = 3`.
+* `enable-if` can be used to restrict the background to specific surfaces
+  (See section about conditions below).
 
 
-
-
-#### Example
-To enable shadows for all surfaces and highlight the focused window with a blue glow:
-```ini
-[surface-effects]
-- type = shadow
-- type = glow; color = #4488ff; enable-if = focused
-```
-
-
-### Surface Conditions
-A surface condition is a statement that evaluates to true or false for any given surface.
-It is formed from one of the following terms:
-
-* `true`: always true
-* `false`: always false
-* `focused`: whether the surface is focused
-* `urgent`: whether the surface is urgent
-* `panel`: whether the surface is a panel (i.e. defined in `[panels]`)
-* `floating`: whether the surface is a floating window
-* `tiled`: whether the surface is a tiled window
-
-Furthermore it can be a string comparison of the form:
-
-* `var == <string>`: variable `var` equals `<string>`
-* `var == <string>*`: variable `var` starts with `<string>`
-* `var == *<string>`: variable `var` ends with `<string>`
-* `var == *<string>*`: variable `var` contains `<string>`
-
-where `<string>` is any string subject to the same quoting/escaping rules as every string
-in this config. Note that `*`, `(`, `)`, `|`, `!`, and `=` in a string need to be escaped
-(or the string put in quotation marks).
-Available string variables:
-
-* `app_id`: the app id of the current surface
-
-
-These terms can be combined using the following operators (in descending precendence):
-
-* parentheses `(<expression>)`
-* logical not `!<expression>`
-* logical and `<left expression> && <right expression>`
-* logical or `<left expression> || <right expression>`
-
-#### Examples
-
-```
-enable-if = true
-```
-```
-enable-if = !floating
-```
-```
-enable-if = !panel && (urgent || focused)
-```
-```
-enable-if = !(app_id == foot)
-```
 
 
 ## Configuring Individual Outputs
@@ -421,7 +247,8 @@ The sections above can be overwritten for a specific output `NAME`
 `[NAME.background]` section, respectively.
 Without using quotation marks or escaping, `NAME` must not contain `.` or `]`.
 
-Example:
+
+### Example
 Suppose you have a primary output `eDP-1` with status bar and `image1.png` and
 potentially multiple other outputs without status bar and `image2.png`.
 Furthermore, you want a basic blur effect on all *backgrounds*. Then you could use:
@@ -438,5 +265,94 @@ anchor = lbr; size = 0:22
 [eDP-1.wallpaper]
 path = image1.png
 ```
-The *wallpaper* on `eDP-1` will also be blurred (but based on `image1.png`),
+The *background* on `eDP-1` will also be blurred (but based on `image1.png`),
 since `[eDP-1.background]` is not specified and so `[background]` is used as fallback.
+
+
+
+
+## Using `[surface-effects]`
+Surface effects are effects applied on a per surface (window or panel) basis
+(currently rendered between wallpaper and background).
+They are specified as list where each item requires a `type` property.
+
+Furthermore, each item may contain an `enable-if` property to
+restrict the effect to specific surfaces (See section about conditions below).
+
+* `type = border`:
+  Draws a border effect around surfaces. Additional properties:
+    - `thickness`: thickness of the border in pixels
+    - `position`: where to draw the border with respect to the surface border.
+      Possible values: `outside`, `centered`
+    - `offset`: translate the border by the given 2-dim vector
+    - `color`: color of the border
+    - `blend`: how to mix the color of the border with the wallpaper. Possible values:
+      `alpha`, `add`
+    - `falloff`: How to fade the color accross the thickness. Possible values:
+      `none`, `linear`, `sinusoidal`
+    - `exponent`: Raise the falloff to this power
+
+* `type = shadow`:
+  Same as `type = border`, but with changed defaults:
+  `thickness = 30`, `position = centered`, `offset = 2,2`, `color = #000000cc`,
+  `falloff = sinusoidal`, `exponent = 1.5`
+
+* `type = glow`:
+  Same as `type = border`, but with changed defaults:
+  `thickness = 20`, `color = #ffffff`, `blend = add`, `falloff = linear`, `exponent = 3`
+
+
+### Example
+To enable shadows for all surfaces and highlight the focused window with a blue glow:
+```ini
+[surface-effects]
+- type = shadow
+- type = glow; color = #4488ff; enable-if = focused
+```
+
+
+
+
+## Surface Conditions
+A surface condition is a statement that evaluates to true or false for any given surface.
+It is formed from one of the following terms:
+* `true`: always true
+* `false`: always false
+* `focused`: whether the surface is focused
+* `urgent`: whether the surface is urgent
+* `panel`: whether the surface is a panel (i.e. defined in `[panels]`)
+* `floating`: whether the surface is a floating window
+* `tiled`: whether the surface is a tiled window
+
+Furthermore it can be a string comparison of the form:
+* `var == <string>`: variable `var` equals `<string>`
+* `var == <string>*`: variable `var` starts with `<string>`
+* `var == *<string>`: variable `var` ends with `<string>`
+* `var == *<string>*`: variable `var` contains `<string>`
+
+where `<string>` is any string subject to the same quoting/escaping rules as every string
+in this config. Note that `*`, `(`, `)`, `|`, `!`, and `=` in a string need to be escaped
+(or the string put in quotation marks).
+Available string variables:
+* `app_id`: the app id of the current surface
+
+These terms can be combined using the following operators (in descending precendence):
+* parentheses `(<expression>)`
+* logical not `!<expression>`
+* logical and `<left expression> && <right expression>`
+* logical or `<left expression> || <right expression>`
+
+
+### Examples
+```
+enable-if = true
+```
+```
+enable-if = !floating
+```
+```
+enable-if = !panel && (urgent || focused)
+```
+```
+enable-if = !(app_id == foot)
+```
