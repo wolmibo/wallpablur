@@ -65,9 +65,6 @@ class config {
 void global_config(config&&);
 
 
-
-[[nodiscard]] std::optional<std::filesystem::path> find_config_file();
-
 }
 
 #endif // WALLPABLUR_CONFIG_HPP_INCLUDED

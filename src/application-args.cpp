@@ -6,6 +6,9 @@
 #include <iostream>
 #include <fstream>
 
+#include <iconfigp/find-config.hpp>
+#include <iconfigp/path.hpp>
+
 #include <logcerr/log.hpp>
 
 #include <getopt.h>
@@ -187,18 +190,6 @@ version as background. Additional options in this case:
 
 
 
-  void try_set_working_directory(const std::filesystem::path& path) {
-    std::error_code ec;
-    std::filesystem::current_path(path, ec);
-
-    if (ec) {
-      logcerr::warn("unable to set working directory:\n\"{}\": {}",
-          path.string(), ec.message());
-    }
-  }
-
-
-
   [[nodiscard]] config::config config_from_args(const application_args& arg) {
     if (arg.image) {
       logcerr::verbose("using generic config");
@@ -210,9 +201,11 @@ version as background. Additional options in this case:
       return config::config(*arg.config_string);
     }
 
-    if (auto path = arg.config_path.or_else([](){ return config::find_config_file();})) {
+    if (auto path = arg.config_path.or_else([](){
+          return iconfigp::find_config_file("WallpaBlur");
+        })) {
       logcerr::verbose("using config located at \"{}\"", path->string());
-      try_set_working_directory(std::filesystem::absolute(*path).parent_path());
+      iconfigp::preferred_root_path(path->parent_path());
       return config::config(read_file(*path));
     }
 
