@@ -18,23 +18,20 @@ class change_token {
 
 
 
-    class locked_ref {
+    class locked_const_ref {
       public:
-        locked_ref(T& ref, std::unique_lock<std::mutex>&& lock) :
+        locked_const_ref(const T& ref, std::unique_lock<std::mutex>&& lock) :
           ref_ {&ref},
           lock_{std::move(lock)}
         {}
 
 
-        const T& operator*() const { return *ref_; }
-              T& operator*()       { return *ref_; }
-
-        const T* operator->() const { return ref_; }
-              T* operator->()       { return ref_; }
+        const T& operator*()  const { return *ref_; }
+        const T* operator->() const { return ref_;  }
 
 
       private:
-        T*                           ref_;
+        const T*                     ref_;
         std::unique_lock<std::mutex> lock_;
     };
 
@@ -48,12 +45,12 @@ class change_token {
 
 
 
-    [[nodiscard]] locked_ref get() const {
+    [[nodiscard]] locked_const_ref get() const {
       std::unique_lock lock{state_->mutex};
 
       state_->changed = false;
 
-      return locked_ref{state_->value, std::move(lock)};
+      return locked_const_ref{state_->value, std::move(lock)};
     }
 
 
