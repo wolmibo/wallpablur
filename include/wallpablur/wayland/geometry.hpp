@@ -1,6 +1,7 @@
 #ifndef WALLPABLUR_WAYLAND_GEOMETRY_HPP_INCLUDED
 #define WALLPABLUR_WAYLAND_GEOMETRY_HPP_INCLUDED
 
+#include <cmath>
 #include <cstdint>
 
 namespace wayland {
@@ -15,7 +16,9 @@ class geometry {
 
 
 
-    [[nodiscard]] bool empty() const { return width_ * height_ * scale_ == 0; }
+    [[nodiscard]] bool empty() const {
+      return width_ * height_ == 0 || std::abs(scale_) < 1e-3;
+    }
 
 
 
