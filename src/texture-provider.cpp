@@ -9,6 +9,18 @@
 
 
 
+using key = std::pair<wayland::geometry, config::brush>;
+
+
+
+texture_provider::texture_provider(std::shared_ptr<egl::context> context) :
+  texture_generator_{std::move(context)}
+{}
+
+
+
+
+
 void texture_provider::cleanup() {
   for (size_t i = 0; i < cache_.size();) {
     if (cache_.value(i).expired()) {
@@ -17,35 +29,6 @@ void texture_provider::cleanup() {
       ++i;
     }
   }
-}
-
-
-
-std::shared_ptr<gl::texture> texture_provider::get(
-  const wayland::geometry& geometry,
-  const config::brush&     brush
-) {
-  if (!brush.fgraph) {
-    logcerr::warn("trying to retrieve texture from brush without filter_graph");
-    return {};
-  }
-
-  cleanup();
-
-  size_t ix = std::ranges::find_if(cache_.keys(), [&brush, &geometry](const auto& tp){
-                  return tp.first.same_physical_size(geometry) && tp.second == brush; })
-                - cache_.keys().begin();
-
-  if (ix < cache_.size()) {
-    return cache_.value(ix).lock();
-  }
-
-  auto texture = create_texture(geometry, brush);
-  if (texture) {
-    cache_.emplace({geometry, brush}, texture);
-  }
-
-  return texture;
 }
 
 
@@ -68,8 +51,8 @@ namespace {
 
 
 
-  [[nodiscard]] size_t find_best_fit(
-      std::span<texture_provider::key> list,
+  [[nodiscard]] size_t best_fit(
+      std::span<key>                   list,
       const wayland::geometry&         geometry,
       const config::brush&             brush
   ) {
@@ -96,28 +79,51 @@ namespace {
 
 
 
-std::shared_ptr<gl::texture> texture_provider::create_texture(
+
+std::shared_ptr<gl::texture> texture_provider::get(
   const wayland::geometry& geometry,
   const config::brush&     brush
 ) {
-  try {
-    auto index = find_best_fit(cache_.keys(), geometry, brush);
-
-    if (index == cache_.size()) {
-      return std::make_shared<gl::texture>(texture_generator_.generate(geometry, brush));
-    }
-
-    return std::make_shared<gl::texture>(
-        texture_generator_.generate_from_existing(
-          *cache_.value(index).lock(),
-          geometry,
-          std::span{brush.fgraph->filters}
-            .subspan(cache_.key(index).second.fgraph->filters.size())
-        )
-      );
-
-  } catch (std::exception& ex) {
-    logcerr::error("unable to create texture:\n{}", ex.what());
+  if (!brush.fgraph) {
+    logcerr::warn("trying to retrieve texture from brush without filter_graph");
     return {};
   }
+
+  cleanup();
+
+  size_t ix = std::ranges::find_if(cache_.keys(), [&brush, &geometry](const auto& tp){
+                  return tp.first.same_physical_size(geometry) && tp.second == brush; })
+                - cache_.keys().begin();
+
+  if (ix < cache_.size()) {
+    return cache_.value(ix).lock();
+  }
+
+
+
+  std::shared_ptr<gl::texture> tex;
+
+  try {
+    if (auto index = best_fit(cache_.keys(), geometry, brush); index < cache_.size()) {
+      tex = std::make_shared<gl::texture>(
+          texture_generator_.generate_from_existing(
+            *cache_.value(index).lock(),
+            geometry,
+            std::span{brush.fgraph->filters}
+              .subspan(cache_.key(index).second.fgraph->filters.size())
+          )
+      );
+    } else {
+      tex = std::make_shared<gl::texture>(texture_generator_.generate(geometry, brush));
+    }
+  } catch (std::exception& ex) {
+    logcerr::error("unable to create texture:\n{}", ex.what());
+  }
+
+
+  if (tex) {
+    cache_.emplace({geometry, brush}, tex);
+  }
+
+  return tex;
 }
