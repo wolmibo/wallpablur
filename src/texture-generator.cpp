@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <stdexcept>
+#include <utility>
 
 #include <logcerr/log.hpp>
 
@@ -36,16 +37,19 @@ texture_generator::texture_generator(std::shared_ptr<egl::context> context) :
 
 
 
-void texture_generator::setup_context() const {
-  context_->make_current();
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-}
-
 
 
 namespace {
-  std::array<float, 4> scale_matrix(float x, float y) {
+  void setup_context(const egl::context& context) {
+    context.make_current();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  }
+
+
+
+  [[nodiscard]] std::array<float, 4> scale_matrix(float x, float y) {
     return {
         x, 0.f,
       0.f,   y,
@@ -54,23 +58,31 @@ namespace {
 
 
 
-  std::array<float, 4> setup_texture_distribution(
-    const config::image_distribution& distribution,
-    const wayland::geometry&          geometry,
+  template<typename Enum>
+  void tex_parameter(GLenum key, Enum value) {
+    glTexParameteri(GL_TEXTURE_2D, key, std::to_underlying(value));
+  }
 
-    float width, float height
+
+
+  void setup_texture_parameter(const config::image_distribution& distribution) {
+    tex_parameter(GL_TEXTURE_WRAP_S, distribution.wrap_x);
+    tex_parameter(GL_TEXTURE_WRAP_T, distribution.wrap_y);
+
+    tex_parameter(GL_TEXTURE_MIN_FILTER, distribution.filter);
+    tex_parameter(GL_TEXTURE_MAG_FILTER, distribution.filter);
+  }
+
+
+
+  [[nodiscard]] std::array<float, 4> scale_matrix(
+    config::scale_mode       scale_mode,
+    const wayland::geometry& geometry,
+
+    float                    width,
+    float                    height
   ) {
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-        std::to_underlying(distribution.wrap_x));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-        std::to_underlying(distribution.wrap_y));
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-        std::to_underlying(distribution.filter));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-        std::to_underlying(distribution.filter));
-
-    switch (distribution.scale) {
+    switch (scale_mode) {
       case config::scale_mode::zoom: {
         auto scale = std::min<float>(width / geometry.physical_width(),
             height / geometry.physical_height());
@@ -99,6 +111,8 @@ namespace {
     return scale_matrix(1.f, 1.f);
   }
 }
+
+
 
 
 
@@ -142,14 +156,17 @@ gl::texture texture_generator::create_base_texture(
 
     draw_texture_.use();
     texture.bind();
+    setup_texture_parameter(brush.fgraph->distribution);
     glUniformMatrix2fv(0, 1, GL_FALSE,
-        setup_texture_distribution(brush.fgraph->distribution,
+        scale_matrix(brush.fgraph->distribution.scale,
           geometry, size.width, size.height).data());
     quad_.draw();
   }
 
   return output;
 }
+
+
 
 
 
@@ -164,7 +181,7 @@ gl::texture texture_generator::generate_from_existing(
   logcerr::verbose("creating texture from existing with {} filter(s) remaining",
       remaining_filters.size());
 
-  setup_context();
+  setup_context(*context_);
 
   auto output = apply_filter(texture, remaining_filters[0], geometry);
   for (const auto& filter: remaining_filters.subspan(1)) {
@@ -186,7 +203,7 @@ gl::texture texture_generator::generate(
 
   logcerr::verbose("creating texture from scratch");
 
-  setup_context();
+  setup_context(*context_);
 
   auto output = create_base_texture(geometry, brush);
   for (const auto& filter: brush.fgraph->filters) {

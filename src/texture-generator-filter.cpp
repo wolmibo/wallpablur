@@ -15,10 +15,15 @@
 
 
 namespace {
-  gl::texture line_blur(const gl::texture& texture, int samples, float dx, float dy,
-      float dithering, const gl::program& shader, const gl::mesh& quad) {
-
-
+  [[nodiscard]] gl::texture line_blur(
+      const gl::texture& texture,
+      int                samples,
+      float              dx,
+      float              dy,
+      float              dithering,
+      const gl::program& shader,
+      const gl::mesh&    quad
+  ) {
     texture.bind();
     auto size = gl::active_texture_size();
     gl::texture output{size};
@@ -46,9 +51,12 @@ namespace {
 
 
 
-  gl::texture box_blur(const gl::texture& texture, const config::box_blur_filter& filter,
-      const wayland::geometry& /*geometry*/,
-      const gl::program& shader, const gl::mesh& quad
+  [[nodiscard]] gl::texture box_blur(
+      const gl::texture&             texture,
+      const config::box_blur_filter& filter,
+      const wayland::geometry&       /*geometry*/,
+      const gl::program&             shader,
+      const gl::mesh&                quad
   ) {
     if (filter.iterations == 0) {
       throw std::runtime_error{"unable to apply box blur filter with 0 iterations"};
@@ -69,6 +77,8 @@ namespace {
     return output;
   }
 }
+
+
 
 
 

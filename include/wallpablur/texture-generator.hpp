@@ -51,8 +51,6 @@ class texture_generator {
 
 
 
-    void setup_context() const;
-
     [[nodiscard]] gl::texture create_base_texture(
         const wayland::geometry&, const config::brush&) const;
 
