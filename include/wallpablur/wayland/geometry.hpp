@@ -10,8 +10,9 @@ class geometry {
   public:
     bool operator==(const geometry&) const = default;
 
-    [[nodiscard]] bool same_pixel_size(const geometry& rhs) const {
-      return pixel_width() == rhs.pixel_width() && pixel_height() == rhs.pixel_height();
+    [[nodiscard]] bool same_physical_size(const geometry& rhs) const {
+      return physical_width() == rhs.physical_width() &&
+        physical_height() == rhs.physical_height();
     }
 
 
@@ -22,18 +23,18 @@ class geometry {
 
 
 
-    [[nodiscard]] uint32_t pixel_width()    const { return width_;  }
-    [[nodiscard]] uint32_t pixel_height()   const { return height_; }
+    [[nodiscard]] uint32_t physical_width()  const { return width_;  }
+    [[nodiscard]] uint32_t physical_height() const { return height_; }
 
-    [[nodiscard]] uint32_t logical_width()  const { return width_ / scale_;  }
-    [[nodiscard]] uint32_t logical_height() const { return height_ / scale_; }
+    [[nodiscard]] uint32_t logical_width()   const { return width_  / scale_; }
+    [[nodiscard]] uint32_t logical_height()  const { return height_ / scale_; }
 
-    [[nodiscard]] float    scale()          const { return scale_;  }
+    [[nodiscard]] float    scale()           const { return scale_;  }
 
 
 
-    void pixel_width (uint32_t width)  { width_  = width;  }
-    void pixel_height(uint32_t height) { height_ = height; }
+    void physical_width (uint32_t width)  { width_  = width;  }
+    void physical_height(uint32_t height) { height_ = height; }
 
     void scale       (float s)         { scale_  = s;      }
 

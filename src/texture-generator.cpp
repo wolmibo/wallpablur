@@ -72,24 +72,24 @@ namespace {
 
     switch (distribution.scale) {
       case config::scale_mode::zoom: {
-        auto scale = std::min<float>(width / geometry.pixel_width(),
-            height / geometry.pixel_height());
+        auto scale = std::min<float>(width / geometry.physical_width(),
+            height / geometry.physical_height());
 
-        return scale_matrix(geometry.pixel_width() * scale / width,
-            geometry.pixel_height() * scale / height);
+        return scale_matrix(geometry.physical_width() * scale / width,
+            geometry.physical_height() * scale / height);
       }
 
       case config::scale_mode::fit: {
-        auto scale = std::max<float>(width / geometry.pixel_width(),
-            height / geometry.pixel_height());
+        auto scale = std::max<float>(width / geometry.physical_width(),
+            height / geometry.physical_height());
 
-        return scale_matrix(geometry.pixel_width() * scale / width,
-            geometry.pixel_height() * scale / height);
+        return scale_matrix(geometry.physical_width() * scale / width,
+            geometry.physical_height() * scale / height);
       }
 
       case config::scale_mode::centered:
-        return scale_matrix(geometry.pixel_width() / width,
-            geometry.pixel_height() / height);
+        return scale_matrix(geometry.physical_width() / width,
+            geometry.physical_height() / height);
 
       case config::scale_mode::stretch:
         return scale_matrix(1.f, 1.f);
@@ -110,27 +110,27 @@ gl::texture texture_generator::create_base_texture(
   texture.bind();
   auto size = gl::active_texture_size();
 
-  if (static_cast<unsigned int>(size.width)  == geometry.pixel_width() &&
-      static_cast<unsigned int>(size.height) == geometry.pixel_height() &&
+  if (static_cast<unsigned int>(size.width)  == geometry.physical_width() &&
+      static_cast<unsigned int>(size.height) == geometry.physical_height() &&
       brush.solid[3] == 0.f) {
     return texture;
   }
 
   logcerr::verbose("rescaling image {}x{} -> {}x{} ontop of ({:.2},{:.2},{:.2},{:.2})",
       size.width, size.height,
-      geometry.pixel_width(), geometry.pixel_height(),
+      geometry.physical_width(), geometry.physical_height(),
       brush.solid[0], brush.solid[1], brush.solid[2], brush.solid[3]);
 
   gl::texture output{
-    static_cast<GLsizei>(geometry.pixel_width()),
-    static_cast<GLsizei>(geometry.pixel_height()),
+    static_cast<GLsizei>(geometry.physical_width()),
+    static_cast<GLsizei>(geometry.physical_height()),
     gl::texture::format::rgba8
   };
 
   gl::framebuffer buffer{output};
   {
     auto lock = buffer.bind();
-    glViewport(0, 0, geometry.pixel_width(), geometry.pixel_height());
+    glViewport(0, 0, geometry.physical_width(), geometry.physical_height());
 
     glClearColor(
         brush.solid[0] * brush.solid[3],

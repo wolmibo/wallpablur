@@ -140,7 +140,7 @@ void wayland::output::create_context() {
   logcerr::debug("{}: creating egl context", name());
 
   egl_window_.reset(wl_egl_window_create(surface_.get(),
-        current_geometry_.pixel_width(), current_geometry_.pixel_height()));
+        current_geometry_.physical_width(), current_geometry_.physical_height()));
 
   if (!egl_window_) {
     throw std::runtime_error{"unable to create egl window"};
@@ -162,8 +162,8 @@ void wayland::output::output_mode_(
     int32_t    /*refresh*/
 ) {
   auto& geometry = static_cast<output*>(data)->current_geometry_;
-  geometry.pixel_width(width);
-  geometry.pixel_height(height);
+  geometry.physical_width(width);
+  geometry.physical_height(height);
 }
 
 
@@ -187,7 +187,8 @@ void wayland::output::layer_surface_configure_(
 ) {
   auto* self = static_cast<output*>(data);
 
-  self->current_geometry_.scale(static_cast<float>(self->current_geometry_.pixel_width())
+  self->current_geometry_.scale(
+      static_cast<float>(self->current_geometry_.physical_width())
       / static_cast<float>(width));
 
   if (self->first_configuration_) {
@@ -195,8 +196,8 @@ void wayland::output::layer_surface_configure_(
   } else {
     wl_egl_window_resize(
         self->egl_window_.get(),
-        self->current_geometry_.pixel_width(),
-        self->current_geometry_.pixel_height(),
+        self->current_geometry_.physical_width(),
+        self->current_geometry_.physical_height(),
         0, 0);
   }
 
@@ -225,6 +226,6 @@ void wayland::output::update_viewport() const {
   wp_viewport_set_source(viewport_.get(),
       wl_fixed_from_int(0),
       wl_fixed_from_int(0),
-      wl_fixed_from_int(current_geometry_.pixel_width()),
-      wl_fixed_from_int(current_geometry_.pixel_height()));
+      wl_fixed_from_int(current_geometry_.physical_width()),
+      wl_fixed_from_int(current_geometry_.physical_height()));
 }

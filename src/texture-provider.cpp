@@ -33,7 +33,7 @@ std::shared_ptr<gl::texture> texture_provider::get(
   cleanup();
 
   size_t ix = std::ranges::find_if(cache_.keys(), [&brush, &geometry](const auto& tp){
-                  return tp.first.same_pixel_size(geometry) && tp.second == brush; })
+                  return tp.first.same_physical_size(geometry) && tp.second == brush; })
                 - cache_.keys().begin();
 
   if (ix < cache_.size()) {

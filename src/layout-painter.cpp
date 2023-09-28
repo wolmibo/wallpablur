@@ -118,7 +118,7 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
   logcerr::verbose("{}: update geometry to logical = {}x{}@{}, pixel = {}x{}",
       config_.name,
       geometry_.logical_width(), geometry_.logical_height(), geometry_.scale(),
-      geometry_.pixel_width(), geometry_.pixel_height());
+      geometry_.physical_width(), geometry_.physical_height());
 
 
 
@@ -302,7 +302,7 @@ void layout_painter::draw_layout(
   logcerr::debug("{}: rendering", config_.name);
   context_->make_current();
 
-  glViewport(0, 0, geometry_.pixel_width(), geometry_.pixel_height());
+  glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
 
   draw_wallpaper();
   draw_surface_effects(layout);
