@@ -3,6 +3,7 @@
 
 #include "wallpablur/expression/boolean.hpp"
 #include "wallpablur/expression/string-compare.hpp"
+#include "wallpablur/surface-expression.hpp"
 #include "wallpablur/workspace.hpp"
 
 #include <optional>
@@ -34,8 +35,15 @@ class workspace_expression_condition {
 
 
   private:
+    enum class bool_aggregator {
+      all_of,
+      any_of,
+      none_of
+    };
+
     std::variant<
-      string_expr
+      string_expr,
+      std::pair<surface_expression, bool_aggregator>
     > cond_;
 
 

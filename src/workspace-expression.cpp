@@ -1,24 +1,41 @@
 #include "wallpablur/expression/parser.hpp"
 #include "wallpablur/expression/string-compare.hpp"
+#include "wallpablur/surface-expression.hpp"
 #include "wallpablur/workspace-expression.hpp"
 
 
 
 bool workspace_expression_condition::evaluate(const workspace& ws) const {
-  if (std::holds_alternative<string_expr>(cond_)) {
-    const auto& [expr, var] = std::get<string_expr>(cond_);
+  switch (cond_.index()) {
+    case 0: {
+      const auto& [expr, var] = std::get<string_expr>(cond_);
 
-    switch (var) {
-      case string_var::name:   return expr.evaluate(ws.name());
-      case string_var::output: return expr.evaluate(ws.output());
+      switch (var) {
+        case string_var::name:   return expr.evaluate(ws.name());
+        case string_var::output: return expr.evaluate(ws.output());
+      }
+
+      return false;
     }
-
-    return false;
+    case 1: {
+      const auto& [expr, aggr] = std::get<1>(cond_);
+      switch (aggr) {
+        case bool_aggregator::all_of:
+          return std::ranges::all_of(ws.surfaces(),
+              [&expr](const surface& surf) { return expr.evaluate(surf); });
+        case bool_aggregator::any_of:
+          return std::ranges::any_of(ws.surfaces(),
+              [&expr](const surface& surf) { return expr.evaluate(surf); });
+        case bool_aggregator::none_of:
+          return std::ranges::none_of(ws.surfaces(),
+              [&expr](const surface& surf) { return expr.evaluate(surf); });
+      }
+    }
+    default:
+      break;
   }
 
-
-
-  std::unreachable();
+  return false;
 }
 
 
