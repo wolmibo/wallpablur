@@ -126,13 +126,15 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
   fixed_panels_.reserve(config_.fixed_panels.size());
 
   for (const auto& panel : config_.fixed_panels) {
-    fixed_panels_.emplace_back(
+    fixed_panels_.emplace_back(surface{
         panel.to_rect(geometry_.logical_width(), geometry_.logical_height()),
         surface_type::panel,
         panel.app_id,
         panel.focused,
         panel.urgent,
         panel.radius
+      },
+      panel.condition
     );
   }
 
@@ -340,8 +342,8 @@ void layout_painter::draw_surface_effects(const wm::layout& layout) const {
         draw_border_effect(be, surface);
       }
     }
-    for (const auto& surface: fixed_panels_) {
-      if (be.condition.evaluate(surface)) {
+    for (const auto& [surface, condition]: fixed_panels_) {
+      if (condition.evaluate(layout) && be.condition.evaluate(surface)) {
         draw_border_effect(be, surface);
       }
     }
@@ -362,8 +364,8 @@ void layout_painter::draw_background(const wm::layout& layout) const {
       }
     }
 
-    for (const auto& surface: fixed_panels_) {
-      if (config_.background_condition.evaluate(surface)) {
+    for (const auto& [surface, condition]: fixed_panels_) {
+      if (condition.evaluate(layout) && config_.background_condition.evaluate(surface)) {
         draw_rounded_rectangle(surface.rect(), surface.radius());
       }
     }

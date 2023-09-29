@@ -59,7 +59,8 @@ class layout_painter {
     std::shared_ptr<gl::texture>          background_;
 
     wayland::geometry                     geometry_;
-    std::vector<surface>                  fixed_panels_;
+    std::vector<std::pair<surface, workspace_expression>>
+                                          fixed_panels_;
 
 
 
