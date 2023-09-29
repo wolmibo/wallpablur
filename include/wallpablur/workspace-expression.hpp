@@ -29,7 +29,7 @@ class workspace_expression_condition {
 
 
 
-    [[nodiscard]] bool evaluate(const workspace& ws) const;
+    [[nodiscard]] bool evaluate(const workspace&) const;
 
 
 
