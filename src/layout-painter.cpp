@@ -297,18 +297,15 @@ void layout_painter::draw_border_effect(
 
 
 
-void layout_painter::draw_layout(
-  const wm::layout&   layout,
-  float               alpha
-) const {
+void layout_painter::draw_layout(const workspace& ws, float alpha) const {
   logcerr::debug("{}: rendering", config_.name);
   context_->make_current();
 
   glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
 
   draw_wallpaper();
-  draw_surface_effects(layout);
-  draw_background(layout);
+  draw_surface_effects(ws);
+  draw_background(ws);
 
   if (alpha < 254.f / 255.f) {
     set_buffer_alpha(alpha);
@@ -335,15 +332,15 @@ void layout_painter::draw_wallpaper() const {
 
 
 
-void layout_painter::draw_surface_effects(const wm::layout& layout) const {
+void layout_painter::draw_surface_effects(const workspace& ws) const {
   for (const auto& be: config_.border_effects) {
-    for (const auto& surface: layout.surfaces()) {
+    for (const auto& surface: ws.surfaces()) {
       if (be.condition.evaluate(surface)) {
         draw_border_effect(be, surface);
       }
     }
     for (const auto& [surface, condition]: fixed_panels_) {
-      if (condition.evaluate(layout) && be.condition.evaluate(surface)) {
+      if (condition.evaluate(ws) && be.condition.evaluate(surface)) {
         draw_border_effect(be, surface);
       }
     }
@@ -352,20 +349,20 @@ void layout_painter::draw_surface_effects(const wm::layout& layout) const {
 
 
 
-void layout_painter::draw_background(const wm::layout& layout) const {
+void layout_painter::draw_background(const workspace& ws) const {
   glDisable(GL_BLEND);
 
   draw_stenciled([&]() {
     solid_color_shader_.use();
 
-    for (const auto& surface: layout.surfaces()) {
+    for (const auto& surface: ws.surfaces()) {
       if (config_.background_condition.evaluate(surface)) {
         draw_rounded_rectangle(surface.rect(), surface.radius());
       }
     }
 
     for (const auto& [surface, condition]: fixed_panels_) {
-      if (condition.evaluate(layout) && config_.background_condition.evaluate(surface)) {
+      if (condition.evaluate(ws) && config_.background_condition.evaluate(surface)) {
         draw_rounded_rectangle(surface.rect(), surface.radius());
       }
     }

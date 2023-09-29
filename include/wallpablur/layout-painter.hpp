@@ -34,7 +34,7 @@ class layout_painter {
 
 
     bool update_geometry(const wayland::geometry&);
-    void draw_layout(const wm::layout&, float) const;
+    void draw_layout(const workspace&, float) const;
 
 
 
@@ -70,10 +70,10 @@ class layout_painter {
 
     void draw_border_effect(const config::border_effect&, const surface&) const;
 
-    void draw_wallpaper()                        const;
-    void draw_surface_effects(const wm::layout&) const;
-    void draw_background     (const wm::layout&) const;
-    void set_buffer_alpha    (float alpha)       const;
+    void draw_wallpaper()                       const;
+    void draw_surface_effects(const workspace&) const;
+    void draw_background     (const workspace&) const;
+    void set_buffer_alpha    (float alpha)      const;
 };
 
 

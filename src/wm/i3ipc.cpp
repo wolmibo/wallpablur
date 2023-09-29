@@ -106,7 +106,7 @@ namespace {
 
 
   void load_surface_from_json(
-      wm::layout&             workspace,
+      workspace&              ws,
       const rapidjson::Value& value,
       surface_type            type
   ) {
@@ -122,7 +122,7 @@ namespace {
     auto base_rect{rectangle_from_json(*json_rect)};
 
     if (json::member_to_bool(value, "visible").value_or(false)) {
-      workspace.emplace_surface(base_rect, type, app_id, focused, urgent);
+      ws.emplace_surface(base_rect, type, app_id, focused, urgent);
     }
 
 
@@ -139,14 +139,13 @@ namespace {
 
     deco_rect.translate(base_rect.x(), base_rect.y() - deco_rect.height());
 
-    workspace.emplace_surface(deco_rect, surface_type::decoration,
-                                 app_id, focused, urgent);
+    ws.emplace_surface(deco_rect, surface_type::decoration, app_id, focused, urgent);
   }
 
 
 
   void load_node_leaves(
-      wm::layout&                         surfaces,
+      workspace&                          ws,
       const rapidjson::Value::ConstArray& list,
       surface_type                        type
   ) {
@@ -156,14 +155,14 @@ namespace {
       auto floating = json::member_to_array(container, "floating_nodes");
 
       if ((!nodes || nodes->Empty()) && (!floating || floating->Empty())) {
-        load_surface_from_json(surfaces, container, type);
+        load_surface_from_json(ws, container, type);
       } else {
         if (nodes) {
-          load_node_leaves(surfaces, *nodes, surface_type::tiled);
+          load_node_leaves(ws, *nodes, surface_type::tiled);
         }
 
         if (floating) {
-          load_node_leaves(surfaces, *floating, surface_type::floating);
+          load_node_leaves(ws, *floating, surface_type::floating);
         }
       }
     }
@@ -171,25 +170,19 @@ namespace {
 
 
 
-  void parse_workspace_layout(wm::layout& workspace, const rapidjson::Value& value) {
-    wm::layout surfaces{
-      std::string{json::member_to_str(value, "name").value_or("")},
-      std::string{json::member_to_str(value, "output").value_or("")},
-      {}
-    };
-
+  void parse_workspace_layout(workspace& ws, const rapidjson::Value& value) {
     if (auto nodes = json::member_to_array(value, "nodes")) {
-      load_node_leaves(workspace, *nodes, surface_type::tiled);
+      load_node_leaves(ws, *nodes, surface_type::tiled);
     }
 
     if (auto floating = json::member_to_array(value, "floating_nodes")) {
-      load_node_leaves(workspace, *floating, surface_type::floating);
+      load_node_leaves(ws, *floating, surface_type::floating);
     }
   }
 
 
 
-  [[nodiscard]] wm::layout parse_output_layout(const rapidjson::Value& value) {
+  [[nodiscard]] workspace parse_output_layout(const rapidjson::Value& value) {
     auto current = json::member_to_str(value, "current_workspace");
     if (!current) {
       logcerr::warn("no active workspace on output");
@@ -213,22 +206,22 @@ namespace {
         continue;
       }
 
-      wm::layout workspace{
+      workspace ws{
         std::string{name.value_or("")},
         std::string{json::member_to_str(node, "output").value_or("")},
         {}
       };
 
-      parse_workspace_layout(workspace, node);
+      parse_workspace_layout(ws, node);
 
       if (auto offset = json::find_member(value, "rect")) {
-        translate_surfaces(workspace.surfaces(),
+        translate_surfaces(ws.surfaces(),
           -json::member_to_int(*offset, "x").value_or(0),
           -json::member_to_int(*offset, "y").value_or(0)
         );
       }
 
-      return workspace;
+      return ws;
     }
 
     logcerr::warn("active workspace not found");

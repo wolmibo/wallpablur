@@ -28,10 +28,10 @@ class application {
     std::shared_ptr<texture_provider> texture_provider_;
 
     struct output_data {
-      std::string              name;
-      layout_painter           painter;
-      change_token<wm::layout> layout_source;
-      float                    last_alpha;
+      std::string             name;
+      layout_painter          painter;
+      change_token<workspace> layout_source;
+      float                   last_alpha;
     };
 
     std::vector<std::unique_ptr<output_data>> data_;

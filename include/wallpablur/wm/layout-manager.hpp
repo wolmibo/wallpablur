@@ -11,16 +11,14 @@
 
 namespace wm {
 
-using layout = workspace;
-
 class layout_manager {
   public:
-    [[nodiscard]] change_token<layout> subscribe(std::string_view key) {
+    [[nodiscard]] change_token<workspace> subscribe(std::string_view key) {
       std::lock_guard lock{layouts_mutex_};
       return layouts_.find_or_create(key).create_token();
     }
 
-    void update_layout(std::string_view key, layout&& lay) {
+    void update_layout(std::string_view key, workspace&& lay) {
       std::lock_guard lock{layouts_mutex_};
       layouts_.find_or_create(key).set(std::move(lay));
     }
@@ -28,8 +26,8 @@ class layout_manager {
 
 
   private:
-    flat_map<std::string, change_source<layout>> layouts_;
-    std::mutex                                   layouts_mutex_;
+    flat_map<std::string, change_source<workspace>> layouts_;
+    std::mutex                                      layouts_mutex_;
 };
 
 }

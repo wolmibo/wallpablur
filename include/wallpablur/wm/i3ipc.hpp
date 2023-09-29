@@ -26,7 +26,7 @@ class i3ipc {
 
 
 
-    [[nodiscard]] change_token<wm::layout> layout_token(std::string_view name) {
+    [[nodiscard]] change_token<workspace> layout_token(std::string_view name) {
       return manager_.subscribe(name);
     }
 
