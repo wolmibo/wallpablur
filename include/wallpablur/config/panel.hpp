@@ -3,6 +3,7 @@
 
 #include "wallpablur/config/types.hpp"
 #include "wallpablur/rectangle.hpp"
+#include "wallpablur/workspace-expression.hpp"
 
 #include <string>
 
@@ -20,16 +21,19 @@ struct panel {
 
 
 
-  anchor_type anchor;
-  size_type   size;
-  margin_type margin;
+  anchor_type          anchor;
+  size_type            size;
+  margin_type          margin;
 
-  float       radius;
+  float                radius;
 
 
-  std::string app_id;
-  bool        focused{false};
-  bool        urgent {false};
+  std::string          app_id;
+  bool                 focused{false};
+  bool                 urgent {false};
+
+
+  workspace_expression condition;
 
 
 

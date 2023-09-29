@@ -343,7 +343,10 @@ namespace {
                     .value_or("")
                  },
       .focused = iconfigp::parse<bool>(group.unique_key("focused")).value_or(false),
-      .urgent  = iconfigp::parse<bool>(group.unique_key("urgent")).value_or(false)
+      .urgent  = iconfigp::parse<bool>(group.unique_key("urgent")).value_or(false),
+
+      .condition = iconfigp::parse<workspace_expression>(group.unique_key("enable-if"))
+                     .value_or(workspace_expression{true})
     };
   }
 
