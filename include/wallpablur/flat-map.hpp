@@ -60,9 +60,9 @@ class flat_map {
 
 
 
-    template<typename...Args>
-    void emplace(Key&& key, Args... args) {
-      keys_.emplace_back(std::forward<Key>(key));
+    template<typename K, typename...Args>
+    void emplace(K&& key, Args... args) {
+      keys_.emplace_back(std::forward<K>(key));
       values_.emplace_back(std::forward<Args>(args)...);
     }
 
