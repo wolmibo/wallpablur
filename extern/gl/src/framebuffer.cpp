@@ -65,9 +65,10 @@ namespace {
 
       case 0:
         return "unable to check status";
-    }
 
-    return "unknown";
+      default:
+        return "unknown status";
+    }
   }
 
 

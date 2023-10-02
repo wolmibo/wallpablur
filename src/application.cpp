@@ -46,6 +46,8 @@ namespace {
       case SIGTERM:
         exit_signal_received = true;
         break;
+      default:
+        break;
     }
   }
 

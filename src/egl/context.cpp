@@ -90,9 +90,9 @@ namespace {
       case EGL_BAD_NATIVE_PIXMAP:   return "bad native pixmap";
       case EGL_BAD_NATIVE_WINDOW:   return "bad native window";
       case EGL_CONTEXT_LOST:        return "context lost";
-    }
 
-    return "<unknown>";
+      default:                      return "<unknown>";
+    }
   }
 
 
