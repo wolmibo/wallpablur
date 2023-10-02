@@ -7,7 +7,6 @@
 #include <limits>
 #include <span>
 #include <stdexcept>
-#include <vector>
 
 #include <memory.h>
 #include <unistd.h>

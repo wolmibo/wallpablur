@@ -2,11 +2,8 @@
 #define WALLPABLUR_CONFIG_HPP_INCLUDED
 
 #include "wallpablur/config/output.hpp"
-#include "wallpablur/config/panel.hpp"
 
 #include <chrono>
-#include <filesystem>
-#include <optional>
 #include <string_view>
 #include <vector>
 

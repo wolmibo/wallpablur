@@ -5,8 +5,6 @@
 #include "wallpablur/config/output.hpp"
 #include "wallpablur/egl/context.hpp"
 #include "wallpablur/texture-provider.hpp"
-#include "wallpablur/wm/layout-manager.hpp"
-#include "wallpablur/wayland/output.hpp"
 
 #include <memory>
 

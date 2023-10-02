@@ -3,7 +3,6 @@
 #include "wallpablur/wayland/geometry.hpp"
 
 #include <algorithm>
-#include <tuple>
 
 #include <logcerr/log.hpp>
 

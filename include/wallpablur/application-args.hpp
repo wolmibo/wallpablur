@@ -1,7 +1,6 @@
 #ifndef WALLPABLUR_APPLICATION_ARGS_HPP_INCLUDED
 #define WALLPABLUR_APPLICATION_ARGS_HPP_INCLUDED
 
-#include <chrono>
 #include <filesystem>
 #include <optional>
 #include <span>

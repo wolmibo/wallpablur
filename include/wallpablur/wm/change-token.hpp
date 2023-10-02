@@ -1,7 +1,6 @@
 #ifndef WALLPABLUR_WM_CHANGE_TOKEN_HPP_INCLUDED
 #define WALLPABLUR_WM_CHANGE_TOKEN_HPP_INCLUDED
 
-#include <concepts>
 #include <memory>
 #include <mutex>
 

@@ -6,7 +6,6 @@
 #include "wallpablur/config/panel.hpp"
 #include "wallpablur/surface-expression.hpp"
 
-#include <array>
 #include <optional>
 #include <string>
 #include <vector>

@@ -1,7 +1,6 @@
 #ifndef WALLPABLUR_APPLICATION_HPP_INCLUDED
 #define WALLPABLUR_APPLICATION_HPP_INCLUDED
 
-#include "wallpablur/config/config.hpp"
 #include "wallpablur/layout-painter.hpp"
 #include "wallpablur/texture-provider.hpp"
 #include "wallpablur/wayland/client.hpp"

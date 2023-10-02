@@ -1,9 +1,6 @@
-#include "wallpablur/config/filter.hpp"
-
 #include <filesystem>
 #include <memory>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 #include <gl/texture.hpp>

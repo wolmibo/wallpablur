@@ -7,8 +7,6 @@
 #include "wallpablur/wayland/geometry.hpp"
 
 #include <memory>
-#include <string>
-#include <vector>
 
 #include <gl/mesh.hpp>
 #include <gl/program.hpp>

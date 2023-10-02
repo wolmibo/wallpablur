@@ -5,7 +5,6 @@
 #include "wallpablur/expression/string-compare.hpp"
 #include "wallpablur/surface.hpp"
 
-#include <string>
 #include <variant>
 
 #include <iconfigp/value-parser.hpp>

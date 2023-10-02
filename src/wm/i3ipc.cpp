@@ -1,7 +1,6 @@
 #include "wallpablur/config/config.hpp"
 #include "wallpablur/json/utils.hpp"
 #include "wallpablur/surface.hpp"
-#include "wallpablur/wm/change-token.hpp"
 #include "wallpablur/wm/i3ipc.hpp"
 #include "wallpablur/wm/layout-manager.hpp"
 

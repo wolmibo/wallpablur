@@ -1,7 +1,5 @@
+#include <algorithm>
 #include <filesystem>
-#include <memory>
-
-#include <cassert>
 
 #include <gl/texture.hpp>
 

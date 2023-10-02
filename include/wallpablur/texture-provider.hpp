@@ -5,7 +5,6 @@
 #include "wallpablur/texture-generator.hpp"
 
 #include <memory>
-#include <vector>
 
 
 

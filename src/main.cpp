@@ -1,6 +1,8 @@
 #include "wallpablur/application.hpp"
 #include "wallpablur/application-args.hpp"
+
 #include <cstdlib>
+
 #include <logcerr/log.hpp>
 
 

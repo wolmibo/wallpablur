@@ -7,7 +7,6 @@
 #include "wallpablur/workspace.hpp"
 
 #include <optional>
-#include <string>
 #include <variant>
 
 #include <iconfigp/value-parser.hpp>
