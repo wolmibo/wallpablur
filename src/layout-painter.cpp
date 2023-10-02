@@ -73,7 +73,7 @@ namespace {
 
 
 
-  std::shared_ptr<egl::context> assert_non_nullptr(std::shared_ptr<egl::context>&& cx) {
+  std::shared_ptr<egl::context> assert_non_nullptr(std::shared_ptr<egl::context> cx) {
     if (!cx) {
       throw std::runtime_error{"expected non-null context"};
     }
