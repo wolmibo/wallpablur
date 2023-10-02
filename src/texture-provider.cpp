@@ -121,7 +121,7 @@ std::shared_ptr<gl::texture> texture_provider::get(
 
 
   if (tex) {
-    cache_.emplace({geometry, brush}, tex);
+    cache_.emplace(std::make_pair(geometry, brush), tex);
   }
 
   return tex;
