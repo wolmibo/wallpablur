@@ -54,7 +54,7 @@ int main(int argc, const char* argv[]) {
 
   if (args.size() < 3 || args.size() % 2 != 1) {
     std::cout << "usage: " << args[0]
-      << " <header> <source> [<resource1 name>... <resource1>...]" << std::endl;
+      << " <header> <source> [<resource1 name>... <resource1>...]\n";
     return 1;
   }
 
