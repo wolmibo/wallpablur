@@ -12,20 +12,25 @@
 
 namespace expression {
 
+
+
+enum class instruction {
+  constant_true,
+  constant_false,
+
+  logical_not,
+
+  logical_and,
+  logical_or,
+
+  stack_store
+};
+
+
+
 template<typename T>
 class boolean {
   public:
-    enum class instruction {
-      constant_true,
-      constant_false,
-
-      logical_not,
-
-      logical_and,
-      logical_or,
-
-      stack_store
-    };
 
     using command = std::variant<instruction, T>;
 

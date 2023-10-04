@@ -71,6 +71,7 @@ sources = [
   'workspace-expression.cpp',
 
   'expression/string-compare.cpp',
+  'expression/tokenizer.cpp',
 
   'texture-generator.cpp',
   'texture-generator-filter.cpp',
