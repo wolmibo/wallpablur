@@ -59,12 +59,42 @@ tokenizer::tokenizer(std::string_view input) :
 
 
 namespace {
+  void skip_parentheses(iconfigp::reader& reader) {
+    if (reader.eof() || reader.peek() != '(') {
+      return;
+    }
+
+    reader.skip();
+
+    size_t depth{1};
+
+    while (depth > 0 && !reader.eof()) {
+      reader.skip_until("()");
+
+      if (reader.eof()) {
+        return;
+      }
+
+      switch (reader.peek()) {
+        case '(': depth++; break;
+        case ')': depth--; break;
+        default: break;
+      }
+
+      reader.skip();
+    }
+  }
+
+
+
   [[nodiscard]] token read_value(iconfigp::reader& reader) {
     auto start   = reader.offset();
     auto content = reader.remaining();
 
     reader.skip();
     reader.skip_until("()!&|");
+
+    skip_parentheses(reader);
 
     content = content.substr(0, reader.offset() - start);
 
