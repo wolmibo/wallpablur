@@ -23,7 +23,8 @@ class workspace_expression_condition {
     enum class bool_aggregator {
       all_of,
       any_of,
-      none_of
+      none_of,
+      unique,
     };
 
     using string_expr  = std::pair<expression::string_compare, string_var>;

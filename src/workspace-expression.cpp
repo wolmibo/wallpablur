@@ -29,6 +29,9 @@ bool workspace_expression_condition::evaluate(const workspace& ws) const {
         case bool_aggregator::none_of:
           return std::ranges::none_of(ws.surfaces(),
               [&expr](const surface& surf) { return expr.evaluate(surf); });
+        case bool_aggregator::unique:
+          return std::ranges::count_if(ws.surfaces(),
+              [&expr](const surface& surf) { return expr.evaluate(surf); }) == 1;
       }
     }
     default:
@@ -46,7 +49,7 @@ std::string_view iconfigp::value_parser<workspace_expression>::format() {
   return
     "Boolean expression formed from the terms:\n"
     "  (ws_name|output) == [*]<string>[*]\n"
-    "  all(<se>), any(<se>), none(<se>) where <se> is a surface expression\n"
+    "  all(<se>), any(<se>), none(<se>), unique(<se>) where <se> is a surface expression\n"
     "which can be combined (in descending precendence) using:\n"
     "  (), ! (prefix), && (infix), and || (infix)\n";
 }
@@ -105,6 +108,11 @@ namespace {
     if (input.starts_with("none(")) {
       input.remove_prefix(4);
       return workspace_expression_condition::bool_aggregator::none_of;
+    }
+
+    if (input.starts_with("unique(")) {
+      input.remove_prefix(6);
+      return workspace_expression_condition::bool_aggregator::unique;
     }
 
     return {};
