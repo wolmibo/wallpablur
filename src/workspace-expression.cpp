@@ -1,5 +1,6 @@
 #include "wallpablur/expression/parser.hpp"
 #include "wallpablur/expression/string-compare.hpp"
+#include "wallpablur/surface-expression.hpp"
 #include "wallpablur/workspace-expression.hpp"
 
 
@@ -45,6 +46,7 @@ std::string_view iconfigp::value_parser<workspace_expression>::format() {
   return
     "Boolean expression formed from the terms:\n"
     "  (ws_name|output) == [*]<string>[*]\n"
+    "  all(<se>), any(<se>), none(<se>) where <se> is a surface expression\n"
     "which can be combined (in descending precendence) using:\n"
     "  (), ! (prefix), && (infix), and || (infix)\n";
 }
@@ -85,6 +87,45 @@ namespace {
 
     return std::make_pair(std::move(expr), *var);
   }
+
+
+
+  [[nodiscard]] std::optional<workspace_expression_condition::bool_aggregator>
+  slurp_aggregator_function(std::string_view& input) {
+    if (input.starts_with("any(")) {
+      input.remove_prefix(3);
+      return workspace_expression_condition::bool_aggregator::any_of;
+    }
+
+    if (input.starts_with("all(")) {
+      input.remove_prefix(3);
+      return workspace_expression_condition::bool_aggregator::all_of;
+    }
+
+    if (input.starts_with("none(")) {
+      input.remove_prefix(4);
+      return workspace_expression_condition::bool_aggregator::none_of;
+    }
+
+    return {};
+  }
+
+
+
+  [[nodiscard]] std::optional<workspace_expression_condition::surface_expr>
+  parse_surface_expression(std::string_view input) {
+    auto agg = slurp_aggregator_function(input);
+    if (!agg) {
+      return {};
+    }
+
+    auto surf_expr = iconfigp::value_parser<surface_expression>::parse(input);
+    if (!surf_expr) {
+      return {};
+    }
+
+    return workspace_expression_condition::surface_expr{std::move(*surf_expr), *agg};
+  }
 }
 
 
@@ -92,6 +133,10 @@ namespace {
 std::optional<workspace_expression_condition> workspace_expression_condition::from_string(
     std::string_view in
 ) {
+  if (auto surf = parse_surface_expression(in)) {
+    return workspace_expression_condition{std::move(*surf)};
+  }
+
   if (auto str = parse_str_expr(in)) {
     return workspace_expression_condition{std::move(*str)};
   }

@@ -20,7 +20,14 @@ class workspace_expression_condition {
       output
     };
 
-    using string_expr = std::pair<expression::string_compare, string_var>;
+    enum class bool_aggregator {
+      all_of,
+      any_of,
+      none_of
+    };
+
+    using string_expr  = std::pair<expression::string_compare, string_var>;
+    using surface_expr = std::pair<surface_expression, bool_aggregator>;
 
 
 
@@ -34,15 +41,9 @@ class workspace_expression_condition {
 
 
   private:
-    enum class bool_aggregator {
-      all_of,
-      any_of,
-      none_of
-    };
-
     std::variant<
       string_expr,
-      std::pair<surface_expression, bool_aggregator>
+      surface_expr
     > cond_;
 
 
