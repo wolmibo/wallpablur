@@ -95,24 +95,21 @@ namespace {
 
   [[nodiscard]] std::optional<workspace_expression_condition::bool_aggregator>
   slurp_aggregator_function(std::string_view& input) {
-    if (input.starts_with("any(")) {
-      input.remove_prefix(3);
-      return workspace_expression_condition::bool_aggregator::any_of;
-    }
+    using ba = workspace_expression_condition::bool_aggregator;
+    using namespace std::string_view_literals;
 
-    if (input.starts_with("all(")) {
-      input.remove_prefix(3);
-      return workspace_expression_condition::bool_aggregator::all_of;
-    }
+    std::array<std::pair<std::string_view, ba>, 4> lut {
+      std::make_pair("any("sv,    ba::any_of),
+      std::make_pair("all("sv,    ba::all_of),
+      std::make_pair("none("sv,   ba::none_of),
+      std::make_pair("unique("sv, ba::unique),
+    };
 
-    if (input.starts_with("none(")) {
-      input.remove_prefix(4);
-      return workspace_expression_condition::bool_aggregator::none_of;
-    }
-
-    if (input.starts_with("unique(")) {
-      input.remove_prefix(6);
-      return workspace_expression_condition::bool_aggregator::unique;
+    for (const auto& [name, item]: lut) {
+      if (input.starts_with(name)) {
+        input.remove_prefix(name.size() - 1);
+        return item;
+      }
     }
 
     return {};
