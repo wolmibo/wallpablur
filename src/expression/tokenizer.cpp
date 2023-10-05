@@ -58,6 +58,26 @@ tokenizer::tokenizer(std::string_view input) :
 
 
 
+namespace {
+  [[nodiscard]] token read_value(iconfigp::reader& reader) {
+    auto start   = reader.offset();
+    auto content = reader.remaining();
+
+    reader.skip();
+    reader.skip_until("()!&|");
+
+    content = content.substr(0, reader.offset() - start);
+
+    while (!content.empty() && isspace(content.back()) != 0) {
+      content.remove_suffix(1);
+    }
+
+    return token{content, start};
+  }
+}
+
+
+
 std::optional<token> tokenizer::next() {
   reader_.skip_whitespace();
 
@@ -91,19 +111,5 @@ std::optional<token> tokenizer::next() {
     return token{remaining.substr(0, 2), reader_.offset() - 2};
   }
 
-
-
-  auto start   = reader_.offset();
-  auto content = reader_.remaining();
-
-  reader_.skip();
-  reader_.skip_until("()!&|");
-
-  content = content.substr(0, reader_.offset() - start);
-
-  while (!content.empty() && isspace(content.back()) != 0) {
-    content.remove_suffix(1);
-  }
-
-  return token{content, start};
+  return read_value(reader_);
 }
