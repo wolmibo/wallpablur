@@ -13,6 +13,12 @@
 
 
 
+namespace expression {
+  class token;
+}
+
+
+
 class workspace_expression_condition {
   public:
     enum class string_var {
@@ -33,7 +39,7 @@ class workspace_expression_condition {
 
 
     [[nodiscard]] static std::optional<workspace_expression_condition>
-      from_string(std::string_view);
+      from_token(expression::token);
 
 
 

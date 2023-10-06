@@ -105,14 +105,14 @@ namespace {
 
 
 
-std::optional<surface_expression_condition> surface_expression_condition::from_string(
-    std::string_view in
+std::optional<surface_expression_condition> surface_expression_condition::from_token(
+    expression::token in
 ) {
-  if (auto flg = iconfigp::value_parser<flag>::parse(in)) {
+  if (auto flg = iconfigp::value_parser<flag>::parse(in.content())) {
     return surface_expression_condition{*flg};
   }
 
-  if (auto str = parse_str_expr(in)) {
+  if (auto str = parse_str_expr(in.content())) {
     return surface_expression_condition{std::move(*str)};
   }
 

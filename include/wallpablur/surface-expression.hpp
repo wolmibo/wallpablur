@@ -10,6 +10,11 @@
 #include <iconfigp/value-parser.hpp>
 
 
+namespace expression {
+  class token;
+}
+
+
 
 class surface_expression_condition {
   public:
@@ -31,7 +36,7 @@ class surface_expression_condition {
 
 
     [[nodiscard]] static std::optional<surface_expression_condition>
-      from_string(std::string_view);
+      from_token(expression::token);
 
 
 

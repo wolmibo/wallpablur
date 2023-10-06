@@ -1,4 +1,3 @@
-#include "iconfigp/exception.hpp"
 #include "wallpablur/expression/parser.hpp"
 #include "wallpablur/expression/string-compare.hpp"
 #include "wallpablur/surface-expression.hpp"
@@ -135,14 +134,14 @@ namespace {
 
 
 
-std::optional<workspace_expression_condition> workspace_expression_condition::from_string(
-    std::string_view in
+std::optional<workspace_expression_condition> workspace_expression_condition::from_token(
+    expression::token in
 ) {
-  if (auto surf = parse_surface_expression(in)) {
+  if (auto surf = parse_surface_expression(in.content())) {
     return workspace_expression_condition{std::move(*surf)};
   }
 
-  if (auto str = parse_str_expr(in)) {
+  if (auto str = parse_str_expr(in.content())) {
     return workspace_expression_condition{std::move(*str)};
   }
 

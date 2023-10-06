@@ -107,7 +107,7 @@ class parser {
             lsv.throw_error("Missing operator before ");
           }
 
-          if (auto t = T::from_string(lsv.content())) {
+          if (auto t = T::from_token(lsv)) {
             commands_.emplace_back(std::move(*t));
           } else if (auto b = iconfigp::value_parser<bool>::parse(lsv.content())) {
             commands_.emplace_back(*b
