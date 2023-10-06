@@ -1,3 +1,4 @@
+#include "iconfigp/exception.hpp"
 #include "wallpablur/expression/parser.hpp"
 #include "wallpablur/expression/string-compare.hpp"
 #include "wallpablur/surface-expression.hpp"
@@ -118,14 +119,24 @@ namespace {
 
 
   [[nodiscard]] std::optional<workspace_expression_condition::surface_expr>
-  parse_surface_expression(std::string_view input) {
-    auto agg = slurp_aggregator_function(input);
+  parse_surface_expression(expression::token input) {
+    auto value = input.content();
+
+    auto agg = slurp_aggregator_function(value);
     if (!agg) {
       return {};
     }
 
-    if (auto surf_expr = iconfigp::value_parser<surface_expression>::parse(input)) {
+    try {
+    if (auto surf_expr = iconfigp::value_parser<surface_expression>::parse(value)) {
       return workspace_expression_condition::surface_expr{std::move(*surf_expr), *agg};
+    }
+    } catch (const iconfigp::value_parse_exception::range_exception& rex) {
+      throw iconfigp::value_parse_exception::range_exception{
+        std::string{rex.message()},
+        rex.offset() + input.content().size() - value.size() + input.offset(),
+        rex.size()
+      };
     }
 
     return {};
@@ -137,7 +148,7 @@ namespace {
 std::optional<workspace_expression_condition> workspace_expression_condition::from_token(
     expression::token in
 ) {
-  if (auto surf = parse_surface_expression(in.content())) {
+  if (auto surf = parse_surface_expression(in)) {
     return workspace_expression_condition{std::move(*surf)};
   }
 
