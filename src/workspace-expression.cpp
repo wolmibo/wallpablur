@@ -1,3 +1,4 @@
+#include "iconfigp/exception.hpp"
 #include "wallpablur/expression/parser.hpp"
 #include "wallpablur/expression/string-compare.hpp"
 #include "wallpablur/surface-expression.hpp"
@@ -124,12 +125,11 @@ namespace {
       return {};
     }
 
-    auto surf_expr = iconfigp::value_parser<surface_expression>::parse(input);
-    if (!surf_expr) {
-      return {};
+    if (auto surf_expr = iconfigp::value_parser<surface_expression>::parse(input)) {
+      return workspace_expression_condition::surface_expr{std::move(*surf_expr), *agg};
     }
 
-    return workspace_expression_condition::surface_expr{std::move(*surf_expr), *agg};
+    return {};
   }
 }
 
