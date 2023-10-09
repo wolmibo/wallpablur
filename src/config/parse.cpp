@@ -6,6 +6,7 @@
 #include "wallpablur/config/types.hpp"
 #include "wallpablur/surface-expression.hpp"
 
+#include <chrono>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
@@ -22,6 +23,8 @@
 #include <iconfigp/value-parser.hpp>
 
 #include <logcerr/log.hpp>
+
+using namespace std::string_view_literals;
 
 
 
@@ -277,31 +280,35 @@ template<> struct iconfigp::value_parser<config::border_effect::offset_type> {
 
 
 namespace {
+  template<typename Tgt> struct source_type { using type = Tgt; };
+  template<> struct source_type<std::string> { using type = std::string_view; };
+  template<> struct source_type<std::chrono::milliseconds> { using type = uint32_t; };
+
+  template<typename Tgt, typename SrcKv, typename ...Args>
+  void update(const SrcKv& section, Tgt& value, std::string_view key, Args&& ...args) {
+    if (auto kv = section.unique_key(key)) {
+      value = static_cast<Tgt>(iconfigp::parse<typename source_type<Tgt>::type>(*kv));
+    } else if constexpr(sizeof...(Args)) {
+      update(section, value, std::forward<Args>(args)...);
+    }
+  }
+
+
+
   [[nodiscard]] config::border_effect parse_border_effect(
       const iconfigp::group&       group,
       const config::border_effect& defaults
   ) {
-    using offset_type = config::border_effect::offset_type;
-
-    return config::border_effect {
-      .condition = iconfigp::parse<surface_expression>(group.unique_key("enable-if"))
-                     .value_or(defaults.condition),
-      .thickness = iconfigp::parse<uint32_t>(group.unique_key("thickness"))
-                     .value_or(defaults.thickness),
-      .position  = iconfigp::parse<config::border_position>(group.unique_key("position"))
-                     .value_or(defaults.position),
-      .offset    = iconfigp::parse<offset_type>(group.unique_key("offset"))
-                     .value_or(defaults.offset),
-
-      .col       = iconfigp::parse<config::color>(group.unique_key("color"))
-                     .value_or(defaults.col),
-      .blend     = iconfigp::parse<config::blend_mode>(group.unique_key("blend"))
-                     .value_or(defaults.blend),
-      .foff      = iconfigp::parse<config::falloff>(group.unique_key("falloff"))
-                     .value_or(defaults.foff),
-      .exponent  = iconfigp::parse<float>(group.unique_key("exponent"))
-                     .value_or(defaults.exponent)
-    };
+    auto output = defaults;
+    update(group, output.condition, "enable-if");
+    update(group, output.thickness, "thickness");
+    update(group, output.position,  "position");
+    update(group, output.offset,    "offset");
+    update(group, output.col,       "color");
+    update(group, output.blend,     "blend");
+    update(group, output.foff,      "falloff");
+    update(group, output.exponent,  "exponent");
+    return output;
   }
 
 
@@ -328,26 +335,16 @@ namespace {
 
 
   [[nodiscard]] config::panel parse_panel(const iconfigp::group& group) {
-    return config::panel {
-      .anchor = iconfigp::parse<config::anchor_type>(group.unique_key("anchor"))
-                  .value_or(config::anchor_type{}),
-      .size   = iconfigp::parse<config::panel::size_type>(group.unique_key("size"))
-                  .value_or(config::panel::size_type{}),
-      .margin = iconfigp::parse<config::margin_type>(group.unique_key("margin"))
-                  .value_or(config::margin_type{}),
-
-      .radius = iconfigp::parse<float>(group.unique_key("border-radius")).value_or(0.f),
-
-      .app_id  = std::string{
-                  iconfigp::parse<std::string_view>(group.unique_key("app-id"))
-                    .value_or("")
-                 },
-      .focused = iconfigp::parse<bool>(group.unique_key("focused")).value_or(false),
-      .urgent  = iconfigp::parse<bool>(group.unique_key("urgent")).value_or(false),
-
-      .condition = iconfigp::parse<workspace_expression>(group.unique_key("enable-if"))
-                     .value_or(workspace_expression{true})
-    };
+    config::panel output;
+    update(group, output.anchor,    "anchor");
+    update(group, output.size,      "size");
+    update(group, output.margin,    "margin");
+    update(group, output.radius,    "border-radius");
+    update(group, output.app_id,    "app-id");
+    update(group, output.focused,   "focused");
+    update(group, output.urgent,    "urgent");
+    update(group, output.condition, "enable-if");
+    return output;
   }
 
 
@@ -377,26 +374,22 @@ namespace {
 
     switch (filter_type) {
       case filter_e::blur:
-      case filter_e::box_blur:
-        return config::box_blur_filter{
-          .width = iconfigp::parse<uint32_t>(filter.unique_key("width"))
-                     .or_else([&](){
-                         return iconfigp::parse<uint32_t>(filter.unique_key("radius"));})
-                     .value_or(96),
-          .height = iconfigp::parse<uint32_t>(filter.unique_key("height"))
-                     .or_else([&](){
-                         return iconfigp::parse<uint32_t>(filter.unique_key("radius"));})
-                     .value_or(96),
+      case filter_e::box_blur: {
+        config::box_blur_filter output;
+        if (filter_type == filter_e::blur) {
+          output.iterations = 2;
+        }
+        update(filter, output.width,      "width",  "radius"sv);
+        update(filter, output.height,     "height", "radius"sv);
+        update(filter, output.iterations, "iterations");
+        update(filter, output.dithering,  "dithering");
 
-          .iterations = iconfigp::parse<uint32_t>(filter.unique_key("iterations"))
-                          .value_or(filter_type == filter_e::blur ? 2 : 1),
-          .dithering  = iconfigp::parse<float>(filter.unique_key("dithering"))
-                          .value_or(1.f)
-        };
+        return output;
+      }
       case filter_e::invert:
         return config::invert_filter{};
     }
-    throw std::runtime_error{"filter branch is not implemented"};
+    throw std::runtime_error{"filter type is not implemented"};
   }
 
 
@@ -416,22 +409,12 @@ namespace {
   [[nodiscard]] config::image_distribution parse_image_distribution(
     const iconfigp::section& section
   ) {
-    return config::image_distribution {
-      .scale  = iconfigp::parse<config::scale_mode>(section.unique_key("scale"))
-                  .value_or(config::scale_mode::zoom),
-      .wrap_x = iconfigp::parse<config::wrap_mode>(section.unique_key("wrap-x"))
-                  .or_else([&](){
-                    return iconfigp::parse<config::wrap_mode>(
-                        section.unique_key("wrap")); })
-                  .value_or(config::wrap_mode::none),
-      .wrap_y = iconfigp::parse<config::wrap_mode>(section.unique_key("wrap-y"))
-                  .or_else([&](){
-                    return iconfigp::parse<config::wrap_mode>(
-                        section.unique_key("wrap")); })
-                  .value_or(config::wrap_mode::none),
-      .filter = iconfigp::parse<config::scale_filter>(section.unique_key("scale-filter"))
-                  .value_or(config::scale_filter::linear)
-    };
+    config::image_distribution output{};
+    update(section, output.scale,  "scale");
+    update(section, output.wrap_x, "wrap-x", "wrap"sv);
+    update(section, output.wrap_y, "wrap-y", "wrap"sv);
+    update(section, output.filter, "scale-filter");
+    return output;
   }
 
 
@@ -538,26 +521,20 @@ namespace {
 
 
 config::config::config(std::string_view input) {
+  using std::chrono::milliseconds;
+
   try {
     auto root = iconfigp::parser::parse(input);
 
-    poll_rate_ = std::chrono::milliseconds{
-      iconfigp::parse<uint32_t>(root.unique_key("poll-rate-ms")).value_or(250)};
+    update(root, poll_rate_,     "poll-rate-ms");
+    update(root, fade_in_,       "fade-in-ms");
+    update(root, fade_out_,      "fade-out-ms");
 
-    fade_in_   = std::chrono::milliseconds{
-      iconfigp::parse<uint32_t>(root.unique_key("fade-in-ms"  )).value_or(0)};
+    update(root, disable_i3ipc_, "disable-i3ipc");
 
-    fade_out_  = std::chrono::milliseconds{
-      iconfigp::parse<uint32_t>(root.unique_key("fade-out-ms" )).value_or(0)};
-
-
-
-    disable_i3ipc_ = iconfigp::parse<bool>(root.unique_key("disable-i3ipc"))
-      .value_or(false);
-
-    as_overlay_ = iconfigp::parse<bool>(root.unique_key("as-overlay")).value_or(false);
-    opacity_    = iconfigp::parse<float>(root.unique_key("opacity")).value_or(1.f);
-    gl_samples_ = iconfigp::parse<uint16_t>(root.unique_key("gl-samples")).value_or(0);
+    update(root, as_overlay_,    "as-overlay");
+    update(root, opacity_,       "opacity");
+    update(root, gl_samples_,    "gl-samples");
 
 
 

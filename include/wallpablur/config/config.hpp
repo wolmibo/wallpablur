@@ -44,7 +44,7 @@ class config {
 
 
   private:
-    std::chrono::milliseconds poll_rate_    {500};
+    std::chrono::milliseconds poll_rate_    {250};
     std::chrono::milliseconds fade_out_     {0};
     std::chrono::milliseconds fade_in_      {0};
     bool                      disable_i3ipc_{false};

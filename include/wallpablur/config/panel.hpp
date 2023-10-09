@@ -21,19 +21,19 @@ struct panel {
 
 
 
-  anchor_type          anchor;
-  size_type            size;
-  margin_type          margin;
+  anchor_type          anchor {};
+  size_type            size   {};
+  margin_type          margin {};
 
-  float                radius;
+  float                radius {0.f};
 
 
-  std::string          app_id;
+  std::string          app_id {};
   bool                 focused{false};
   bool                 urgent {false};
 
 
-  workspace_expression condition;
+  workspace_expression condition{true};
 
 
 
