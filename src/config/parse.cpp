@@ -11,8 +11,6 @@
 #include <optional>
 #include <stdexcept>
 
-#include <cassert>
-
 #include <unistd.h>
 
 #include <iconfigp/color.hpp>
@@ -30,26 +28,34 @@ using namespace std::string_view_literals;
 
 
 namespace {
-  [[nodiscard]] std::vector<std::string_view> split(std::string_view input, char delim) {
-    std::vector<std::string_view> output;
-    while (!input.empty()) {
-      output.push_back(input.substr(0, input.find(delim)));
-      input.remove_prefix(std::min(input.size(), output.back().size() + 1));
-    }
-    return output;
-  }
+  template<typename T, typename C, size_t Size>
+    requires (sizeof(T) == sizeof(C) * Size)
+  [[nodiscard]] std::optional<T> parse_as_vector(std::string_view input) {
+    std::array<C, Size> buffer{};
+    auto it = buffer.begin();
 
-  template<typename T>
-  [[nodiscard]] bool parse_list(std::span<std::string_view> input, std::span<T> output) {
-    assert(input.size() == output.size());
-    for (size_t i = 0; i < input.size(); ++i) {
-      if (auto value = iconfigp::value_parser<T>::parse(input[i])) {
-        output[i] = *value;
-      } else {
-        return false;
+    for (; !input.empty() && it != buffer.end(); ++it) {
+      auto str = input.substr(0, input.find_first_of(":,"));
+      if (str.empty()) {
+        return {};
       }
+
+      if (auto value = iconfigp::value_parser<C>::parse(str)) {
+        *it = *value;
+      } else {
+        return {};
+      }
+
+      input.remove_prefix(std::min(input.size(), str.size() + 1));
     }
-    return true;
+
+    if (buffer.size() > 1 && it == buffer.begin() + 1) {
+      std::ranges::fill(buffer, buffer[0]);
+    } else if (it != buffer.end() || !input.empty()) {
+      return {};
+    }
+
+    return std::bit_cast<T>(buffer);
   }
 }
 
@@ -199,17 +205,7 @@ template<> struct iconfigp::value_parser<config::margin_type> {
     return "<all:i32> or <left:i32>:<right:i32>:<top:i32>:<bottom:i32>";
   }
   static std::optional<config::margin_type> parse(std::string_view input) {
-    if (auto value = iconfigp::value_parser<int32_t>::parse(input)) {
-      return config::margin_type{*value};
-    }
-    auto list = split(input, ':');
-    std::array<int32_t, 4> intlist{};
-
-    if (list.size() != 4 || !parse_list<int32_t>(list, intlist)) {
-      return {};
-    }
-
-    return config::margin_type{intlist[0], intlist[1], intlist[2], intlist[3]};
+    return parse_as_vector<config::margin_type, int32_t, 4>(input);
   }
 };
 
@@ -242,16 +238,7 @@ template<> struct iconfigp::value_parser<config::panel::size_type> {
   static constexpr std::string_view format() { return "<width:u32>:<height:u32>"; }
 
   static std::optional<config::panel::size_type> parse(std::string_view input) {
-    auto list = split(input, ':');
-    std::array<uint32_t, 2> intlist{};
-    if (list.size() != 2 || !parse_list<uint32_t>(list, intlist)) {
-      return {};
-    }
-
-    return config::panel::size_type {
-      .width  = intlist[0],
-      .height = intlist[1]
-    };
+    return parse_as_vector<config::panel::size_type, uint32_t, 2>(input);
   }
 };
 
@@ -262,16 +249,7 @@ template<> struct iconfigp::value_parser<config::border_effect::offset_type> {
   static constexpr std::string_view format() { return "<x:i32>,<y:i32>"; }
 
   static std::optional<config::border_effect::offset_type> parse(std::string_view in) {
-    auto list = split(in, ',');
-    std::array<int32_t, 2> intlist{};
-    if (list.size() != 2 || !parse_list<int32_t>(list, intlist)) {
-      return {};
-    }
-
-    return config::border_effect::offset_type {
-      .x = intlist[0],
-      .y = intlist[1]
-    };
+    return parse_as_vector<config::border_effect::offset_type, int32_t, 2>(in);
   }
 };
 
