@@ -1,4 +1,3 @@
-#include "iconfigp/opt-ref.hpp"
 #include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/config/config.hpp"
 #include "wallpablur/config/filter.hpp"
@@ -16,6 +15,7 @@
 
 #include <iconfigp/color.hpp>
 #include <iconfigp/exception.hpp>
+#include <iconfigp/opt-ref.hpp>
 #include <iconfigp/parser.hpp>
 #include <iconfigp/path.hpp>
 #include <iconfigp/section.hpp>
@@ -45,7 +45,7 @@ namespace {
         return {};
       }
 
-      if (auto value = value_parser<C>::parse(str)) {
+      if (auto value = iconfigp::value_parser<C>::parse(str)) {
         *it = *value;
       } else {
         return {};
@@ -65,7 +65,7 @@ namespace {
 }
 
 
-template<> struct case_insensitive_parse_lut<wrap_mode> {
+template<> struct iconfigp::case_insensitive_parse_lut<wrap_mode> {
   static constexpr std::string_view name {"wrap-mode"};
   static constexpr std::array<std::pair<std::string_view, wrap_mode>, 4> lut {
     std::make_pair("none",         wrap_mode::none),
@@ -75,7 +75,7 @@ template<> struct case_insensitive_parse_lut<wrap_mode> {
   };
 };
 
-template<> struct case_insensitive_parse_lut<scale_mode> {
+template<> struct iconfigp::case_insensitive_parse_lut<scale_mode> {
   static constexpr std::string_view name {"scale-mode"};
   static constexpr std::array<std::pair<std::string_view, scale_mode>, 4> lut {
     std::make_pair("fit",      scale_mode::fit),
@@ -85,7 +85,7 @@ template<> struct case_insensitive_parse_lut<scale_mode> {
   };
 };
 
-template<> struct case_insensitive_parse_lut<scale_filter> {
+template<> struct iconfigp::case_insensitive_parse_lut<scale_filter> {
   static constexpr std::string_view name{"scale-filter"};
   static constexpr std::array<std::pair<std::string_view, scale_filter>, 2> lut {
     std::make_pair("linear",  scale_filter::linear),
@@ -93,7 +93,7 @@ template<> struct case_insensitive_parse_lut<scale_filter> {
   };
 };
 
-template<> struct case_insensitive_parse_lut<blend_mode> {
+template<> struct iconfigp::case_insensitive_parse_lut<blend_mode> {
   static constexpr std::string_view name{"blend-mode"};
   static constexpr std::array<std::pair<std::string_view, blend_mode>, 3> lut {
     std::make_pair("add",     blend_mode::add),
@@ -102,7 +102,7 @@ template<> struct case_insensitive_parse_lut<blend_mode> {
   };
 };
 
-template<> struct case_insensitive_parse_lut<falloff> {
+template<> struct iconfigp::case_insensitive_parse_lut<falloff> {
   static constexpr std::string_view name{"falloff"};
   static constexpr std::array<std::pair<std::string_view, falloff>, 3> lut {
     std::make_pair("none",       falloff::none),
@@ -111,7 +111,7 @@ template<> struct case_insensitive_parse_lut<falloff> {
   };
 };
 
-template<> struct case_insensitive_parse_lut<border_position> {
+template<> struct iconfigp::case_insensitive_parse_lut<border_position> {
   static constexpr std::string_view name{"border-position"};
   static constexpr std::array<std::pair<std::string_view, border_position>, 3>
   lut {
@@ -129,7 +129,7 @@ enum class surface_effect_e {
   glow
 };
 
-template<> struct case_insensitive_parse_lut<surface_effect_e> {
+template<> struct iconfigp::case_insensitive_parse_lut<surface_effect_e> {
   static constexpr std::string_view name{"border-effect"};
   static constexpr std::array<std::pair<std::string_view, surface_effect_e>, 3>
   lut {
@@ -191,7 +191,7 @@ enum class filter_e {
   box_blur
 };
 
-template<> struct case_insensitive_parse_lut<filter_e> {
+template<> struct iconfigp::case_insensitive_parse_lut<filter_e> {
   static constexpr std::string_view name {"filter-type"};
   static constexpr std::array<std::pair<std::string_view, filter_e>, 3> lut {
     std::make_pair("invert",   filter_e::invert),
@@ -202,7 +202,7 @@ template<> struct case_insensitive_parse_lut<filter_e> {
 
 
 
-template<> struct value_parser<margin_type> {
+template<> struct iconfigp::value_parser<margin_type> {
   static constexpr std::string_view name {"margin"};
   static constexpr std::string_view format() {
     return "<all:i32> or <left:i32>:<right:i32>:<top:i32>:<bottom:i32>";
@@ -214,7 +214,7 @@ template<> struct value_parser<margin_type> {
 
 
 
-template<> struct value_parser<anchor_type> {
+template<> struct iconfigp::value_parser<anchor_type> {
   static constexpr std::string_view name {"anchor"};
   static constexpr std::string_view format() {
     return "string made up of l, r, b and t";
@@ -236,7 +236,7 @@ template<> struct value_parser<anchor_type> {
 
 
 
-template<> struct value_parser<panel::size_type> {
+template<> struct iconfigp::value_parser<panel::size_type> {
   static constexpr std::string_view name {"size"};
   static constexpr std::string_view format() { return "<width:u32>:<height:u32>"; }
 
@@ -247,7 +247,7 @@ template<> struct value_parser<panel::size_type> {
 
 
 
-template<> struct value_parser<border_effect::offset_type> {
+template<> struct iconfigp::value_parser<border_effect::offset_type> {
   static constexpr std::string_view name {"size"};
   static constexpr std::string_view format() { return "<x:i32>,<y:i32>"; }
 

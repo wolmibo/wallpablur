@@ -19,6 +19,7 @@ logcerr_dep = dependency(
 
 iconfigp_dep = dependency(
   'iconfigp',
+  version: '>=0.1.1',
   fallback: ['iconfigp', 'iconfigp_dep'],
   default_options: [
     'default_library=static',
