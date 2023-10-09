@@ -24,6 +24,10 @@
 #include <logcerr/log.hpp>
 
 using namespace std::string_view_literals;
+using namespace iconfigp;
+using namespace config;
+
+using opt_sec = iconfigp::opt_ref<const iconfigp::section>;
 
 
 
@@ -41,7 +45,7 @@ namespace {
         return {};
       }
 
-      if (auto value = iconfigp::value_parser<C>::parse(str)) {
+      if (auto value = value_parser<C>::parse(str)) {
         *it = *value;
       } else {
         return {};
@@ -61,59 +65,59 @@ namespace {
 }
 
 
-template<> struct iconfigp::case_insensitive_parse_lut<config::wrap_mode> {
+template<> struct case_insensitive_parse_lut<wrap_mode> {
   static constexpr std::string_view name {"wrap-mode"};
-  static constexpr std::array<std::pair<std::string_view, config::wrap_mode>, 4> lut {
-    std::make_pair("none",         config::wrap_mode::none),
-    std::make_pair("stretch-edge", config::wrap_mode::stretch_edge),
-    std::make_pair("tiled",        config::wrap_mode::tiled),
-    std::make_pair("tiled-mirror", config::wrap_mode::tiled_mirror),
+  static constexpr std::array<std::pair<std::string_view, wrap_mode>, 4> lut {
+    std::make_pair("none",         wrap_mode::none),
+    std::make_pair("stretch-edge", wrap_mode::stretch_edge),
+    std::make_pair("tiled",        wrap_mode::tiled),
+    std::make_pair("tiled-mirror", wrap_mode::tiled_mirror),
   };
 };
 
-template<> struct iconfigp::case_insensitive_parse_lut<config::scale_mode> {
+template<> struct case_insensitive_parse_lut<scale_mode> {
   static constexpr std::string_view name {"scale-mode"};
-  static constexpr std::array<std::pair<std::string_view, config::scale_mode>, 4> lut {
-    std::make_pair("fit",      config::scale_mode::fit),
-    std::make_pair("zoom",     config::scale_mode::zoom),
-    std::make_pair("stretch",  config::scale_mode::stretch),
-    std::make_pair("centered", config::scale_mode::centered),
+  static constexpr std::array<std::pair<std::string_view, scale_mode>, 4> lut {
+    std::make_pair("fit",      scale_mode::fit),
+    std::make_pair("zoom",     scale_mode::zoom),
+    std::make_pair("stretch",  scale_mode::stretch),
+    std::make_pair("centered", scale_mode::centered),
   };
 };
 
-template<> struct iconfigp::case_insensitive_parse_lut<config::scale_filter> {
+template<> struct case_insensitive_parse_lut<scale_filter> {
   static constexpr std::string_view name{"scale-filter"};
-  static constexpr std::array<std::pair<std::string_view, config::scale_filter>, 2> lut {
-    std::make_pair("linear",  config::scale_filter::linear),
-    std::make_pair("nearest", config::scale_filter::nearest)
+  static constexpr std::array<std::pair<std::string_view, scale_filter>, 2> lut {
+    std::make_pair("linear",  scale_filter::linear),
+    std::make_pair("nearest", scale_filter::nearest)
   };
 };
 
-template<> struct iconfigp::case_insensitive_parse_lut<config::blend_mode> {
+template<> struct case_insensitive_parse_lut<blend_mode> {
   static constexpr std::string_view name{"blend-mode"};
-  static constexpr std::array<std::pair<std::string_view, config::blend_mode>, 3> lut {
-    std::make_pair("add",     config::blend_mode::add),
-    std::make_pair("alpha",   config::blend_mode::alpha),
-    std::make_pair("replace", config::blend_mode::replace)
+  static constexpr std::array<std::pair<std::string_view, blend_mode>, 3> lut {
+    std::make_pair("add",     blend_mode::add),
+    std::make_pair("alpha",   blend_mode::alpha),
+    std::make_pair("replace", blend_mode::replace)
   };
 };
 
-template<> struct iconfigp::case_insensitive_parse_lut<config::falloff> {
+template<> struct case_insensitive_parse_lut<falloff> {
   static constexpr std::string_view name{"falloff"};
-  static constexpr std::array<std::pair<std::string_view, config::falloff>, 3> lut {
-    std::make_pair("none",       config::falloff::none),
-    std::make_pair("linear",     config::falloff::linear),
-    std::make_pair("sinusoidal", config::falloff::sinusoidal)
+  static constexpr std::array<std::pair<std::string_view, falloff>, 3> lut {
+    std::make_pair("none",       falloff::none),
+    std::make_pair("linear",     falloff::linear),
+    std::make_pair("sinusoidal", falloff::sinusoidal)
   };
 };
 
-template<> struct iconfigp::case_insensitive_parse_lut<config::border_position> {
+template<> struct case_insensitive_parse_lut<border_position> {
   static constexpr std::string_view name{"border-position"};
-  static constexpr std::array<std::pair<std::string_view, config::border_position>, 3>
+  static constexpr std::array<std::pair<std::string_view, border_position>, 3>
   lut {
-    std::make_pair("outside",  config::border_position::outside),
-    std::make_pair("inside",   config::border_position::inside),
-    std::make_pair("centered", config::border_position::centered)
+    std::make_pair("outside",  border_position::outside),
+    std::make_pair("inside",   border_position::inside),
+    std::make_pair("centered", border_position::centered)
   };
 };
 
@@ -125,7 +129,7 @@ enum class surface_effect_e {
   glow
 };
 
-template<> struct iconfigp::case_insensitive_parse_lut<surface_effect_e> {
+template<> struct case_insensitive_parse_lut<surface_effect_e> {
   static constexpr std::string_view name{"border-effect"};
   static constexpr std::array<std::pair<std::string_view, surface_effect_e>, 3>
   lut {
@@ -135,43 +139,41 @@ template<> struct iconfigp::case_insensitive_parse_lut<surface_effect_e> {
   };
 };
 
-static const config::border_effect surface_effect_e_border {
+static const border_effect surface_effect_e_border {
   .condition = true,
   .thickness = 2,
-  .position  = config::border_position::outside,
-  .offset    = config::border_effect::offset_type{},
+  .position  = border_position::outside,
+  .offset    = border_effect::offset_type{},
   .col       = {0.f, 0.f, 0.f, 1.f},
-  .blend     = config::blend_mode::alpha,
-  .foff      = config::falloff::none,
+  .blend     = blend_mode::alpha,
+  .foff      = falloff::none,
   .exponent  = 1.f
 };
 
-static const config::border_effect surface_effect_e_shadow {
+static const border_effect surface_effect_e_shadow {
   .condition = true,
   .thickness = 30,
-  .position  = config::border_position::centered,
-  .offset    = config::border_effect::offset_type {.x = 2, .y = 2},
+  .position  = border_position::centered,
+  .offset    = border_effect::offset_type {.x = 2, .y = 2},
   .col       = {0.f, 0.f, 0.f, 0.8f},
-  .blend     = config::blend_mode::alpha,
-  .foff      = config::falloff::sinusoidal,
+  .blend     = blend_mode::alpha,
+  .foff      = falloff::sinusoidal,
   .exponent  = 1.5f
 };
 
-static const config::border_effect surface_effect_e_glow {
+static const border_effect surface_effect_e_glow {
   .condition = true,
   .thickness = 20,
-  .position  = config::border_position::outside,
-  .offset    = config::border_effect::offset_type{},
+  .position  = border_position::outside,
+  .offset    = border_effect::offset_type{},
   .col       = {1.f, 1.f, 1.f, 1.f},
-  .blend     = config::blend_mode::add,
-  .foff      = config::falloff::linear,
+  .blend     = blend_mode::add,
+  .foff      = falloff::linear,
   .exponent  = 3.f
 };
 
 namespace {
-  [[nodiscard]] const config::border_effect& surface_effect_e_default(
-      surface_effect_e var
-  ) {
+  [[nodiscard]] const border_effect& surface_effect_e_default(surface_effect_e var) {
     switch (var) {
       case surface_effect_e::border: return surface_effect_e_border;
       case surface_effect_e::shadow: return surface_effect_e_shadow;
@@ -189,7 +191,7 @@ enum class filter_e {
   box_blur
 };
 
-template<> struct iconfigp::case_insensitive_parse_lut<filter_e> {
+template<> struct case_insensitive_parse_lut<filter_e> {
   static constexpr std::string_view name {"filter-type"};
   static constexpr std::array<std::pair<std::string_view, filter_e>, 3> lut {
     std::make_pair("invert",   filter_e::invert),
@@ -200,25 +202,25 @@ template<> struct iconfigp::case_insensitive_parse_lut<filter_e> {
 
 
 
-template<> struct iconfigp::value_parser<config::margin_type> {
+template<> struct value_parser<margin_type> {
   static constexpr std::string_view name {"margin"};
   static constexpr std::string_view format() {
     return "<all:i32> or <left:i32>:<right:i32>:<top:i32>:<bottom:i32>";
   }
-  static std::optional<config::margin_type> parse(std::string_view input) {
-    return parse_as_vector<config::margin_type, int32_t, 4>(input);
+  static std::optional<margin_type> parse(std::string_view input) {
+    return parse_as_vector<margin_type, int32_t, 4>(input);
   }
 };
 
 
 
-template<> struct iconfigp::value_parser<config::anchor_type> {
+template<> struct value_parser<anchor_type> {
   static constexpr std::string_view name {"anchor"};
   static constexpr std::string_view format() {
     return "string made up of l, r, b and t";
   }
-  static std::optional<config::anchor_type> parse(std::string_view input) {
-    config::anchor_type anchor;
+  static std::optional<anchor_type> parse(std::string_view input) {
+    anchor_type anchor;
     for (auto character: input) {
       switch (character) {
         case 'l': case 'L': anchor.left(true);   break;
@@ -234,23 +236,23 @@ template<> struct iconfigp::value_parser<config::anchor_type> {
 
 
 
-template<> struct iconfigp::value_parser<config::panel::size_type> {
+template<> struct value_parser<panel::size_type> {
   static constexpr std::string_view name {"size"};
   static constexpr std::string_view format() { return "<width:u32>:<height:u32>"; }
 
-  static std::optional<config::panel::size_type> parse(std::string_view input) {
-    return parse_as_vector<config::panel::size_type, uint32_t, 2>(input);
+  static std::optional<panel::size_type> parse(std::string_view input) {
+    return parse_as_vector<panel::size_type, uint32_t, 2>(input);
   }
 };
 
 
 
-template<> struct iconfigp::value_parser<config::border_effect::offset_type> {
+template<> struct value_parser<border_effect::offset_type> {
   static constexpr std::string_view name {"size"};
   static constexpr std::string_view format() { return "<x:i32>,<y:i32>"; }
 
-  static std::optional<config::border_effect::offset_type> parse(std::string_view in) {
-    return parse_as_vector<config::border_effect::offset_type, int32_t, 2>(in);
+  static std::optional<border_effect::offset_type> parse(std::string_view in) {
+    return parse_as_vector<border_effect::offset_type, int32_t, 2>(in);
   }
 };
 
@@ -266,7 +268,7 @@ namespace {
   template<typename Tgt, typename SrcKv, typename ...Args>
   void update(const SrcKv& section, Tgt& value, std::string_view key, Args&& ...args) {
     if (auto kv = section.unique_key(key)) {
-      value = static_cast<Tgt>(iconfigp::parse<typename source_type<Tgt>::type>(*kv));
+      value = static_cast<Tgt>(parse<typename source_type<Tgt>::type>(*kv));
     } else if constexpr(sizeof...(Args)) {
       update(section, value, std::forward<Args>(args)...);
     }
@@ -274,36 +276,36 @@ namespace {
 
 
 
-  [[nodiscard]] config::border_effect parse_border_effect(
-      const iconfigp::group&       group,
-      const config::border_effect& defaults
+
+
+  [[nodiscard]] border_effect parse_border_effect(
+      const group&         grp,
+      const border_effect& defaults
   ) {
     auto output = defaults;
-    update(group, output.condition, "enable-if");
-    update(group, output.thickness, "thickness");
-    update(group, output.position,  "position");
-    update(group, output.offset,    "offset");
-    update(group, output.col,       "color");
-    update(group, output.blend,     "blend");
-    update(group, output.foff,      "falloff");
-    update(group, output.exponent,  "exponent");
+    update(grp, output.condition, "enable-if");
+    update(grp, output.thickness, "thickness");
+    update(grp, output.position,  "position");
+    update(grp, output.offset,    "offset");
+    update(grp, output.col,       "color");
+    update(grp, output.blend,     "blend");
+    update(grp, output.foff,      "falloff");
+    update(grp, output.exponent,  "exponent");
     return output;
   }
 
 
 
-  [[nodiscard]] std::vector<config::border_effect> parse_border_effects(
-    iconfigp::opt_ref<const iconfigp::section> section
-  ) {
-    if (!section) {
+  [[nodiscard]] std::vector<border_effect> parse_border_effects(opt_sec sec) {
+    if (!sec) {
       return {};
     }
 
-    std::vector<config::border_effect> effects;
-    for (const auto& grp: section->groups()) {
+    std::vector<border_effect> effects;
+    for (const auto& grp: sec->groups()) {
       if (auto type = grp.unique_key("type")) {
         effects.emplace_back(parse_border_effect(grp,
-              surface_effect_e_default(iconfigp::parse<surface_effect_e>(*type))));
+              surface_effect_e_default(parse<surface_effect_e>(*type))));
       }
     }
     return effects;
@@ -313,29 +315,27 @@ namespace {
 
 
 
-  [[nodiscard]] config::panel parse_panel(const iconfigp::group& group) {
-    config::panel output;
-    update(group, output.anchor,    "anchor");
-    update(group, output.size,      "size");
-    update(group, output.margin,    "margin");
-    update(group, output.radius,    "border-radius");
-    update(group, output.app_id,    "app-id");
-    update(group, output.focused,   "focused");
-    update(group, output.urgent,    "urgent");
-    update(group, output.condition, "enable-if");
+  [[nodiscard]] panel parse_panel(const group& grp) {
+    panel output;
+    update(grp, output.anchor,    "anchor");
+    update(grp, output.size,      "size");
+    update(grp, output.margin,    "margin");
+    update(grp, output.radius,    "border-radius");
+    update(grp, output.app_id,    "app-id");
+    update(grp, output.focused,   "focused");
+    update(grp, output.urgent,    "urgent");
+    update(grp, output.condition, "enable-if");
     return output;
   }
 
 
 
-  [[nodiscard]] std::vector<config::panel> parse_panels(
-      iconfigp::opt_ref<const iconfigp::section> pan
-  ) {
+  [[nodiscard]] std::vector<panel> parse_panels(opt_ref<const section> pan) {
     if (!pan) {
       return {};
     }
 
-    std::vector<config::panel> panels;
+    std::vector<panel> panels;
     for (const auto& grp: pan->groups()) {
       if (grp.count_keys("anchor") + grp.count_keys("size")
           + grp.count_keys("margin") > 0) {
@@ -348,13 +348,13 @@ namespace {
 
 
 
-  [[nodiscard]] config::filter parse_filter(const iconfigp::group& filter) {
-    auto filter_type = iconfigp::parse<filter_e>(filter.require_unique_key("filter"));
+  [[nodiscard]] filter parse_filter(const group& filter) {
+    auto filter_type = parse<filter_e>(filter.require_unique_key("filter"));
 
     switch (filter_type) {
       case filter_e::blur:
       case filter_e::box_blur: {
-        config::box_blur_filter output;
+        box_blur_filter output;
         if (filter_type == filter_e::blur) {
           output.iterations = 2;
         }
@@ -366,15 +366,15 @@ namespace {
         return output;
       }
       case filter_e::invert:
-        return config::invert_filter{};
+        return invert_filter{};
     }
     throw std::runtime_error{"filter type is not implemented"};
   }
 
 
 
-  [[nodiscard]] std::vector<config::filter> parse_filters(const iconfigp::section& sec) {
-    std::vector<config::filter> filters;
+  [[nodiscard]] std::vector<filter> parse_filters(const section& sec) {
+    std::vector<filter> filters;
     for (const auto& grp: sec.groups()) {
       if (grp.count_keys("filter") > 0) {
         filters.emplace_back(parse_filter(grp));
@@ -385,46 +385,41 @@ namespace {
 
 
 
-  [[nodiscard]] config::image_distribution parse_image_distribution(
-    const iconfigp::section& section
-  ) {
-    config::image_distribution output{};
-    update(section, output.scale,  "scale");
-    update(section, output.wrap_x, "wrap-x", "wrap"sv);
-    update(section, output.wrap_y, "wrap-y", "wrap"sv);
-    update(section, output.filter, "scale-filter");
+  [[nodiscard]] image_distribution parse_image_distribution(const section& sec) {
+    image_distribution output{};
+    update(sec, output.scale,  "scale");
+    update(sec, output.wrap_x, "wrap-x", "wrap"sv);
+    update(sec, output.wrap_y, "wrap-y", "wrap"sv);
+    update(sec, output.filter, "scale-filter");
     return output;
   }
 
 
 
-  [[nodiscard]] config::brush parse_brush(
-      iconfigp::opt_ref<const iconfigp::section> section,
-      iconfigp::opt_ref<const config::brush>     background
-  ) {
-    if (!section) {
+  [[nodiscard]] brush parse_brush(opt_sec sec, opt_ref<const brush> background) {
+    if (!sec) {
       if (background) {
         return *background;
       }
-      return config::brush{};
+      return brush{};
     }
 
-    config::brush output;
+    brush output;
 
-    if (auto val = section->unique_key("color")) {
-      output.solid = iconfigp::parse<config::color>(*val);
+    if (auto val = sec->unique_key("color")) {
+      output.solid = parse<color>(*val);
     } else if (background) {
       output.solid = background->solid;
     }
 
-    if (auto path = section->unique_key("path")) {
+    if (auto path = sec->unique_key("path")) {
       if (path->value().empty()) {
         return output;
       }
-      output.fgraph = config::filter_graph {
-        .path         = iconfigp::parse<std::filesystem::path>(*path),
-        .distribution = parse_image_distribution(*section),
-        .filters      = parse_filters(*section)
+      output.fgraph = filter_graph {
+        .path         = parse<std::filesystem::path>(*path),
+        .distribution = parse_image_distribution(*sec),
+        .filters      = parse_filters(*sec)
       };
       return output;
     }
@@ -435,7 +430,7 @@ namespace {
 
     output.fgraph = background->fgraph;
 
-    auto append_filters = parse_filters(*section);
+    auto append_filters = parse_filters(*sec);
     for (const auto& fil: append_filters) {
       output.fgraph->filters.emplace_back(fil);
     }
@@ -445,12 +440,12 @@ namespace {
 
 
 
-  [[nodiscard]] iconfigp::opt_ref<const iconfigp::section> best_subsection(
-      const iconfigp::section&                   section,
-      iconfigp::opt_ref<const iconfigp::section> fallback,
-      std::string_view                           name
+  [[nodiscard]] opt_sec best_subsection(
+      const section&   sec,
+      opt_sec          fallback,
+      std::string_view name
   ) {
-    auto cand = section.subsection(name);
+    auto cand = sec.subsection(name);
     if (!cand && fallback) {
       return fallback->subsection(name);
     }
@@ -459,28 +454,25 @@ namespace {
 
 
 
-  [[nodiscard]] config::output parse_output(
-      const iconfigp::section&                   section,
-      iconfigp::opt_ref<const iconfigp::section> fallback
-  ) {
-    auto wallpaper_section  = best_subsection(section, fallback, "wallpaper");
+  [[nodiscard]] output parse_output(const section& sec, opt_sec fallback) {
+    auto wallpaper_section  = best_subsection(sec, fallback, "wallpaper");
     auto wallpaper          = parse_brush(wallpaper_section, {});
 
-    auto background_section = best_subsection(section, fallback, "background");
+    auto background_section = best_subsection(sec, fallback, "background");
     auto background         = parse_brush(background_section, wallpaper);
 
     surface_expression background_condition{true};
     if (background_section) {
       if (auto key = background_section->unique_key("enable-if")) {
-        background_condition = iconfigp::parse<surface_expression>(*key);
+        background_condition = parse<surface_expression>(*key);
       }
     }
 
-    auto panel_section          = best_subsection(section, fallback, "panels");
-    auto border_effects_section = best_subsection(section, fallback, "surface-effects");
+    auto panel_section          = best_subsection(sec, fallback, "panels");
+    auto border_effects_section = best_subsection(sec, fallback, "surface-effects");
 
-    return config::output {
-      .name                 = std::string{section.name()},
+    return output {
+      .name                 = std::string{sec.name()},
       .wallpaper            = std::move(wallpaper),
       .background           = std::move(background),
       .background_condition = std::move(background_condition),
@@ -494,9 +486,9 @@ namespace {
 
 
 
-config::config::config(std::string_view input) {
+::config::config::config(std::string_view input) {
   try {
-    auto root = iconfigp::parser::parse(input);
+    auto root = parser::parse(input);
 
     update(root, poll_rate_,     "poll-rate-ms");
     update(root, fade_in_,       "fade-in-ms");
@@ -526,15 +518,15 @@ config::config::config(std::string_view input) {
     }
 
     if (auto message =
-        iconfigp::generate_unused_message(root, input, logcerr::is_colored())) {
+        generate_unused_message(root, input, logcerr::is_colored())) {
 
       logcerr::warn("config file contains unused keys");
       logcerr::print_raw_sync(std::cout, *message);
     }
-  } catch (const iconfigp::exception& ex) {
+  } catch (const exception& ex) {
     logcerr::error(ex.what());
     logcerr::print_raw_sync(std::cout,
-        iconfigp::format_exception(ex, input, logcerr::is_colored()));
+        format_exception(ex, input, logcerr::is_colored()));
     throw false;
   }
 }
