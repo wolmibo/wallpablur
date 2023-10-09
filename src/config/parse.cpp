@@ -322,9 +322,9 @@ namespace {
 
     std::vector<config::border_effect> effects;
     for (const auto& grp: section->groups()) {
-      if (grp.count_keys("type") > 0) {
-        auto type = iconfigp::parse<surface_effect_e>(grp.require_unique_key("type"));
-        effects.emplace_back(parse_border_effect(grp, surface_effect_e_default(type)));
+      if (auto type = grp.unique_key("type")) {
+        effects.emplace_back(parse_border_effect(grp,
+              surface_effect_e_default(iconfigp::parse<surface_effect_e>(*type))));
       }
     }
     return effects;
@@ -467,7 +467,7 @@ namespace {
 
 
   [[nodiscard]] config::output parse_output(
-      const iconfigp::section& section,
+      const iconfigp::section&                   section,
       iconfigp::opt_ref<const iconfigp::section> fallback
   ) {
     auto wallpaper_section = section.subsection("wallpaper");
