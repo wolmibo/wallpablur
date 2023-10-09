@@ -13,6 +13,7 @@
 
 #include <unistd.h>
 
+#include <iconfigp/array.hpp>
 #include <iconfigp/color.hpp>
 #include <iconfigp/exception.hpp>
 #include <iconfigp/opt-ref.hpp>
@@ -30,39 +31,6 @@ using namespace config;
 using opt_sec = iconfigp::opt_ref<const iconfigp::section>;
 
 
-
-
-namespace {
-  template<typename T, typename C, size_t Size>
-    requires (sizeof(T) == sizeof(C) * Size)
-  [[nodiscard]] std::optional<T> parse_as_vector(std::string_view input) {
-    std::array<C, Size> buffer{};
-    auto it = buffer.begin();
-
-    for (; !input.empty() && it != buffer.end(); ++it) {
-      auto str = input.substr(0, input.find_first_of(":,"));
-      if (str.empty()) {
-        return {};
-      }
-
-      if (auto value = iconfigp::value_parser<C>::parse(str)) {
-        *it = *value;
-      } else {
-        return {};
-      }
-
-      input.remove_prefix(std::min(input.size(), str.size() + 1));
-    }
-
-    if (buffer.size() > 1 && it == buffer.begin() + 1) {
-      std::ranges::fill(buffer, buffer[0]);
-    } else if (it != buffer.end() || !input.empty()) {
-      return {};
-    }
-
-    return std::bit_cast<T>(buffer);
-  }
-}
 
 
 template<> struct iconfigp::case_insensitive_parse_lut<wrap_mode> {
@@ -208,7 +176,7 @@ template<> struct iconfigp::value_parser<margin_type> {
     return "<all:i32> or <left:i32>:<right:i32>:<top:i32>:<bottom:i32>";
   }
   static std::optional<margin_type> parse(std::string_view input) {
-    return parse_as_vector<margin_type, int32_t, 4>(input);
+    return std::bit_cast<margin_type>(parse_as_array<int32_t, 4>(input));
   }
 };
 
@@ -241,7 +209,7 @@ template<> struct iconfigp::value_parser<panel::size_type> {
   static constexpr std::string_view format() { return "<width:u32>:<height:u32>"; }
 
   static std::optional<panel::size_type> parse(std::string_view input) {
-    return parse_as_vector<panel::size_type, uint32_t, 2>(input);
+    return std::bit_cast<panel::size_type>(parse_as_array<uint32_t, 2>(input));
   }
 };
 
@@ -251,8 +219,8 @@ template<> struct iconfigp::value_parser<border_effect::offset_type> {
   static constexpr std::string_view name {"size"};
   static constexpr std::string_view format() { return "<x:i32>,<y:i32>"; }
 
-  static std::optional<border_effect::offset_type> parse(std::string_view in) {
-    return parse_as_vector<border_effect::offset_type, int32_t, 2>(in);
+  static std::optional<border_effect::offset_type> parse(std::string_view input) {
+    return std::bit_cast<border_effect::offset_type>(parse_as_array<int32_t, 2>(input));
   }
 };
 
