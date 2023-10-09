@@ -219,12 +219,12 @@ template<> struct iconfigp::value_parser<config::anchor_type> {
   static std::optional<config::anchor_type> parse(std::string_view input) {
     config::anchor_type anchor;
     for (auto character: input) {
-      if      (character == 'l') { anchor.left(true);   }
-      else if (character == 'r') { anchor.right(true);  }
-      else if (character == 'b') { anchor.bottom(true); }
-      else if (character == 't') { anchor.top(true);    }
-      else {
-        return {};
+      switch (character) {
+        case 'l': case 'L': anchor.left(true);   break;
+        case 'r': case 'R': anchor.right(true);  break;
+        case 'b': case 'B': anchor.bottom(true); break;
+        case 't': case 'T': anchor.top(true);    break;
+        default: return {};
       }
     }
     return anchor;
