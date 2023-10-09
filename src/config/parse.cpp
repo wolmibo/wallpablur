@@ -1,3 +1,4 @@
+#include "iconfigp/opt-ref.hpp"
 #include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/config/config.hpp"
 #include "wallpablur/config/filter.hpp"
@@ -444,23 +445,29 @@ namespace {
 
 
 
+  [[nodiscard]] iconfigp::opt_ref<const iconfigp::section> best_subsection(
+      const iconfigp::section&                   section,
+      iconfigp::opt_ref<const iconfigp::section> fallback,
+      std::string_view                           name
+  ) {
+    auto cand = section.subsection(name);
+    if (!cand && fallback) {
+      return fallback->subsection(name);
+    }
+    return cand;
+  }
+
+
+
   [[nodiscard]] config::output parse_output(
       const iconfigp::section&                   section,
       iconfigp::opt_ref<const iconfigp::section> fallback
   ) {
-    auto wallpaper_section = section.subsection("wallpaper");
-    if (!wallpaper_section && fallback) {
-      wallpaper_section = fallback->subsection("wallpaper");
-    }
-    auto wallpaper = parse_brush(wallpaper_section, {});
+    auto wallpaper_section  = best_subsection(section, fallback, "wallpaper");
+    auto wallpaper          = parse_brush(wallpaper_section, {});
 
-
-
-    auto background_section = section.subsection("background");
-    if (!background_section && fallback) {
-      background_section = fallback->subsection("background");
-    }
-    auto background = parse_brush(background_section, wallpaper);
+    auto background_section = best_subsection(section, fallback, "background");
+    auto background         = parse_brush(background_section, wallpaper);
 
     surface_expression background_condition{true};
     if (background_section) {
@@ -469,19 +476,8 @@ namespace {
       }
     }
 
-
-
-    auto panel_section = section.subsection("panels");
-    if (!panel_section && fallback) {
-      panel_section = fallback->subsection("panels");
-    }
-
-    auto border_effects_section = section.subsection("surface-effects");
-    if (!border_effects_section && fallback) {
-      border_effects_section = fallback->subsection("surface-effects");
-    }
-
-
+    auto panel_section          = best_subsection(section, fallback, "panels");
+    auto border_effects_section = best_subsection(section, fallback, "surface-effects");
 
     return config::output {
       .name                 = std::string{section.name()},
