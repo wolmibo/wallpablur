@@ -499,8 +499,6 @@ namespace {
 
 
 config::config::config(std::string_view input) {
-  using std::chrono::milliseconds;
-
   try {
     auto root = iconfigp::parser::parse(input);
 
