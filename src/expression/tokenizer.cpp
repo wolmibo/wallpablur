@@ -6,11 +6,11 @@ using namespace expression;
 
 namespace {
   [[nodiscard]] token_type type_from_content(std::string_view input) {
-    if (input == "||") return token_type::logical_or;
-    if (input == "&&") return token_type::logical_and;
-    if (input == "!")  return token_type::logical_not;
-    if (input == "(")  return token_type::paren_open;
-    if (input == ")")  return token_type::paren_close;
+    if (input == "||") { return token_type::logical_or;  }
+    if (input == "&&") { return token_type::logical_and; }
+    if (input == "!")  { return token_type::logical_not; }
+    if (input == "(")  { return token_type::paren_open;  }
+    if (input == ")")  { return token_type::paren_close; }
 
     return token_type::value;
   }
