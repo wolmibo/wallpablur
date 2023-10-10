@@ -1,4 +1,10 @@
+#if __has_include("versioninfo.h")
 #include "versioninfo.h"
+#else
+#warning "Missing vcs version info"
+#define VERSION_VCS_STR "<?>"
+#endif
+
 #include "buildinfo.h"
 
 #include <string_view>
