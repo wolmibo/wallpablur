@@ -429,10 +429,10 @@ namespace {
     auto background_section = best_subsection(sec, fallback, "background");
     auto background         = parse_brush(background_section, wallpaper);
 
-    surface_expression background_condition{true};
+    surface_workspace_expression background_condition{true};
     if (background_section) {
       if (auto key = background_section->unique_key("enable-if")) {
-        background_condition = parse<surface_expression>(*key);
+        background_condition = parse<decltype(background_condition)>(*key);
       }
     }
 

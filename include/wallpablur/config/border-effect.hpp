@@ -2,7 +2,7 @@
 #define WALLPABLUR_CONFIG_BORDER_EFFECT_HPP_INCLUDED
 
 #include "wallpablur/config/types.hpp"
-#include "wallpablur/surface-expression.hpp"
+#include "wallpablur/surface-workspace-expression.hpp"
 
 
 
@@ -40,16 +40,16 @@ struct border_effect {
     int y{0};
   };
 
-  surface_expression condition;
+  surface_workspace_expression condition{true};
 
-  uint32_t           thickness{};
-  border_position    position {border_position::outside};
-  offset_type        offset;
+  uint32_t                     thickness{};
+  border_position              position {border_position::outside};
+  offset_type                  offset;
 
-  color              col      {};
-  blend_mode         blend    {blend_mode::alpha};
-  falloff            foff     {falloff::none};
-  float              exponent {1.f};
+  color                        col      {};
+  blend_mode                   blend    {blend_mode::alpha};
+  falloff                      foff     {falloff::none};
+  float                        exponent {1.f};
 };
 
 }

@@ -4,7 +4,7 @@
 #include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/config/filter.hpp"
 #include "wallpablur/config/panel.hpp"
-#include "wallpablur/surface-expression.hpp"
+#include "wallpablur/surface-workspace-expression.hpp"
 
 #include <optional>
 #include <string>
@@ -24,15 +24,15 @@ struct brush {
 
 
 struct output {
-  std::string                name;
+  std::string                  name;
 
-  brush                      wallpaper;
-  brush                      background;
-  surface_expression         background_condition;
+  brush                        wallpaper;
+  brush                        background;
+  surface_workspace_expression background_condition{true};
 
-  std::vector<panel>         fixed_panels;
+  std::vector<panel>           fixed_panels;
 
-  std::vector<border_effect> border_effects;
+  std::vector<border_effect>   border_effects;
 };
 
 }

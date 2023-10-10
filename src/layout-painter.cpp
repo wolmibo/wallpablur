@@ -335,12 +335,12 @@ void layout_painter::draw_wallpaper() const {
 void layout_painter::draw_surface_effects(const workspace& ws) const {
   for (const auto& be: config_.border_effects) {
     for (const auto& surface: ws.surfaces()) {
-      if (be.condition.evaluate(surface)) {
+      if (be.condition.evaluate(surface, ws)) {
         draw_border_effect(be, surface);
       }
     }
     for (const auto& [surface, condition]: fixed_panels_) {
-      if (condition.evaluate(ws) && be.condition.evaluate(surface)) {
+      if (condition.evaluate(ws) && be.condition.evaluate(surface, ws)) {
         draw_border_effect(be, surface);
       }
     }
@@ -356,13 +356,13 @@ void layout_painter::draw_background(const workspace& ws) const {
     solid_color_shader_.use();
 
     for (const auto& surface: ws.surfaces()) {
-      if (config_.background_condition.evaluate(surface)) {
+      if (config_.background_condition.evaluate(surface, ws)) {
         draw_rounded_rectangle(surface.rect(), surface.radius());
       }
     }
 
     for (const auto& [surface, condition]: fixed_panels_) {
-      if (condition.evaluate(ws) && config_.background_condition.evaluate(surface)) {
+      if (condition.evaluate(ws) && config_.background_condition.evaluate(surface, ws)) {
         draw_rounded_rectangle(surface.rect(), surface.radius());
       }
     }
