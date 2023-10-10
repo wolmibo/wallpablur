@@ -4,7 +4,6 @@
 #include "wallpablur/config/output.hpp"
 #include "wallpablur/config/panel.hpp"
 #include "wallpablur/config/types.hpp"
-#include "wallpablur/surface-expression.hpp"
 
 #include <chrono>
 #include <iostream>
