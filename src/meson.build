@@ -69,6 +69,7 @@ sources = [
 
   'surface-expression.cpp',
   'workspace-expression.cpp',
+  'surface-workspace-expression.cpp',
 
   'expression/string-compare.cpp',
   'expression/tokenizer.cpp',
