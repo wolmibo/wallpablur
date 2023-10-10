@@ -33,6 +33,7 @@ disable-i3ipc = false
 
 [panels]
 # - anchor =; size = 0:0; margin = 0:0:0:0; focused = false; urgent = false; app-id = ""
+#   enable-if = true
 
 [wallpaper]
 color  = #00000000
@@ -109,6 +110,8 @@ properties of the layer-shell protocol:
   specified as a uniform margin `<int>` or explicitly for each side as
   `<left>:<right>:<top>:<bottom>`.
 
+To show the panel conditionally (e.g. only on certain workspaces) you can use the
+`enable-if` property set to a workspace expression (see below).
 
 ### Surface Properties
 Surfaces have various properties which can be used in surface expressions (see below).
@@ -235,7 +238,7 @@ path = <filepath>
   (compare the example for `wallpablur <image>` in the introduction).
   If *background* is supposed to not have an image, set `path =` to be empty.
 
-* `enable-if` can be used to restrict the background to specific surfaces
+* `enable-if` can be used to restrict the background to specific surfaces or workspaces
   (See section about conditions below).
 
 
@@ -277,7 +280,8 @@ Surface effects are effects applied on a per surface (window or panel) basis
 They are specified as list where each item requires a `type` property.
 
 Furthermore, each item may contain an `enable-if` property to
-restrict the effect to specific surfaces (See section about conditions below).
+restrict the effect to specific surfaces or workspaces
+(See section about conditions below).
 
 * `type = border`:
   Draws a border effect around surfaces. Additional properties:
@@ -313,16 +317,15 @@ To enable shadows for all surfaces and highlight the focused window with a blue 
 
 
 
-## Surface Conditions
-A surface condition is a statement that evaluates to true or false for any given surface.
-It is formed from one of the following terms:
+## Conditions and Expressions
+To selectively enable features depending on the current surface,
+surfaces on the current workspace, or workspace, logical expressions that evaluate to
+true or false can be used.
+
+They are formed from one of the following terms:
 * `true`: always true
 * `false`: always false
-* `focused`: whether the surface is focused
-* `urgent`: whether the surface is urgent
-* `panel`: whether the surface is a panel (i.e. defined in `[panels]`)
-* `floating`: whether the surface is a floating window
-* `tiled`: whether the surface is a tiled window
+* context specific terms listed below
 
 Furthermore it can be a string comparison of the form:
 * `var == <string>`: variable `var` equals `<string>`
@@ -333,8 +336,6 @@ Furthermore it can be a string comparison of the form:
 where `<string>` is any string subject to the same quoting/escaping rules as every string
 in this config. Note that `*`, `(`, `)`, `|`, `!`, and `=` in a string need to be escaped
 (or the string put in quotation marks).
-Available string variables:
-* `app_id`: the app id of the current surface
 
 These terms can be combined using the following operators (in descending precendence):
 * parentheses `(<expression>)`
@@ -342,6 +343,31 @@ These terms can be combined using the following operators (in descending precend
 * logical and `<left expression> && <right expression>`
 * logical or `<left expression> || <right expression>`
 
+### Surface Conditions
+A surface condition is checked for an individual surface and has the following terms:
+* `focused`, `urgent`: whether the surface is focused / urgent
+* `panel`, `floating`, `tiled`: whether the surface is a panel
+   (i.e., defined in `[panels]`), a floating window, or a tiled window, respectively
+
+And string variables:
+* `app_id`: the app id of the current surface
+
+### Workspace Conditions
+A workspace condition is checked for the current workspace and all its contained surfaces,
+with the following terms:
+* `any(S)`, `all(S)`, `none(S)`, `unique(S)`: whether any / all / none / a unique
+  surface(s) on the current workspace satisfy the surface condition `S`
+
+And string variables:
+* `ws_name`: the name of the current workspace
+* `output`: the name of the current output
+
+### Combined Surface and Workspace Conditions
+Surface conditions can generally be combined with workspace conditions, except inside the
+aggregator functions `any(...)`, etc. .
+
+Note that `app_id == ws_name` (currently) checks whether `app_id` is literally `"ws_name"`
+and not whether these to variables are the same.
 
 ### Examples
 ```
@@ -355,4 +381,7 @@ enable-if = !panel && (urgent || focused)
 ```
 ```
 enable-if = !(app_id == foot)
+```
+```
+enable-if = (app_id == foot*) && unique(tiled)
 ```
