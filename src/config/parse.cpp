@@ -289,7 +289,7 @@ namespace {
     update(grp, output.size,      "size");
     update(grp, output.margin,    "margin");
     update(grp, output.radius,    "border-radius");
-    update(grp, output.app_id,    "app-id");
+    update(grp, output.app_id,    "app-id", "app_id"sv);
     update(grp, output.focused,   "focused");
     update(grp, output.urgent,    "urgent");
     update(grp, output.condition, "enable-if");
