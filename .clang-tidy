@@ -18,8 +18,6 @@ Checks: >
     -modernize-use-trailing-return-type,
   performance-*,
   readability-*,
-    -readability-braces-around-statements,
     -readability-identifier-length,
     -readability-magic-numbers,
-    -readability-simplify-boolean-expr,
     -readability-uppercase-literal-suffix
