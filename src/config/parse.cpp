@@ -371,7 +371,7 @@ namespace {
       return brush{};
     }
 
-    brush output;
+    brush output{};
 
     if (auto val = sec->unique_key("color")) {
       output.solid = parse<color>(*val);
@@ -421,28 +421,74 @@ namespace {
 
 
 
-  [[nodiscard]] output parse_output(const section& sec, opt_sec fallback) {
-    auto wallpaper_section  = best_subsection(sec, fallback, "wallpaper");
-    auto wallpaper          = parse_brush(wallpaper_section, {});
+  [[nodiscard]] wallpaper parse_wallpaper(opt_sec sec, opt_sec bg_sec) {
+    wallpaper wp{};
 
-    auto background_section = best_subsection(sec, fallback, "background");
-    auto background         = parse_brush(background_section, wallpaper);
+    wp.description = parse_brush(sec, {});
 
-    surface_workspace_expression background_condition{true};
-    if (background_section) {
-      if (auto key = background_section->unique_key("enable-if")) {
-        background_condition = parse<decltype(background_condition)>(*key);
+    if (sec) {
+      update(*sec, wp.condition, "enable-if");
+    }
+
+    wp.background.description = parse_brush(bg_sec, wp.description);
+
+    if (bg_sec) {
+      update(*bg_sec, wp.background.condition, "enable-if");
+    }
+
+    return wp;
+  }
+
+
+
+  [[nodiscard]] std::vector<const section*> list_wallpaper_sections(
+      const section& sec,
+      opt_sec        fallback
+  ) {
+    std::vector<std::pair<size_t, const section*>> list;
+    for (const auto& s: sec.subsections()) {
+      if (s.name().starts_with("wallpaper#")) {
+        if (auto value = value_parser<size_t>::parse(s.name().substr(10))) {
+          list.emplace_back(*value, &s);
+        } else {
+          logcerr::warn("found section {}, did you mean wallpaper#<int>?", s.name());
+        }
       }
     }
+
+    std::ranges::sort(list, {}, &std::pair<size_t, const section*>::first);
+
+    std::vector<const section*> slice;
+    slice.reserve(list.size());
+    for (const auto& [_, ptr]: list) {
+      slice.emplace_back(ptr);
+    }
+
+    return slice;
+  }
+
+
+
+  [[nodiscard]] output parse_output(const section& sec, opt_sec fallback) {
+    auto wallpaper_section  = best_subsection(sec, fallback, "wallpaper");
+    auto background_section = best_subsection(sec, fallback, "background");
+
+    std::vector<wallpaper> wallpapers{
+      parse_wallpaper(wallpaper_section, background_section)
+    };
+
+    for (const auto* ptr: list_wallpaper_sections(sec, fallback)) {
+      wallpapers.emplace_back(parse_wallpaper(*ptr, background_section));
+    }
+
+    std::ranges::reverse(wallpapers);
 
     auto panel_section          = best_subsection(sec, fallback, "panels");
     auto border_effects_section = best_subsection(sec, fallback, "surface-effects");
 
     return output {
       .name                 = std::string{sec.name()},
-      .wallpaper            = std::move(wallpaper),
-      .background           = std::move(background),
-      .background_condition = std::move(background_condition),
+      .wallpapers           = std::move(wallpapers),
       .fixed_panels         = parse_panels(panel_section),
       .border_effects       = parse_border_effects(border_effects_section)
     };
@@ -472,11 +518,12 @@ namespace {
     default_output_ = parse_output(root, {});
 
     for (const auto& section: root.subsections()) {
-      if (section.name().empty()              ||
-          section.name() == "panels"          ||
-          section.name() == "wallpaper"       ||
-          section.name() == "background"      ||
-          section.name() == "surface-effects"
+      if (section.name().empty()                   ||
+          section.name() == "panels"               ||
+          section.name() == "wallpaper"            ||
+          section.name() == "background"           ||
+          section.name() == "surface-effects"      ||
+          section.name().starts_with("wallpaper#")
       ) {
         continue;
       }

@@ -1,4 +1,5 @@
 #include "wallpablur/config/border-effect.hpp"
+#include "wallpablur/config/output.hpp"
 #include "wallpablur/gl/utils.hpp"
 #include "wallpablur/layout-painter.hpp"
 #include "wallpablur/rectangle.hpp"
@@ -140,20 +141,26 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 
 
-  if (config_.wallpaper.fgraph) {
-    wallpaper_ = texture_provider_->get(geometry, config_.wallpaper);
+  for (auto& wp: config_.wallpapers) {
+    if (wp.description.fgraph) {
+      wp.description.realization = texture_provider_->get(geometry, wp.description);
 
-    if (!wallpaper_) {
-      logcerr::warn("{}: retrieved empty wallpaper image", config_.name);
+      if (!wp.description.realization) {
+        logcerr::warn("{}: retrieved empty wallpaper image", config_.name);
+      }
+    }
+
+    if (wp.background.description.fgraph) {
+      wp.background.description.realization
+        = texture_provider_->get(geometry, wp.background.description);
+
+      if (!wp.background.description.realization) {
+        logcerr::warn("{}: retrieved empty background image", config_.name);
+      }
     }
   }
 
-  if (config_.background.fgraph) {
-    background_ = texture_provider_->get(geometry, config_.background);
-    if (!background_) {
-      logcerr::warn("{}: retrieved empty background image", config_.name);
-    }
-  }
+
 
   texture_provider_->cleanup();
 
@@ -297,15 +304,37 @@ void layout_painter::draw_border_effect(
 
 
 
+const config::wallpaper* layout_painter::active_wallpaper(const workspace& ws) const {
+  for (const auto& wp: config_.wallpapers) {
+    if (wp.condition.evaluate(ws)) {
+      return &wp;
+    }
+  }
+
+  return nullptr;
+}
+
+
+
+
+
 void layout_painter::draw_layout(const workspace& ws, float alpha) const {
   logcerr::debug("{}: rendering", config_.name);
   context_->make_current();
 
   glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
 
-  draw_wallpaper();
+  const auto* active = active_wallpaper(ws);
+
+  if (active != nullptr) {
+    draw_wallpaper(*active);
+  }
+
   draw_surface_effects(ws);
-  draw_background(ws);
+
+  if (active != nullptr) {
+    draw_background(active->background, ws);
+  }
 
   if (alpha < 254.f / 255.f) {
     set_buffer_alpha(alpha);
@@ -314,18 +343,17 @@ void layout_painter::draw_layout(const workspace& ws, float alpha) const {
 
 
 
-void layout_painter::draw_wallpaper() const {
-  if (wallpaper_) {
+void layout_painter::draw_wallpaper(const config::wallpaper& wp) const {
+  if (wp.description.realization) {
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     texture_shader_.use();
 
-    wallpaper_->bind();
+    wp.description.realization->bind();
     quad_.draw();
-
   } else {
-    invoke_append_color(glClearColor, config_.wallpaper.solid);
+    invoke_append_color(glClearColor, wp.description.solid);
     glClear(GL_COLOR_BUFFER_BIT);
   }
 }
@@ -349,35 +377,38 @@ void layout_painter::draw_surface_effects(const workspace& ws) const {
 
 
 
-void layout_painter::draw_background(const workspace& ws) const {
+void layout_painter::draw_background(
+    const config::background& bg,
+    const workspace&         ws
+) const {
   glDisable(GL_BLEND);
 
   draw_stenciled([&]() {
     solid_color_shader_.use();
 
     for (const auto& surface: ws.surfaces()) {
-      if (config_.background_condition.evaluate(surface, ws)) {
+      if (bg.condition.evaluate(surface, ws)) {
         draw_rounded_rectangle(surface.rect(), surface.radius());
       }
     }
 
     for (const auto& [surface, condition]: fixed_panels_) {
-      if (condition.evaluate(ws) && config_.background_condition.evaluate(surface, ws)) {
+      if (condition.evaluate(ws) && bg.condition.evaluate(surface, ws)) {
         draw_rounded_rectangle(surface.rect(), surface.radius());
       }
     }
 
   }, [&](){
-    if (background_) {
+    if (bg.description.realization) {
       texture_shader_.use();
 
-      background_->bind();
+      bg.description.realization->bind();
       quad_.draw();
 
     } else {
       solid_color_shader_.use();
 
-      invoke_append_color(glUniform4f, config_.background.solid, solid_color_uniform_);
+      invoke_append_color(glUniform4f, bg.description.solid, solid_color_uniform_);
 
       glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
       quad_.draw();

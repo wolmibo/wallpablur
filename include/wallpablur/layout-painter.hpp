@@ -53,9 +53,6 @@ class layout_painter {
     };
     mutable flat_map<shader, gl::program> shader_cache_;
 
-    std::shared_ptr<gl::texture>          wallpaper_;
-    std::shared_ptr<gl::texture>          background_;
-
     wayland::geometry                     geometry_;
     std::vector<std::pair<surface, workspace_expression>>
                                           fixed_panels_;
@@ -68,10 +65,12 @@ class layout_painter {
 
     void draw_border_effect(const config::border_effect&, const surface&) const;
 
-    void draw_wallpaper()                       const;
+    void draw_wallpaper      (const config::wallpaper&) const;
     void draw_surface_effects(const workspace&) const;
-    void draw_background     (const workspace&) const;
+    void draw_background     (const config::background&, const workspace&) const;
     void set_buffer_alpha    (float alpha)      const;
+
+    [[nodiscard]] const config::wallpaper* active_wallpaper(const workspace&) const;
 };
 
 
