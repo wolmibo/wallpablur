@@ -32,11 +32,10 @@ bool surface_workspace_expression_condition::evaluate(
     case 0: return std::get<0>(cond_).evaluate(surf);
     case 1: return std::get<1>(cond_).evaluate(ws);
 
-    default: break;
+    default:
+      static_assert(std::variant_size_v<decltype(cond_)> == 2);
+      std::unreachable();
   }
-
-  static_assert(std::variant_size_v<decltype(cond_)> == 2);
-  std::unreachable();
 }
 
 

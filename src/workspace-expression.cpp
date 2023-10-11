@@ -4,12 +4,14 @@
 #include "wallpablur/surface-expression.hpp"
 #include "wallpablur/workspace-expression.hpp"
 
+#include <utility>
+
 
 
 bool workspace_expression_condition::evaluate(const workspace& ws) const {
   switch (cond_.index()) {
     case 0: {
-      const auto& [expr, var] = std::get<string_expr>(cond_);
+      const auto& [expr, var] = std::get<0>(cond_);
 
       switch (var) {
         case string_var::name:   return expr.evaluate(ws.name());
@@ -18,6 +20,7 @@ bool workspace_expression_condition::evaluate(const workspace& ws) const {
 
       return false;
     }
+
     case 1: {
       const auto& [expr, aggr] = std::get<1>(cond_);
 
@@ -38,12 +41,14 @@ bool workspace_expression_condition::evaluate(const workspace& ws) const {
           return false;
         }
       }
-    }
-    default:
-      break;
-  }
 
-  return false;
+      return false;
+    }
+
+    default:
+      static_assert(std::variant_size_v<decltype(cond_)> == 2);
+      std::unreachable();
+  }
 }
 
 
