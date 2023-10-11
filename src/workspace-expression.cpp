@@ -20,19 +20,23 @@ bool workspace_expression_condition::evaluate(const workspace& ws) const {
     }
     case 1: {
       const auto& [expr, aggr] = std::get<1>(cond_);
+
+      auto&& check_function = [&expr](const surface& s) { return expr.evaluate(s); };
+
       switch (aggr) {
         case bool_aggregator::all_of:
-          return std::ranges::all_of(ws.surfaces(),
-              [&expr](const surface& surf) { return expr.evaluate(surf); });
+          return std::ranges::all_of(ws.surfaces(), check_function);
         case bool_aggregator::any_of:
-          return std::ranges::any_of(ws.surfaces(),
-              [&expr](const surface& surf) { return expr.evaluate(surf); });
+          return std::ranges::any_of(ws.surfaces(), check_function);
         case bool_aggregator::none_of:
-          return std::ranges::none_of(ws.surfaces(),
-              [&expr](const surface& surf) { return expr.evaluate(surf); });
-        case bool_aggregator::unique:
-          return std::ranges::count_if(ws.surfaces(),
-              [&expr](const surface& surf) { return expr.evaluate(surf); }) == 1;
+          return std::ranges::none_of(ws.surfaces(), check_function);
+        case bool_aggregator::unique: {
+          auto end = ws.surfaces().end();
+          if (auto it = std::ranges::find_if(ws.surfaces(), check_function); it != end) {
+            return std::find_if(it + 1, end, check_function) == end;
+          }
+          return false;
+        }
       }
     }
     default:
