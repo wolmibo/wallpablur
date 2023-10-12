@@ -104,10 +104,22 @@ namespace {
 
 
 
+  [[nodiscard]] layout_orientation orientation_from_json(const rapidjson::Value& parent) {
+    if (auto value = json::member_to_str(parent, "layout")) {
+      if (*value == "splitv") { return layout_orientation::vertical;   }
+      if (*value == "splith") { return layout_orientation::horizontal; }
+    }
+
+    return layout_orientation::none;
+  }
+
+
+
   void load_surface_from_json(
       workspace&              ws,
       const rapidjson::Value& value,
-      surface_type            type
+      surface_type            type,
+      layout_orientation      orientation
   ) {
     auto json_rect = json::find_member(value, "rect");
     if (!json_rect) {
@@ -121,7 +133,7 @@ namespace {
     auto base_rect{rectangle_from_json(*json_rect)};
 
     if (json::member_to_bool(value, "visible").value_or(false)) {
-      ws.emplace_surface(base_rect, type, app_id, focused, urgent);
+      ws.emplace_surface(base_rect, type, app_id, focused, urgent, 0.f, orientation);
     }
 
 
@@ -138,7 +150,8 @@ namespace {
 
     deco_rect.translate(base_rect.x(), base_rect.y() - deco_rect.height());
 
-    ws.emplace_surface(deco_rect, surface_type::decoration, app_id, focused, urgent);
+    ws.emplace_surface(deco_rect,
+        surface_type::decoration, app_id, focused, urgent, 0.f, orientation);
   }
 
 
@@ -146,7 +159,8 @@ namespace {
   void load_node_leaves(
       workspace&                          ws,
       const rapidjson::Value::ConstArray& list,
-      surface_type                        type
+      surface_type                        type,
+      layout_orientation                  parent_orientation
   ) {
 
     for (const auto& container: list) {
@@ -154,14 +168,16 @@ namespace {
       auto floating = json::member_to_array(container, "floating_nodes");
 
       if ((!nodes || nodes->Empty()) && (!floating || floating->Empty())) {
-        load_surface_from_json(ws, container, type);
+        load_surface_from_json(ws, container, type, parent_orientation);
       } else {
+        auto orientation = orientation_from_json(container);
+
         if (nodes) {
-          load_node_leaves(ws, *nodes, surface_type::tiled);
+          load_node_leaves(ws, *nodes, surface_type::tiled, orientation);
         }
 
         if (floating) {
-          load_node_leaves(ws, *floating, surface_type::floating);
+          load_node_leaves(ws, *floating, surface_type::floating, orientation);
         }
       }
     }
@@ -170,12 +186,14 @@ namespace {
 
 
   void parse_workspace_layout(workspace& ws, const rapidjson::Value& value) {
+    auto orientation = orientation_from_json(value);
+
     if (auto nodes = json::member_to_array(value, "nodes")) {
-      load_node_leaves(ws, *nodes, surface_type::tiled);
+      load_node_leaves(ws, *nodes, surface_type::tiled, orientation);
     }
 
     if (auto floating = json::member_to_array(value, "floating_nodes")) {
-      load_node_leaves(ws, *floating, surface_type::floating);
+      load_node_leaves(ws, *floating, surface_type::floating, orientation);
     }
   }
 
