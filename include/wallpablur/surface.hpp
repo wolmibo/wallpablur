@@ -17,52 +17,67 @@ enum class surface_type {
 
 
 
+enum class layout_orientation {
+  none,
+  vertical,
+  horizontal
+};
+
+
+
 class surface {
   public:
     surface(
-        rectangle    rect,
-        surface_type type,
-        std::string  app_id,
-        bool         focused = false,
-        bool         urgent  = false,
-        float        radius  = 0.f
+        rectangle          rect,
+        surface_type       type,
+        std::string        app_id,
+        bool               focused     = false,
+        bool               urgent      = false,
+        float              radius      = 0.f,
+        layout_orientation orientation = layout_orientation::none
     ) :
-      rect_  {rect},
-      radius_{radius},
-      type_  {type},
+      rect_       {rect},
+      radius_     {radius},
+      type_       {type},
 
-      app_id_ {std::move(app_id)},
-      focused_{focused},
-      urgent_ {urgent}
+      app_id_     {std::move(app_id)},
+      focused_    {focused},
+      urgent_     {urgent},
+
+      orientation_{orientation}
     {}
 
 
 
     bool operator==(const surface&) const = default;
 
-    [[nodiscard]] rectangle&       rect()          { return rect_; }
-    [[nodiscard]] const rectangle& rect()    const { return rect_; }
+    [[nodiscard]] rectangle&         rect()              { return rect_; }
+    [[nodiscard]] const rectangle&   rect()        const { return rect_; }
 
-    [[nodiscard]] float            radius()  const { return radius_; }
+    [[nodiscard]] float              radius()      const { return radius_; }
 
-    [[nodiscard]] surface_type     type()    const { return type_; }
+    [[nodiscard]] surface_type       type()        const { return type_; }
 
-    [[nodiscard]] std::string_view app_id()  const { return app_id_;  }
+    [[nodiscard]] std::string_view   app_id()      const { return app_id_;  }
 
-    [[nodiscard]] bool             focused() const { return focused_; }
-    [[nodiscard]] bool             urgent()  const { return urgent_;  }
+    [[nodiscard]] bool               focused()     const { return focused_; }
+    [[nodiscard]] bool               urgent()      const { return urgent_;  }
+
+    [[nodiscard]] layout_orientation orientation() const { return orientation_; }
 
 
 
   private:
-    rectangle    rect_;
-    float        radius_;
-    surface_type type_;
+    rectangle          rect_;
+    float              radius_;
+    surface_type       type_;
 
-    std::string  app_id_;
+    std::string        app_id_;
 
-    bool         focused_;
-    bool         urgent_;
+    bool               focused_;
+    bool               urgent_;
+
+    layout_orientation orientation_;
 };
 
 #endif // WALLPABLUR_SURFACE_HPP_INCLUDED
