@@ -50,6 +50,12 @@ class boolean {
 
 
 
+    [[nodiscard]] bool is_always_false() const {
+      return commands_.size() == 1 && commands_.front() == instruction::constant_false;
+    }
+
+
+
     template<typename... Args>
     [[nodiscard]] bool evaluate(Args&&... args) const {
       stack_clear();
