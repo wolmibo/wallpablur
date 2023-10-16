@@ -51,7 +51,9 @@ class boolean {
 
 
     [[nodiscard]] bool is_always_false() const {
-      return commands_.size() == 1 && commands_.front() == instruction::constant_false;
+      return commands_.size() == 1 &&
+        std::holds_alternative<instruction>(commands_.front()) &&
+        std::get<instruction>(commands_.front()) == instruction::constant_false;
     }
 
 
