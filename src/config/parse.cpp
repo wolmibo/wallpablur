@@ -478,7 +478,10 @@ namespace {
     };
 
     for (const auto* ptr: list_wallpaper_sections(sec, fallback)) {
-      wallpapers.emplace_back(parse_wallpaper(*ptr, background_section));
+      if (auto wp = parse_wallpaper(*ptr, background_section);
+          !wp.condition.is_always_false()) {
+        wallpapers.emplace_back(std::move(wp));
+      }
     }
 
     std::ranges::reverse(wallpapers);
