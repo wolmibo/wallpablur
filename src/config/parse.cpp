@@ -271,8 +271,11 @@ namespace {
     std::vector<border_effect> effects;
     for (const auto& grp: sec->groups()) {
       if (auto type = grp.unique_key("type")) {
-        effects.emplace_back(parse_border_effect(grp,
-              surface_effect_e_default(parse<surface_effect_e>(*type))));
+        if (auto effect = parse_border_effect(grp,
+                            surface_effect_e_default(parse<surface_effect_e>(*type)));
+            !effect.condition.is_always_false()) {
+          effects.emplace_back(std::move(effect));
+        }
       }
     }
     return effects;
