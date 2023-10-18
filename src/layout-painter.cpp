@@ -297,15 +297,24 @@ void layout_painter::draw_border_effect(
 
 
   if (float t = effect.thickness + surf.radius(); t > 0) {
-    size_t side{0};
+    auto borders = center.border_rectangles(t);
 
-    for (const auto& rect: center.border_rectangles(t)) {
-      if (sides[side++]) {
-        draw_mesh(rect, quad_);
+    static_assert(borders.size() == 2l * 4);
+    for (size_t side = 0; side < 4; ++side) {
+      if (!sides[side]) {
+        continue;
+      }
+
+      //NOLINTNEXTLINE(*-constant-array-index)
+      draw_mesh(borders[side], quad_);
+
+      if (!sides.all()) {
+        //NOLINTNEXTLINE(*-constant-array-index)
+        draw_mesh(borders[side + 4], quad_);
       }
     }
 
-    side = 0;
+    size_t side{0};
 
     for (const auto& rect: center.corner_rectangles(t)) {
       if (sides[side] || sides[(side + 1) % sides.size()]) {

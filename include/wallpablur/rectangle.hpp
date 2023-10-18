@@ -56,12 +56,17 @@ class rectangle {
 
 
 
-    [[nodiscard]] std::array<rectangle, 4> border_rectangles(float thickness) const {
+    [[nodiscard]] std::array<rectangle, 8> border_rectangles(float thickness) const {
       return {
         rectangle{x_,             y_ - thickness, width_,    thickness, rot_cw90_},
         rectangle{x_ + width_,    y_,             thickness, height_,   rot_cw90_ + 1},
         rectangle{x_,             y_ + height_,   width_,    thickness, rot_cw90_ + 2},
-        rectangle{x_ - thickness, y_,             thickness, height_,   rot_cw90_ + 3}
+        rectangle{x_ - thickness, y_,             thickness, height_,   rot_cw90_ + 3},
+
+        rectangle{x_,             y_ , width_,    thickness, rot_cw90_ + 2},
+        rectangle{x_ + width_ - thickness,    y_,             thickness, height_,   rot_cw90_ + 3},
+        rectangle{x_,             y_ + height_ - thickness,   width_,    thickness, rot_cw90_ + 0},
+        rectangle{x_, y_,             thickness, height_,   rot_cw90_ + 1},
       };
     }
 
