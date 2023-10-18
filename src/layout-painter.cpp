@@ -180,32 +180,6 @@ void layout_painter::draw_mesh(const rectangle& rect, const gl::mesh& mesh) cons
 
 
 
-void layout_painter::draw_rounded_rectangle(const rectangle& rect, float radius) const {
-  radius = std::min({radius, rect.width(), rect.height()});
-
-  if (radius < std::numeric_limits<float>::epsilon()) {
-    draw_mesh(rect, quad_);
-    return;
-  }
-
-  auto center = rect;
-  center.inset(radius);
-
-  draw_mesh(center, quad_);
-
-  for (const auto& bord: center.border_rectangles(radius)) {
-    draw_mesh(bord, quad_);
-  }
-
-  for (const auto& corn: center.corner_rectangles(radius)) {
-    draw_mesh(corn, sector_);
-  }
-}
-
-
-
-
-
 namespace {
   void set_blend_mode(config::blend_mode mode) {
     switch (mode) {
@@ -251,7 +225,77 @@ namespace {
 
     return rect;
   }
+
+
+
+
+
+  [[nodiscard]] std::array<rectangle, 4> border_rectangles(rectangle r, float t) {
+    auto&& w = r.width();
+    auto&& h = r.height();
+
+    return {
+      rectangle{r.x(),         r.y() - t,     w, t, r.rot_cw90() + 0},
+      rectangle{r.x() + w,     r.y(),         t, h, r.rot_cw90() + 1},
+      rectangle{r.x(),         r.y() + h,     w, t, r.rot_cw90() + 2},
+      rectangle{r.x() - t,     r.y(),         t, h, r.rot_cw90() + 3},
+    };
+  }
+
+  [[nodiscard]] std::array<rectangle, 4> border_rectangles_in(rectangle r, float t) {
+    auto&& w = r.width();
+    auto&& h = r.height();
+
+    return {
+      rectangle{r.x(),         r.y(),         w, t, r.rot_cw90() + 2},
+      rectangle{r.x() + w - t, r.y(),         t, h, r.rot_cw90() + 3},
+      rectangle{r.x(),         r.y() + h - t, w, t, r.rot_cw90() + 0},
+      rectangle{r.x(),         r.y(),         t, h, r.rot_cw90() + 1},
+    };
+  }
+
+
+
+  [[nodiscard]] std::array<rectangle, 4> corner_rectangles(rectangle r, float t) {
+    auto&& w = r.width();
+    auto&& h = r.height();
+
+    return {
+      rectangle{r.x() + w, r.y() - t, t, t, r.rot_cw90() + 0},
+      rectangle{r.x() + w, r.y() + h, t, t, r.rot_cw90() + 1},
+      rectangle{r.x() - t, r.y() + h, t, t, r.rot_cw90() + 2},
+      rectangle{r.x() - t, r.y() - t, t, t, r.rot_cw90() + 3}
+    };
+  }
 }
+
+
+
+
+
+void layout_painter::draw_rounded_rectangle(const rectangle& rect, float radius) const {
+  radius = std::min({radius, rect.width(), rect.height()});
+
+  if (radius < std::numeric_limits<float>::epsilon()) {
+    draw_mesh(rect, quad_);
+    return;
+  }
+
+  auto center = rect;
+  center.inset(radius);
+
+  draw_mesh(center, quad_);
+
+
+  for (const auto& bord: border_rectangles(center, radius)) {
+    draw_mesh(bord, quad_);
+  }
+
+  for (const auto& corn: corner_rectangles(center, radius)) {
+    draw_mesh(corn, sector_);
+  }
+}
+
 
 
 
@@ -296,10 +340,11 @@ void layout_painter::draw_border_effect(
 
 
 
-  if (float t = effect.thickness + surf.radius(); t > 0) {
-    auto borders = center.border_rectangles(t);
+  if (float thickness = effect.thickness + surf.radius(); thickness > 0) {
+    auto borders    = border_rectangles(center, thickness);
+    auto borders_in = border_rectangles_in(center, thickness);
 
-    static_assert(borders.size() == 2l * 4);
+    static_assert(borders.size() == 4 && borders_in.size() == 4);
     for (size_t side = 0; side < 4; ++side) {
       if (!sides[side]) {
         continue;
@@ -310,13 +355,13 @@ void layout_painter::draw_border_effect(
 
       if (!sides.all()) {
         //NOLINTNEXTLINE(*-constant-array-index)
-        draw_mesh(borders[side + 4], quad_);
+        draw_mesh(borders_in[side], quad_);
       }
     }
 
     size_t side{0};
 
-    for (const auto& rect: center.corner_rectangles(t)) {
+    for (const auto& rect: corner_rectangles(center, thickness)) {
       if (sides[side] || sides[(side + 1) % sides.size()]) {
         draw_mesh(rect, sector_);
       }
