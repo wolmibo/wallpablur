@@ -267,6 +267,25 @@ namespace {
       rectangle{r.x() - t, r.y() - t, t, t, r.rot_cw90() + 3}
     };
   }
+
+
+
+  [[nodiscard]] std::array<rectangle, 8> corner_rectangles_alt(rectangle r, float t) {
+    auto&& w = r.width();
+    auto&& h = r.height();
+
+    return {
+      rectangle{r.x() - t,     r.y(),         t, t, r.rot_cw90() + 2},
+      rectangle{r.x() + w - t, r.y() - t,     t, t, r.rot_cw90() + 3},
+      rectangle{r.x() + w,     r.y() + h - t, t, t, r.rot_cw90() + 0},
+      rectangle{r.x(),         r.y() + h,     t, t, r.rot_cw90() + 1},
+
+      rectangle{r.x() + w,     r.y(),         t, t, r.rot_cw90() + 1},
+      rectangle{r.x() + w - t, r.y() + h,     t, t, r.rot_cw90() + 2},
+      rectangle{r.x() - t,     r.y() + h - t, t, t, r.rot_cw90() + 3},
+      rectangle{r.x(),         r.y() - t,     t, t, r.rot_cw90() + 0}
+    };
+  }
 }
 
 
@@ -340,32 +359,46 @@ void layout_painter::draw_border_effect(
 
 
 
-  if (float thickness = effect.thickness + surf.radius(); thickness > 0) {
-    auto borders    = border_rectangles(center, thickness);
-    auto borders_in = border_rectangles_in(center, thickness);
+  float thickness = effect.thickness + surf.radius();
+  if (thickness < std::numeric_limits<float>::epsilon()) {
+    return;
+  }
 
-    static_assert(borders.size() == 4 && borders_in.size() == 4);
-    for (size_t side = 0; side < 4; ++side) {
-      if (!sides[side]) {
-        continue;
-      }
 
-      //NOLINTNEXTLINE(*-constant-array-index)
-      draw_mesh(borders[side], quad_);
 
-      if (!sides.all()) {
-        //NOLINTNEXTLINE(*-constant-array-index)
-        draw_mesh(borders_in[side], quad_);
-      }
+  auto borders    = border_rectangles(center, thickness);
+  auto borders_in = border_rectangles_in(center, thickness);
+
+  constexpr auto S = sides.size();
+
+  static_assert(borders.size() == S && borders_in.size() == S);
+  for (size_t side = 0; side < S; ++side) {
+    if (!sides[side]) {
+      continue;
     }
 
-    size_t side{0};
+    draw_mesh(borders[side], quad_);                    //NOLINT(*-constant-array-index)
 
-    for (const auto& rect: corner_rectangles(center, thickness)) {
-      if (sides[side] || sides[(side + 1) % sides.size()]) {
-        draw_mesh(rect, sector_);
-      }
-      side++;
+    if (!sides.all()) {
+      draw_mesh(borders_in[side], quad_);               //NOLINT(*-constant-array-index)
+    }
+  }
+
+  auto corners     = corner_rectangles(center, thickness);
+  auto corners_alt = corner_rectangles_alt(center, thickness);
+
+  static_assert(corners.size() == S && corners_alt.size() == S * 2);
+  for (size_t side = 0; side < S; ++side) {
+    if (!sides[(side + S - 1) % S] && sides[side]) {
+      draw_mesh(corners_alt[side], sector_);            //NOLINT(*-constant-array-index)
+    }
+
+    if (sides[side] && !sides[(side + 1) % S]) {
+      draw_mesh(corners_alt[side + S], sector_);        //NOLINT(*-constant-array-index)
+    }
+
+    if (sides[side] || sides[(side + 1) % S]) {
+      draw_mesh(corners[side], sector_);                //NOLINT(*-constant-array-index)
     }
   }
 }
