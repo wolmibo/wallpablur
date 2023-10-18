@@ -31,10 +31,11 @@ class rectangle {
 
 
 
-    [[nodiscard]] float x()      const { return x_;      }
-    [[nodiscard]] float y()      const { return y_;      }
-    [[nodiscard]] float width()  const { return width_;  }
-    [[nodiscard]] float height() const { return height_; }
+    [[nodiscard]] float        x()        const { return x_;      }
+    [[nodiscard]] float        y()        const { return y_;      }
+    [[nodiscard]] float        width()    const { return width_;  }
+    [[nodiscard]] float        height()   const { return height_; }
+    [[nodiscard]] unsigned int rot_cw90() const { return rot_cw90_; }
 
     [[nodiscard]] std::array<float, 16> to_matrix(float, float) const;
 
