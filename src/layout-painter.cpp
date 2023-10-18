@@ -258,16 +258,23 @@ namespace {
 
 void layout_painter::draw_border_effect(
     const config::border_effect& effect,
-    const surface&               surf
+    const surface&               surf,
+    std::bitset<4>               sides
 ) const {
-  set_blend_mode(effect.blend);
+  if (sides.none()) {
+    return;
+  }
 
-  solid_color_shader_.use();
-  invoke_append_color(glUniform4f, effect.col, solid_color_uniform_);
+  set_blend_mode(effect.blend);
 
   auto center = center_tile(surf.rect(), effect);
   center.inset(surf.radius());
-  draw_mesh(center, quad_);
+
+  if (sides.all()) {
+    solid_color_shader_.use();
+    invoke_append_color(glUniform4f, effect.col, solid_color_uniform_);
+    draw_mesh(center, quad_);
+  }
 
 
   switch (effect.foff) {
@@ -290,12 +297,21 @@ void layout_painter::draw_border_effect(
 
 
   if (float t = effect.thickness + surf.radius(); t > 0) {
+    size_t side{0};
+
     for (const auto& rect: center.border_rectangles(t)) {
-      draw_mesh(rect, quad_);
+      if (sides[side++]) {
+        draw_mesh(rect, quad_);
+      }
     }
 
+    side = 0;
+
     for (const auto& rect: center.corner_rectangles(t)) {
-      draw_mesh(rect, sector_);
+      if (sides[side] || sides[(side + 1) % sides.size()]) {
+        draw_mesh(rect, sector_);
+      }
+      side++;
     }
   }
 }

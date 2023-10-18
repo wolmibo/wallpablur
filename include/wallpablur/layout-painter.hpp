@@ -63,7 +63,8 @@ class layout_painter {
 
     void draw_rounded_rectangle(const rectangle&, float) const;
 
-    void draw_border_effect(const config::border_effect&, const surface&) const;
+    void draw_border_effect(const config::border_effect&, const surface&,
+                             std::bitset<4> = 0xf) const;
 
     void draw_wallpaper      (const config::wallpaper&) const;
     void draw_surface_effects(const workspace&) const;
