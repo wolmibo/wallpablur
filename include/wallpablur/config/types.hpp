@@ -34,6 +34,12 @@ struct margin_type {
 
 class anchor_type {
   public:
+    static constexpr anchor_type all() {
+      return anchor_type{0xf};
+    }
+
+    anchor_type() = default;
+
     [[nodiscard]] bool left()   const { return value_.test(a_left);   }
     [[nodiscard]] bool right()  const { return value_.test(a_right);  }
     [[nodiscard]] bool top()    const { return value_.test(a_top);    }
@@ -57,6 +63,8 @@ class anchor_type {
     static constexpr size_t a_bottom {3};
 
     std::bitset<4> value_;
+
+    constexpr anchor_type(std::bitset<4> value) : value_{value} {}
 };
 
 

@@ -34,6 +34,15 @@ enum class border_position {
 
 
 
+struct sides_type {
+  anchor_type relative;
+  anchor_type absolute;
+};
+
+
+
+
+
 struct border_effect {
   struct offset_type {
     int x{0};
@@ -50,6 +59,8 @@ struct border_effect {
   blend_mode                   blend    {blend_mode::alpha};
   falloff                      foff     {falloff::none};
   float                        exponent {1.f};
+
+  sides_type                   sides;
 };
 
 }

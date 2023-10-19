@@ -106,6 +106,10 @@ template<> struct iconfigp::case_insensitive_parse_lut<surface_effect_e> {
   };
 };
 
+static const sides_type sides_type_all_sides {
+  .relative = anchor_type::all()
+};
+
 static const border_effect surface_effect_e_border {
   .condition = true,
   .thickness = 2,
@@ -114,7 +118,8 @@ static const border_effect surface_effect_e_border {
   .col       = {0.f, 0.f, 0.f, 1.f},
   .blend     = blend_mode::alpha,
   .foff      = falloff::none,
-  .exponent  = 1.f
+  .exponent  = 1.f,
+  .sides     = sides_type_all_sides
 };
 
 static const border_effect surface_effect_e_shadow {
@@ -125,7 +130,8 @@ static const border_effect surface_effect_e_shadow {
   .col       = {0.f, 0.f, 0.f, 0.8f},
   .blend     = blend_mode::alpha,
   .foff      = falloff::sinusoidal,
-  .exponent  = 1.5f
+  .exponent  = 1.5f,
+  .sides     = sides_type_all_sides
 };
 
 static const border_effect surface_effect_e_glow {
@@ -136,7 +142,8 @@ static const border_effect surface_effect_e_glow {
   .col       = {1.f, 1.f, 1.f, 1.f},
   .blend     = blend_mode::add,
   .foff      = falloff::linear,
-  .exponent  = 3.f
+  .exponent  = 3.f,
+  .sides     = sides_type_all_sides
 };
 
 namespace {
@@ -203,6 +210,34 @@ template<> struct iconfigp::value_parser<anchor_type> {
 
 
 
+template<> struct iconfigp::value_parser<sides_type> {
+  static constexpr std::string_view name {"sides"};
+  static constexpr std::string_view format() {
+    return "string made up of l, r, b, t, n, e, s, and w";
+  }
+  static std::optional<sides_type> parse(std::string_view input) {
+    anchor_type relative;
+    anchor_type absolute;
+    for (auto character: input) {
+      switch (character) {
+        case 'w': case 'W': relative.left(true);   break;
+        case 'e': case 'E': relative.right(true);  break;
+        case 's': case 'S': relative.bottom(true); break;
+        case 'n': case 'N': relative.top(true);    break;
+
+        case 'l': case 'L': absolute.left(true);   break;
+        case 'r': case 'R': absolute.right(true);  break;
+        case 'b': case 'B': absolute.bottom(true); break;
+        case 't': case 'T': absolute.top(true);    break;
+        default: return {};
+      }
+    }
+    return sides_type{relative, absolute};
+  }
+};
+
+
+
 template<> struct iconfigp::value_parser<panel::size_type> {
   static constexpr std::string_view name {"size"};
   static constexpr std::string_view format() { return "<width:u32>:<height:u32>"; }
@@ -258,6 +293,7 @@ namespace {
     update(grp, output.blend,     "blend");
     update(grp, output.foff,      "falloff");
     update(grp, output.exponent,  "exponent");
+    update(grp, output.sides,     "sides");
     return output;
   }
 
