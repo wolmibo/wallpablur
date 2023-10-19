@@ -3,6 +3,7 @@
 #include "wallpablur/gl/utils.hpp"
 #include "wallpablur/layout-painter.hpp"
 #include "wallpablur/rectangle.hpp"
+#include "wallpablur/surface.hpp"
 #include "shader/shader.hpp"
 
 #include <algorithm>
@@ -181,6 +182,30 @@ void layout_painter::draw_mesh(const rectangle& rect, const gl::mesh& mesh) cons
 
 
 namespace {
+  [[nodiscard]] std::bitset<4> realize_sides(
+      const config::sides_type& sides,
+      layout_orientation        orientation
+  ) {
+    auto output = sides.absolute.value();
+    auto rel    = sides.relative.value();
+
+    if (output.all() || rel.none()) {
+      return output;
+    }
+
+    switch (orientation) {
+      case layout_orientation::horizontal:
+        return output | (rel >> 1) | std::bitset<4>(rel[0] ? 0x8 : 0);
+      case layout_orientation::vertical:
+        return output | rel;
+
+      default:
+        return output;
+    }
+  }
+
+
+
   void set_blend_mode(config::blend_mode mode) {
     switch (mode) {
       case config::blend_mode::add:
@@ -321,9 +346,10 @@ void layout_painter::draw_rounded_rectangle(const rectangle& rect, float radius)
 
 void layout_painter::draw_border_effect(
     const config::border_effect& effect,
-    const surface&               surf,
-    std::bitset<4>               sides
+    const surface&               surf
 ) const {
+  auto sides = realize_sides(effect.sides, surf.orientation());
+
   if (sides.none()) {
     return;
   }

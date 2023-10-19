@@ -52,15 +52,15 @@ class anchor_type {
 
 
 
-    [[nodiscard]] std::bitset<4>& value() { return value_; }
+    [[nodiscard]] std::bitset<4> value() const { return value_; }
 
 
 
   private:
-    static constexpr size_t a_left   {0};
+    static constexpr size_t a_top    {0};
     static constexpr size_t a_right  {1};
-    static constexpr size_t a_top    {2};
-    static constexpr size_t a_bottom {3};
+    static constexpr size_t a_bottom {2};
+    static constexpr size_t a_left   {3};
 
     std::bitset<4> value_;
 
