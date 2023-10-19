@@ -51,12 +51,12 @@ scale-filter = linear
 enable-if = true
 
 [surface-effects]
-# - type = border; thickness = 2; position = outside; offset = 0,0;
+# - type = border; thickness = 2; position = outside; offset = 0,0; sides = lrtb;
 #   color = #000000; blend = alpha; falloff = none; exponent = 1; enable-if = true
-# - type = shadow; thickness = 30; position = centered; offset = 2,2;
+# - type = shadow; thickness = 30; position = centered; offset = 2,2; sides = lrtb;
 #   color = #000000cc; blend = alpha; falloff = sinusoidal; exponent = 1.5;
 #   enable-if = true
-# - type = glow; thickness = 20; position = outside; offset = 0,0;
+# - type = glow; thickness = 20; position = outside; offset = 0,0; sides = lrtb;
 #   color = #ffffff; blend = add; falloff = linear; exponent = 3; enable-if = true
 
 # [OUTPUT.panels]
@@ -295,6 +295,12 @@ restrict the effect to specific surfaces or workspaces
     - `falloff`: How to fade the color accross the thickness. Possible values:
       `none`, `linear`, `sinusoidal`
     - `exponent`: Raise the falloff to this power
+    - `sides`: String made up of `l`, `r`, `t`, `b`, `n`, `w`, `e`, and `s`,
+       indicating on what sides of the surface to draw the border:
+       `[l]eft`, `[r]ight`, `[t]op`, `[b]ottom` in absolute terms, and
+       `[n]orth`, `[w]est`, `[e]ast`, `[s]outh = [s]plit in this direction` relative
+       to the current split direction
+
 
 * `type = shadow`:
   Same as `type = border`, but with changed defaults:
