@@ -34,15 +34,19 @@ struct margin_type {
 
 class anchor_type {
   public:
-    [[nodiscard]] bool left()   const { return value.test(a_left);   }
-    [[nodiscard]] bool right()  const { return value.test(a_right);  }
-    [[nodiscard]] bool top()    const { return value.test(a_top);    }
-    [[nodiscard]] bool bottom() const { return value.test(a_bottom); }
+    [[nodiscard]] bool left()   const { return value_.test(a_left);   }
+    [[nodiscard]] bool right()  const { return value_.test(a_right);  }
+    [[nodiscard]] bool top()    const { return value_.test(a_top);    }
+    [[nodiscard]] bool bottom() const { return value_.test(a_bottom); }
 
-    void left  (bool v) { value.set(a_left,   v); }
-    void right (bool v) { value.set(a_right,  v); }
-    void top   (bool v) { value.set(a_top,    v); }
-    void bottom(bool v) { value.set(a_bottom, v); }
+    void left  (bool v) { value_.set(a_left,   v); }
+    void right (bool v) { value_.set(a_right,  v); }
+    void top   (bool v) { value_.set(a_top,    v); }
+    void bottom(bool v) { value_.set(a_bottom, v); }
+
+
+
+    [[nodiscard]] std::bitset<4>& value() { return value_; }
 
 
 
@@ -52,7 +56,7 @@ class anchor_type {
     static constexpr size_t a_top    {2};
     static constexpr size_t a_bottom {3};
 
-    std::bitset<4> value;
+    std::bitset<4> value_;
 };
 
 
