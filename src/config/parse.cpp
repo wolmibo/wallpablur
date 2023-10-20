@@ -355,14 +355,23 @@ namespace {
 
   [[nodiscard]] panel parse_panel(const group& grp) {
     panel output;
+
+    set_surface_flag(output.mask, surface_flag::panel);
+
+    if (auto key = grp.unique_key("focused"); key && parse<bool>(*key)) {
+      set_surface_flag(output.mask, surface_flag::focused);
+    }
+    if (auto key = grp.unique_key("urgent"); key && parse<bool>(*key)) {
+      set_surface_flag(output.mask, surface_flag::urgent);
+    }
+
     update(grp, output.anchor,    "anchor");
     update(grp, output.size,      "size");
     update(grp, output.margin,    "margin");
     update(grp, output.radius,    "border-radius");
     update(grp, output.app_id,    "app-id", "app_id"sv);
-    update(grp, output.focused,   "focused");
-    update(grp, output.urgent,    "urgent");
     update(grp, output.condition, "enable-if");
+
     return output;
   }
 

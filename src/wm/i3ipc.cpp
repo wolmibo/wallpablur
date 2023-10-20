@@ -118,7 +118,7 @@ namespace {
   void load_surface_from_json(
       workspace&              ws,
       const rapidjson::Value& value,
-      surface_type            type,
+      bool                    floating,
       layout_orientation      orientation
   ) {
     auto json_rect = json::find_member(value, "rect");
@@ -127,13 +127,27 @@ namespace {
     }
 
     std::string app_id {json::member_to_str (value, "app_id" ).value_or("")};
-    bool        focused{json::member_to_bool(value, "focused").value_or(false)};
-    bool        urgent {json::member_to_bool(value, "urgent" ).value_or(false)};
+
+    surface_flag_mask mask;
+
+    if (json::member_to_bool(value, "focused").value_or(false)) {
+      set_surface_flag(mask, surface_flag::focused);
+    }
+
+    if (json::member_to_bool(value, "urgent").value_or(false)) {
+      set_surface_flag(mask, surface_flag::urgent);
+    }
+
+    if (floating) {
+      set_surface_flag(mask, surface_flag::floating);
+    } else {
+      set_surface_flag(mask, surface_flag::tiled);
+    }
 
     auto base_rect{rectangle_from_json(*json_rect)};
 
     if (json::member_to_bool(value, "visible").value_or(false)) {
-      ws.emplace_surface(base_rect, type, app_id, focused, urgent, 0.f, orientation);
+      ws.emplace_surface(base_rect, app_id, mask, 0.f, orientation);
     }
 
 
@@ -150,8 +164,9 @@ namespace {
 
     deco_rect.translate(base_rect.x(), base_rect.y() - deco_rect.height());
 
-    ws.emplace_surface(deco_rect,
-        surface_type::decoration, app_id, focused, urgent, 0.f, orientation);
+    set_surface_flag(mask, surface_flag::decoration);
+
+    ws.emplace_surface(deco_rect, app_id, mask, 0.f, orientation);
   }
 
 
@@ -159,25 +174,25 @@ namespace {
   void load_node_leaves(
       workspace&                          ws,
       const rapidjson::Value::ConstArray& list,
-      surface_type                        type,
+      bool                                floating,
       layout_orientation                  parent_orientation
   ) {
 
     for (const auto& container: list) {
-      auto nodes    = json::member_to_array(container, "nodes");
-      auto floating = json::member_to_array(container, "floating_nodes");
+      auto nodes  = json::member_to_array(container, "nodes");
+      auto floats = json::member_to_array(container, "floating_nodes");
 
-      if ((!nodes || nodes->Empty()) && (!floating || floating->Empty())) {
-        load_surface_from_json(ws, container, type, parent_orientation);
+      if ((!nodes || nodes->Empty()) && (!floats || floats->Empty())) {
+        load_surface_from_json(ws, container, floating, parent_orientation);
       } else {
         auto orientation = orientation_from_json(container);
 
         if (nodes) {
-          load_node_leaves(ws, *nodes, surface_type::tiled, orientation);
+          load_node_leaves(ws, *nodes, false, orientation);
         }
 
-        if (floating) {
-          load_node_leaves(ws, *floating, surface_type::floating, orientation);
+        if (floats) {
+          load_node_leaves(ws, *floats, true, orientation);
         }
       }
     }
@@ -189,11 +204,11 @@ namespace {
     auto orientation = orientation_from_json(value);
 
     if (auto nodes = json::member_to_array(value, "nodes")) {
-      load_node_leaves(ws, *nodes, surface_type::tiled, orientation);
+      load_node_leaves(ws, *nodes, false, orientation);
     }
 
     if (auto floating = json::member_to_array(value, "floating_nodes")) {
-      load_node_leaves(ws, *floating, surface_type::floating, orientation);
+      load_node_leaves(ws, *floating, true, orientation);
     }
   }
 

@@ -18,15 +18,6 @@ namespace expression {
 
 class surface_expression_condition {
   public:
-    enum class flag {
-      focused,
-      urgent,
-      panel,
-      floating,
-      tiled,
-      decoration,
-    };
-
     enum class string_var {
       app_id,
     };
@@ -46,9 +37,9 @@ class surface_expression_condition {
 
   private:
     std::variant<
-      flag,
+      surface_flag,
       string_expr
-    > cond_ = flag::focused;
+    > cond_ = surface_flag::eoec_marker;
 
 
 

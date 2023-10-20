@@ -3,17 +3,12 @@
 
 #include "wallpablur/rectangle.hpp"
 
+#include <bitset>
 #include <string>
 #include <string_view>
+#include <utility>
 
 
-
-enum class surface_type {
-  panel,
-  floating,
-  tiled,
-  decoration,
-};
 
 
 
@@ -25,24 +20,41 @@ enum class layout_orientation {
 
 
 
+enum class surface_flag : size_t {
+  panel,
+  floating,
+  tiled,
+  decoration,
+
+  focused,
+  urgent,
+
+  eoec_marker
+};
+
+using surface_flag_mask = std::bitset<std::to_underlying(surface_flag::eoec_marker) - 1>;
+
+constexpr void set_surface_flag(surface_flag_mask& mask, surface_flag flag) {
+  mask[std::to_underlying(flag)] = true;
+}
+
+
+
+
 class surface {
   public:
     surface(
         rectangle          rect,
-        surface_type       type,
         std::string        app_id,
-        bool               focused     = false,
-        bool               urgent      = false,
+        surface_flag_mask  mask        = {},
         float              radius      = 0.f,
         layout_orientation orientation = layout_orientation::none
     ) :
       rect_       {rect},
       radius_     {radius},
-      type_       {type},
 
       app_id_     {std::move(app_id)},
-      focused_    {focused},
-      urgent_     {urgent},
+      mask_       {mask},
 
       orientation_{orientation}
     {}
@@ -56,26 +68,25 @@ class surface {
 
     [[nodiscard]] float              radius()      const { return radius_; }
 
-    [[nodiscard]] surface_type       type()        const { return type_; }
-
     [[nodiscard]] std::string_view   app_id()      const { return app_id_;  }
 
-    [[nodiscard]] bool               focused()     const { return focused_; }
-    [[nodiscard]] bool               urgent()      const { return urgent_;  }
-
     [[nodiscard]] layout_orientation orientation() const { return orientation_; }
+
+
+
+    [[nodiscard]] bool has_flag(surface_flag flag) const {
+      return mask_[std::to_underlying(flag)];
+    }
 
 
 
   private:
     rectangle          rect_;
     float              radius_;
-    surface_type       type_;
 
     std::string        app_id_;
 
-    bool               focused_;
-    bool               urgent_;
+    surface_flag_mask  mask_;
 
     layout_orientation orientation_;
 };

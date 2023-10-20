@@ -130,10 +130,8 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
   for (const auto& panel : config_.fixed_panels) {
     fixed_panels_.emplace_back(surface{
         panel.to_rect(geometry_.logical_width(), geometry_.logical_height()),
-        surface_type::panel,
         panel.app_id,
-        panel.focused,
-        panel.urgent,
+        panel.mask,
         panel.radius
       },
       panel.condition

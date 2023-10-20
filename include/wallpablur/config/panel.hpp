@@ -3,6 +3,7 @@
 
 #include "wallpablur/config/types.hpp"
 #include "wallpablur/rectangle.hpp"
+#include "wallpablur/surface.hpp"
 #include "wallpablur/workspace-expression.hpp"
 
 #include <string>
@@ -29,8 +30,8 @@ struct panel {
 
 
   std::string          app_id {};
-  bool                 focused{false};
-  bool                 urgent {false};
+
+  surface_flag_mask    mask   {};
 
 
   workspace_expression condition{true};

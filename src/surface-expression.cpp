@@ -6,16 +6,7 @@
 bool surface_expression_condition::evaluate(const surface& surf) const {
   switch (cond_.index()) {
     case 0:
-      switch (std::get<0>(cond_)) {
-        case flag::focused:    return surf.focused();
-        case flag::urgent:     return surf.urgent();
-
-        case flag::panel:      return surf.type() == surface_type::panel;
-        case flag::floating:   return surf.type() == surface_type::floating;
-        case flag::tiled:      return surf.type() == surface_type::tiled;
-        case flag::decoration: return surf.type() == surface_type::decoration;
-      }
-      return false;
+      return surf.has_flag(std::get<0>(cond_));
 
     case 1: {
       const auto& [expr, var] = std::get<1>(cond_);
@@ -39,7 +30,7 @@ bool surface_expression_condition::evaluate(const surface& surf) const {
 std::string_view iconfigp::value_parser<surface_expression>::format() {
   return
     "Boolean expression formed from the terms:\n"
-    "  <boolean>, focused, urgent, panel, floating, tiled, decoration,\n"
+    "  <boolean>, <surface_flag>\n"
     "  app_id == [*]<string>[*]\n"
     "which can be combined (in descending precendence) using:\n"
     "  (), ! (prefix), && (infix), and || (infix)\n";
@@ -50,18 +41,17 @@ std::string_view iconfigp::value_parser<surface_expression>::format() {
 
 
 template<>
-struct iconfigp::case_insensitive_parse_lut<surface_expression_condition::flag> {
+struct iconfigp::case_insensitive_parse_lut<surface_flag> {
   static constexpr std::string_view name {"surface-flag"};
-  static constexpr std::array<std::pair<std::string_view,
-                                        surface_expression_condition::flag>, 6> lut
+  static constexpr std::array<std::pair<std::string_view, surface_flag>, 6> lut
   {
-    std::make_pair("focused",  surface_expression_condition::flag::focused),
-    std::make_pair("urgent",   surface_expression_condition::flag::urgent),
+    std::make_pair("focused",    surface_flag::focused),
+    std::make_pair("urgent",     surface_flag::urgent),
 
-    std::make_pair("panel",      surface_expression_condition::flag::panel),
-    std::make_pair("floating",   surface_expression_condition::flag::floating),
-    std::make_pair("tiled",      surface_expression_condition::flag::tiled),
-    std::make_pair("decoration", surface_expression_condition::flag::decoration),
+    std::make_pair("panel",      surface_flag::panel),
+    std::make_pair("floating",   surface_flag::floating),
+    std::make_pair("tiled",      surface_flag::tiled),
+    std::make_pair("decoration", surface_flag::decoration),
   };
 };
 
@@ -107,7 +97,7 @@ namespace {
 std::optional<surface_expression_condition> surface_expression_condition::from_token(
     expression::token in
 ) {
-  if (auto flg = iconfigp::value_parser<flag>::parse(in.content())) {
+  if (auto flg = iconfigp::value_parser<surface_flag>::parse(in.content())) {
     return surface_expression_condition{*flg};
   }
 
