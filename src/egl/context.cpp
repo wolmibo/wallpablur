@@ -11,7 +11,6 @@
 
 
 namespace {
-  template<typename T = void> requires (logcerr::debugging_enabled())
   [[nodiscard]] std::string_view gl_message_source(GLenum source) {
     switch (source) {
       case GL_DEBUG_SOURCE_API:             return "API";
@@ -28,7 +27,6 @@ namespace {
 
 
 
-  template<typename T = void> requires (logcerr::debugging_enabled())
   [[nodiscard]] std::string_view gl_message_type(GLenum type) {
     switch (type) {
       case GL_DEBUG_TYPE_ERROR:               return "an error";
@@ -47,7 +45,6 @@ namespace {
 
 
 
-  template<typename T = void> requires (logcerr::debugging_enabled())
   [[nodiscard]] logcerr::severity gl_severity(GLenum severity) {
     switch (severity) {
       case GL_DEBUG_SEVERITY_HIGH:         return logcerr::severity::error;
@@ -61,12 +58,13 @@ namespace {
 
 
 
-  template<typename T = void> requires (logcerr::debugging_enabled())
   void gl_debug_cb(GLenum source, GLenum type, GLuint id, GLenum severity,
       GLsizei /*length*/, const GLchar* message, const void* /*userptr*/) {
 
-    logcerr::print(gl_severity(severity), "GL {} reports {} ({}):\n{}",
-        gl_message_source(source), gl_message_type(type), id, message);
+    if constexpr (logcerr::debugging_enabled()) {
+      logcerr::print(gl_severity(severity), "GL {} reports {} ({}):\n{}",
+          gl_message_source(source), gl_message_type(type), id, message);
+    }
   }
 
 

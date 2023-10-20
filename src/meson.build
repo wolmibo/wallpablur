@@ -99,11 +99,21 @@ gdkpixbuf = dependency(
 if gdkpixbuf.found()
   sources       += 'load-image-gdk-pixbuf.cpp'
   dependencies  += gdkpixbuf
-  build_options += 'gdk-pixbuf=enabled'
+  build_options += 'gdk-pixbuf=enabled, '
 else
   sources       += 'load-image-png.cpp'
   dependencies  += dependency('libpng')
-  build_options += 'gdk-pixbuf=disabled'
+  build_options += 'gdk-pixbuf=disabled, '
+endif
+
+cpp_args = []
+
+if get_option('debug')
+  cpp_args += '-DLOGCERR_ENABLE_DEBUGGING'
+  build_options += 'debug=enabled'
+else
+  cpp_args += '-DLOGCERR_DISABLE_DEBUGGING'
+  build_options += 'debug=disabled'
 endif
 
 
@@ -123,6 +133,7 @@ executable(
   'wallpablur',
   sources,
   dependencies:        dependencies,
+  cpp_args:            cpp_args,
   install:             true,
   include_directories: ['../include']
 )
