@@ -107,6 +107,7 @@ template<> struct iconfigp::case_insensitive_parse_lut<surface_effect_e> {
 };
 
 static const sides_type sides_type_all_sides {
+  .relative = {},
   .absolute = anchor_type::all()
 };
 
