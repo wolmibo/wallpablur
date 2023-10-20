@@ -45,14 +45,22 @@ struct wallpaper {
 
 
 
+struct surface_rounded_corners {
+  surface_workspace_expression condition{true};
+  float                        radius   {10.f};
+};
+
+
+
 struct output {
-  std::string                  name;
+  std::string                          name;
 
-  std::vector<wallpaper>       wallpapers;
+  std::vector<wallpaper>               wallpapers;
 
-  std::vector<panel>           fixed_panels;
+  std::vector<panel>                   fixed_panels;
 
-  std::vector<border_effect>   border_effects;
+  std::vector<border_effect>           border_effects;
+  std::vector<surface_rounded_corners> rounded_corners;
 };
 
 }

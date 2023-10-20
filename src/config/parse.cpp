@@ -93,16 +93,19 @@ template<> struct iconfigp::case_insensitive_parse_lut<border_position> {
 enum class surface_effect_e {
   border,
   shadow,
-  glow
+  glow,
+
+  rounded_corners
 };
 
 template<> struct iconfigp::case_insensitive_parse_lut<surface_effect_e> {
-  static constexpr std::string_view name{"border-effect"};
-  static constexpr std::array<std::pair<std::string_view, surface_effect_e>, 3>
+  static constexpr std::string_view name{"surface-effect-type"};
+  static constexpr std::array<std::pair<std::string_view, surface_effect_e>, 4>
   lut {
-    std::make_pair("border", surface_effect_e::border),
-    std::make_pair("shadow", surface_effect_e::shadow),
-    std::make_pair("glow",   surface_effect_e::glow)
+    std::make_pair("border",          surface_effect_e::border),
+    std::make_pair("shadow",          surface_effect_e::shadow),
+    std::make_pair("glow",            surface_effect_e::glow),
+    std::make_pair("rounded-corners", surface_effect_e::rounded_corners)
   };
 };
 
@@ -153,8 +156,9 @@ namespace {
       case surface_effect_e::border: return surface_effect_e_border;
       case surface_effect_e::shadow: return surface_effect_e_shadow;
       case surface_effect_e::glow:   return surface_effect_e_glow;
+
+      default:                       return surface_effect_e_border;
     }
-    return surface_effect_e_border;
   }
 }
 
@@ -300,22 +304,49 @@ namespace {
 
 
 
-  [[nodiscard]] std::vector<border_effect> parse_border_effects(opt_sec sec) {
+  [[nodiscard]] surface_rounded_corners parse_rounded_corners(const group& grp) {
+    surface_rounded_corners output;
+    update(grp, output.condition, "enable-if");
+    update(grp, output.radius,    "radius");
+    return output;
+  }
+
+
+
+  [[nodiscard]]
+  std::pair<std::vector<surface_rounded_corners>, std::vector<border_effect>>
+  parse_surface_effects(opt_sec sec) {
     if (!sec) {
       return {};
     }
 
-    std::vector<border_effect> effects;
+    std::vector<surface_rounded_corners> rounded_corners;
+    std::vector<border_effect>           border_effects;
+
     for (const auto& grp: sec->groups()) {
       if (auto type = grp.unique_key("type")) {
-        if (auto effect = parse_border_effect(grp,
-                            surface_effect_e_default(parse<surface_effect_e>(*type)));
-            !effect.condition.is_always_false()) {
-          effects.emplace_back(std::move(effect));
+        auto tp = parse<surface_effect_e>(*type);
+
+        switch (tp) {
+          case surface_effect_e::rounded_corners:
+            if (auto effect = parse_rounded_corners(grp);
+                !effect.condition.is_always_false()) {
+              rounded_corners.emplace_back(std::move(effect));
+            }
+            break;
+
+          default:
+            if (auto effect = parse_border_effect(grp, surface_effect_e_default(tp));
+                !effect.condition.is_always_false()) {
+              border_effects.emplace_back(std::move(effect));
+            }
+            break;
         }
       }
     }
-    return effects;
+
+
+    return {std::move(rounded_corners), std::move(border_effects)};
   }
 
 
@@ -526,14 +557,17 @@ namespace {
 
     std::ranges::reverse(wallpapers);
 
-    auto panel_section          = best_subsection(sec, fallback, "panels");
-    auto border_effects_section = best_subsection(sec, fallback, "surface-effects");
+    auto panel_section = best_subsection(sec, fallback, "panels");
+    auto s_e_section   = best_subsection(sec, fallback, "surface-effects");
+
+    auto [rounded_corners, border_effects] = parse_surface_effects(s_e_section);
 
     return output {
       .name                 = std::string{sec.name()},
       .wallpapers           = std::move(wallpapers),
       .fixed_panels         = parse_panels(panel_section),
-      .border_effects       = parse_border_effects(border_effects_section)
+      .border_effects       = std::move(border_effects),
+      .rounded_corners      = std::move(rounded_corners)
     };
   }
 }
