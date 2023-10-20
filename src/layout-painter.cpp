@@ -346,7 +346,8 @@ void layout_painter::draw_rounded_rectangle(const rectangle& rect, float radius)
 
 void layout_painter::draw_border_effect(
     const config::border_effect& effect,
-    const surface&               surf
+    const surface&               surf,
+    float                        radius
 ) const {
   auto sides = realize_sides(effect.sides, surf.orientation());
 
@@ -357,7 +358,7 @@ void layout_painter::draw_border_effect(
   set_blend_mode(effect.blend);
 
   auto center = center_tile(surf.rect(), effect);
-  center.inset(surf.radius());
+  center.inset(radius);
 
   if (sides.all()) {
     solid_color_shader_.use();
@@ -373,19 +374,19 @@ void layout_painter::draw_border_effect(
     case config::falloff::linear:
       shader_cache_.find_or_create(shader::border_linear,
           resources::border_vs(), resources::border_linear_fs()).use();
-      set_border_uniforms(effect, surf.radius());
+      set_border_uniforms(effect, radius);
       break;
 
     case config::falloff::sinusoidal:
       shader_cache_.find_or_create(shader::border_sinusoidal,
           resources::border_vs(), resources::border_sinusoidal_fs()).use();
-      set_border_uniforms(effect, surf.radius());
+      set_border_uniforms(effect, radius);
       break;
   }
 
 
 
-  float thickness = effect.thickness + surf.radius();
+  float thickness = effect.thickness + radius;
   if (thickness < std::numeric_limits<float>::epsilon()) {
     return;
   }
@@ -493,12 +494,12 @@ void layout_painter::draw_surface_effects(const workspace& ws) const {
   for (const auto& be: config_.border_effects) {
     for (const auto& surface: ws.surfaces()) {
       if (be.condition.evaluate(surface, ws)) {
-        draw_border_effect(be, surface);
+        draw_border_effect(be, surface, radius(surface, ws));
       }
     }
     for (const auto& [surface, condition]: fixed_panels_) {
       if (condition.evaluate(ws) && be.condition.evaluate(surface, ws)) {
-        draw_border_effect(be, surface);
+        draw_border_effect(be, surface, radius(surface, ws));
       }
     }
   }
@@ -508,7 +509,7 @@ void layout_painter::draw_surface_effects(const workspace& ws) const {
 
 void layout_painter::draw_background(
     const config::background& bg,
-    const workspace&         ws
+    const workspace&          ws
 ) const {
   glDisable(GL_BLEND);
 
@@ -517,13 +518,13 @@ void layout_painter::draw_background(
 
     for (const auto& surface: ws.surfaces()) {
       if (bg.condition.evaluate(surface, ws)) {
-        draw_rounded_rectangle(surface.rect(), surface.radius());
+        draw_rounded_rectangle(surface.rect(), radius(surface, ws));
       }
     }
 
     for (const auto& [surface, condition]: fixed_panels_) {
       if (condition.evaluate(ws) && bg.condition.evaluate(surface, ws)) {
-        draw_rounded_rectangle(surface.rect(), surface.radius());
+        draw_rounded_rectangle(surface.rect(), radius(surface, ws));
       }
     }
 
@@ -572,4 +573,20 @@ layout_painter::~layout_painter() {
   } catch (std::exception& ex) {
     logcerr::error(ex.what());
   }
+}
+
+
+
+
+
+float layout_painter::radius(const surface& surf, const workspace& ws) const {
+  float value = surf.radius();
+
+  for (const auto& setting: config_.rounded_corners) {
+    if (setting.condition.evaluate(surf, ws)) {
+      value = setting.radius;
+    }
+  }
+
+  return value;
 }

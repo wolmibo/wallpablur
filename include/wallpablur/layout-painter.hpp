@@ -63,12 +63,14 @@ class layout_painter {
 
     void draw_rounded_rectangle(const rectangle&, float) const;
 
-    void draw_border_effect(const config::border_effect&, const surface&) const;
+    void draw_border_effect(const config::border_effect&, const surface&, float) const;
 
     void draw_wallpaper      (const config::wallpaper&) const;
     void draw_surface_effects(const workspace&) const;
     void draw_background     (const config::background&, const workspace&) const;
     void set_buffer_alpha    (float alpha)      const;
+
+    [[nodiscard]] float radius(const surface&, const workspace&) const;
 
     [[nodiscard]] const config::wallpaper* active_wallpaper(const workspace&) const;
 };
