@@ -24,7 +24,11 @@ struct brush {
 
   std::shared_ptr<gl::texture> realization;
 
-  bool operator==(const brush&) const = default;
+
+
+  bool operator==(const brush& rhs) const {
+    return solid == rhs.solid && fgraph == rhs.fgraph;
+  };
 };
 
 
