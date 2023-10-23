@@ -56,6 +56,7 @@ sources = [
 
   'wayland/client.cpp',
   'wayland/output.cpp',
+  'wayland/surface.cpp',
 
   'wm/unix-socket.cpp',
   'wm/i3ipc-socket.cpp',
