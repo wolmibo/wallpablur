@@ -1,6 +1,7 @@
 #include "wallpablur/application.hpp"
 #include "wallpablur/application-args.hpp"
 #include "wallpablur/config/config.hpp"
+#include "wallpablur/wayland/surface.hpp"
 #include "wallpablur/wm/i3ipc-socket.hpp"
 
 #include <chrono>
@@ -78,7 +79,7 @@ application::application(const application_args& args) :
       .name          = std::string{output.name()},
       .painter       = layout_painter{
                          config::global_config().output_config_for(output.name()),
-                         output.share_context(),
+                         output.wallpaper_surface().share_context(),
                          texture_provider_
                        },
       .layout_source = {},

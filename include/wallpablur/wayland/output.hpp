@@ -6,8 +6,6 @@
 #include "wallpablur/wayland/utils.hpp"
 #include "wallpablur/wayland/geometry.hpp"
 
-#include "wallpablur/egl/context.hpp"
-
 #include <functional>
 #include <memory>
 #include <optional>
@@ -42,10 +40,14 @@ class output {
 
 
 
-    [[nodiscard]] bool                          ready()         const;
+    [[nodiscard]] bool           ready()             const;
 
-    [[nodiscard]] const egl::context&           context()       const;
-    [[nodiscard]] std::shared_ptr<egl::context> share_context() const;
+    [[nodiscard]] const surface& wallpaper_surface() const;
+    [[nodiscard]] const surface& clipping_surface()  const;
+
+    [[nodiscard]] bool has_clipping() const {
+      return static_cast<bool>(clipping_surface_);
+    }
 
 
 

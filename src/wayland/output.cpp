@@ -39,20 +39,20 @@ bool wayland::output::ready() const {
 
 
 
-const egl::context& wayland::output::context() const {
+const wayland::surface& wayland::output::wallpaper_surface() const {
   if (!wallpaper_surface_) {
     throw std::runtime_error{"wallpaper surface has not been created yet"};
   }
-  return wallpaper_surface_->context();
+  return *wallpaper_surface_;
 }
 
 
 
-std::shared_ptr<egl::context> wayland::output::share_context() const {
-  if (!wallpaper_surface_) {
-    throw std::runtime_error{"wallpaper surface has not been created yet"};
+const wayland::surface& wayland::output::clipping_surface() const {
+  if (!clipping_surface_) {
+    throw std::runtime_error{"clipping surface has not been created yet"};
   }
-  return wallpaper_surface_->share_context();
+  return *clipping_surface_;
 }
 
 
