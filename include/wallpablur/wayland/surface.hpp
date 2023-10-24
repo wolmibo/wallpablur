@@ -38,9 +38,9 @@ class surface {
     surface(std::string, client&, output&, bool);
 
 
-    [[nodiscard]] bool                ready()   const { return ready_;        }
-
-    [[nodiscard]] const egl::context& context() const { return *context_;     }
+    [[nodiscard]] bool ready() const {
+      return ready_;
+    }
 
     [[nodiscard]] std::shared_ptr<egl::context> share_context() const {
       return context_;
