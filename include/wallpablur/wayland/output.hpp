@@ -70,6 +70,7 @@ class output {
     std::optional<std::string>              name_;
 
     std::unique_ptr<surface>                wallpaper_surface_;
+    std::unique_ptr<surface>                clipping_surface_;
 
 
 

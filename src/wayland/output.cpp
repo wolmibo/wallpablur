@@ -78,6 +78,10 @@ void wayland::output::output_mode_(
   if (self->wallpaper_surface_) {
     self->wallpaper_surface_->update_geometry(self->current_geometry_);
   }
+
+  if (self->clipping_surface_) {
+    self->clipping_surface_->update_geometry(self->current_geometry_);
+  }
 }
 
 
@@ -92,6 +96,15 @@ void wayland::output::output_done_(void* data, wl_output* /*output*/) {
 
   if (!self->wallpaper_surface_) {
     self->wallpaper_surface_ = std::make_unique<surface>(
-        "wallpablur-wallpaper." + self->name_.value_or("<?>"), *self->client_, *self);
+        "wallpablur-wallpaper." + self->name_.value_or("<?>"), *self->client_, *self,
+        config::global_config().as_overlay());
+  }
+
+  if (!self->clipping_surface_ &&
+      config::global_config().clipping() &&
+      !config::global_config().as_overlay()) {
+    self->clipping_surface_ = std::make_unique<surface>(
+        "wallpablur-clipping." + self->name_.value_or("<?>"), *self->client_, *self,
+        true);
   }
 }

@@ -599,6 +599,8 @@ namespace {
     update(root, opacity_,       "opacity");
     update(root, gl_samples_,    "gl-samples");
 
+    update(root, clipping_,      "clipping");
+
 
 
     default_output_ = parse_output(root, {});

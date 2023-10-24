@@ -35,7 +35,7 @@ class surface {
 
     ~surface() = default;
 
-    surface(std::string, client&, output&);
+    surface(std::string, client&, output&, bool);
 
 
     [[nodiscard]] bool                ready()   const { return ready_;        }

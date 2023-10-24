@@ -1,6 +1,5 @@
 #include "wallpablur/wayland/surface.hpp"
 
-#include "wallpablur/config/config.hpp"
 #include "wallpablur/wayland/client.hpp"
 #include "wallpablur/wayland/output.hpp"
 
@@ -23,9 +22,10 @@ namespace {
       zwlr_layer_shell_v1* layer_shell,
       wl_output*           output,
       wl_surface*          surface,
-      const char*          name
+      const char*          name,
+      bool                 as_overlay
   ) {
-    const uint32_t layer = config::global_config().as_overlay() ?
+    const uint32_t layer = as_overlay ?
       ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY : ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
 
     wl_ptr<zwlr_layer_surface_v1> layer_surface(zwlr_layer_shell_v1_get_layer_surface(
@@ -48,7 +48,7 @@ namespace {
 
 
 
-wayland::surface::surface(std::string name, client& cl, output& op) :
+wayland::surface::surface(std::string name, client& cl, output& op, bool as_overlay) :
   name_            {std::move(name)},
   client_          {&cl},
   output_          {&op},
@@ -82,7 +82,8 @@ wayland::surface::surface(std::string name, client& cl, output& op) :
   logcerr::debug("{}: creating layer surface", name_);
   layer_surface_ =
     ::create_layer_surface(client_->layer_shell(),
-                           output_->output_.get(), surface_.get(), name_.c_str());
+                           output_->output_.get(), surface_.get(),
+                           name_.c_str(), as_overlay);
 
   zwlr_layer_surface_v1_add_listener(layer_surface_.get(),
       &layer_surface_listener_, this);
