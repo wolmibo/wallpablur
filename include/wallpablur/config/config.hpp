@@ -26,11 +26,11 @@ class config {
     [[nodiscard]] std::chrono::milliseconds fade_out()  const { return fade_out_;  }
     [[nodiscard]] std::chrono::milliseconds fade_in()   const { return fade_in_;   }
 
-    [[nodiscard]] bool     disable_i3ipc() const { return disable_i3ipc_; }
-    [[nodiscard]] bool     as_overlay()    const { return as_overlay_;    }
-    [[nodiscard]] bool     clipping()      const { return clipping_;      }
-    [[nodiscard]] float    opacity()       const { return opacity_;       }
-    [[nodiscard]] uint16_t gl_samples()    const { return gl_samples_;    }
+    [[nodiscard]] bool     disable_i3ipc() const { return disable_i3ipc_;            }
+    [[nodiscard]] bool     as_overlay()    const { return as_overlay_;               }
+    [[nodiscard]] bool     clipping()      const { return clipping_ && !as_overlay_; }
+    [[nodiscard]] float    opacity()       const { return opacity_;                  }
+    [[nodiscard]] uint16_t gl_samples()    const { return gl_samples_;               }
 
 
 

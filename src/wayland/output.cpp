@@ -27,6 +27,11 @@ wayland::output::output(wl_ptr<wl_output> op, client& parent) :
 
 
 bool wayland::output::ready() const {
+  if (config::global_config().clipping()) {
+    return wallpaper_surface_ && wallpaper_surface_->ready() &&
+      clipping_surface_ && clipping_surface_->ready();
+  }
+
   return wallpaper_surface_ && wallpaper_surface_->ready();
 }
 
@@ -100,9 +105,7 @@ void wayland::output::output_done_(void* data, wl_output* /*output*/) {
         config::global_config().as_overlay());
   }
 
-  if (!self->clipping_surface_ &&
-      config::global_config().clipping() &&
-      !config::global_config().as_overlay()) {
+  if (!self->clipping_surface_ && config::global_config().clipping()) {
     self->clipping_surface_ = std::make_unique<surface>(
         "wallpablur-clipping." + std::string{self->name()}, *self->client_, *self, true);
   }
