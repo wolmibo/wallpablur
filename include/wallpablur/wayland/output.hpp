@@ -36,7 +36,9 @@ class output {
 
 
 
-    [[nodiscard]] std::string_view name() const { return name_.value(); }
+    [[nodiscard]] std::string_view name() const {
+      return name_ ? *name_ : std::string_view{"<?>"};
+    }
 
 
 
