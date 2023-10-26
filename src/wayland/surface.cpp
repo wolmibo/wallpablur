@@ -192,11 +192,7 @@ void wayland::surface::layer_surface_configure_(
 
   zwlr_layer_surface_v1_ack_configure(zwlr_layer_surface, serial);
 
-  if (self->output_->ready_cb_) {
-    self->ready_ = true;
-    self->output_->ready_cb_(*(self->output_));
-    self->output_->ready_cb_ = {};
-  }
+  self->output_->mark_surface_ready(self->name_.contains("clipping") ? 1 : 0);
 
   if (self->first_configuration_) {
     self->render();

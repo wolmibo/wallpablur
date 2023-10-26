@@ -1,6 +1,7 @@
 #ifndef WALLPABLUR_WAYLAND_OUTPUT_HPP_INCLUDED
 #define WALLPABLUR_WAYLAND_OUTPUT_HPP_INCLUDED
 
+#include <bitset>
 #include <wayland-client.h>
 
 #include "wallpablur/wayland/utils.hpp"
@@ -60,6 +61,7 @@ class output {
     }
 
     void set_ready_cb(std::move_only_function<void(output&)>&& fnc) {
+      ready_surfaces_.reset();
       ready_cb_ = std::move(fnc);
     }
 
@@ -82,6 +84,10 @@ class output {
     std::move_only_function<bool(geometry)> update_cb_;
     std::move_only_function<void(output&)>  ready_cb_;
 
+    std::bitset<2>                          ready_surfaces_;
+    size_t                                  required_surfaces_;
+
+    void mark_surface_ready(size_t);
 
 
 

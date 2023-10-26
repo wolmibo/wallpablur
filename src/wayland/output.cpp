@@ -16,8 +16,9 @@ wayland::output::~output() = default;
 
 
 wayland::output::output(wl_ptr<wl_output> op, client& parent) :
-  client_{&parent},
-  output_{std::move(op)}
+  client_           {&parent},
+  output_           {std::move(op)},
+  required_surfaces_{config::global_config().clipping() ? 2u : 1}
 {
   wl_output_add_listener(output_.get(), &output_listener_, this);
 }
@@ -27,7 +28,7 @@ wayland::output::output(wl_ptr<wl_output> op, client& parent) :
 
 
 bool wayland::output::ready() const {
-  if (config::global_config().clipping()) {
+  if (required_surfaces_ > 1) {
     return wallpaper_surface_ && wallpaper_surface_->ready() &&
       clipping_surface_ && clipping_surface_->ready();
   }
@@ -53,6 +54,23 @@ const wayland::surface& wayland::output::clipping_surface() const {
     throw std::runtime_error{"clipping surface has not been created yet"};
   }
   return *clipping_surface_;
+}
+
+
+
+
+
+void wayland::output::mark_surface_ready(size_t index) {
+  if (!ready_cb_) {
+    return;
+  }
+
+  ready_surfaces_.set(index);
+
+  if (ready_surfaces_.count() >= required_surfaces_) {
+     ready_cb_(*this);
+     ready_cb_ = {};
+  }
 }
 
 
