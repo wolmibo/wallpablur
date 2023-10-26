@@ -102,6 +102,13 @@ layout_painter::layout_painter(
                          return gl::create_quad();
                        }(*context_)},
   sector_             {gl::create_sector(16)},
+  sector_outside_     {[](const auto& cxp) {
+                         if (cxp) {
+                           cxp->make_current();
+                           return gl::create_sector_outside(16);
+                         }
+                         return gl::mesh{};
+                       }(context_clipping_)},
   solid_color_shader_ {resources::solid_color_vs(), resources::solid_color_fs()},
   solid_color_uniform_{solid_color_shader_.uniform("color_rgba")},
 
@@ -567,6 +574,11 @@ void layout_painter::set_buffer_alpha(float alpha) const {
 
 layout_painter::~layout_painter() {
   try {
+    if (context_clipping_) {
+      context_clipping_->make_current();
+      sector_outside_ = {};
+    }
+
     if (context_) {
       context_->make_current();
     }

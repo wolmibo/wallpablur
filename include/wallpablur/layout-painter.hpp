@@ -43,6 +43,7 @@ class layout_painter {
     std::shared_ptr<texture_provider>     texture_provider_;
     gl::mesh                              quad_;
     gl::mesh                              sector_;
+    gl::mesh                              sector_outside_;
     gl::program                           solid_color_shader_;
     GLint                                 solid_color_uniform_;
     gl::program                           texture_shader_;

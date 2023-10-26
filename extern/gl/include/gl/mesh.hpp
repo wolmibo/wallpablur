@@ -9,6 +9,7 @@ namespace gl {
 
 class mesh {
   public:
+    mesh() = default;
     mesh(GLuint, GLuint, GLuint);
 
 
@@ -34,7 +35,7 @@ class mesh {
     object_name<buffer_deleter> vbo_;
     object_name<buffer_deleter> ibo_;
 
-    size_t element_count_;
+    size_t element_count_{0};
 };
 
 }
