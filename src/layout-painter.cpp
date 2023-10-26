@@ -90,10 +90,12 @@ namespace {
 layout_painter::layout_painter(
   config::output&&                  config,
   std::shared_ptr<egl::context>     context,
+  std::shared_ptr<egl::context>     context_clipping,
   std::shared_ptr<texture_provider> provider
 ) :
   config_             {std::move(config)},
   context_            {assert_non_nullptr(std::move(context))},
+  context_clipping_   {std::move(context_clipping)},
   texture_provider_   {std::move(provider)},
   quad_               {[](const auto& cx) {
                          cx.make_current();

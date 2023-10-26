@@ -23,7 +23,7 @@ class layout_painter {
     ~layout_painter();
 
     layout_painter(config::output&&, std::shared_ptr<egl::context>,
-        std::shared_ptr<texture_provider>);
+        std::shared_ptr<egl::context>, std::shared_ptr<texture_provider>);
 
 
 
@@ -39,6 +39,7 @@ class layout_painter {
   private:
     config::output                        config_;
     std::shared_ptr<egl::context>         context_;
+    std::shared_ptr<egl::context>         context_clipping_;
     std::shared_ptr<texture_provider>     texture_provider_;
     gl::mesh                              quad_;
     gl::mesh                              sector_;

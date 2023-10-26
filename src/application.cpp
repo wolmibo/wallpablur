@@ -80,6 +80,8 @@ application::application(const application_args& args) :
       .painter       = layout_painter{
                          config::global_config().output_config_for(output.name()),
                          output.wallpaper_surface().share_context(),
+                         output.has_clipping() ?
+                            output.clipping_surface().share_context() : nullptr,
                          texture_provider_
                        },
       .layout_source = {},
