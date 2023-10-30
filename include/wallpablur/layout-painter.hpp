@@ -44,9 +44,12 @@ class layout_painter {
 
     struct wallpaper_context;
     struct clipping_context;
+    class  radius_cache;
 
     std::unique_ptr<wallpaper_context>    wallpaper_context_;
     std::unique_ptr<clipping_context>     clipping_context_;
+
+    std::unique_ptr<radius_cache>         radius_cache_;
 
     wayland::geometry                     geometry_;
     std::vector<std::pair<surface, workspace_expression>>

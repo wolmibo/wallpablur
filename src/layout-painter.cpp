@@ -221,26 +221,6 @@ namespace {
 
 
 
-  [[nodiscard]] float radius(
-      std::span<const config::surface_rounded_corners> rc,
-      const surface&                                   surf,
-      const workspace&                                 ws
-  ) {
-    float value = surf.radius();
-
-    for (const auto& setting: rc) {
-      if (setting.condition.evaluate(surf, ws)) {
-        value = setting.radius;
-      }
-    }
-
-    return value;
-  }
-
-
-
-
-
   [[nodiscard]] const config::wallpaper* active_wallpaper(
       const workspace&                   ws,
       std::span<const config::wallpaper> wallpapers
@@ -287,6 +267,65 @@ namespace {
       std::shared_ptr<egl::context> context_;
   };
 }
+
+
+
+
+
+class layout_painter::radius_cache {
+  public:
+    explicit radius_cache(std::vector<config::surface_rounded_corners> conditions) :
+      conditions_{std::move(conditions)}
+    {}
+
+
+
+    void update(
+        const workspace&                                          ws,
+        std::span<const std::pair<surface, workspace_expression>> fixed
+    ) {
+      cache_.clear();
+
+      for (const auto& surf: ws.surfaces()) {
+        cache_.emplace_back(&surf, radius(surf, ws));
+      }
+
+      for (const auto& [surf, _]: fixed) {
+        cache_.emplace_back(&surf, radius(surf, ws));
+      }
+    }
+
+
+
+    [[nodiscard]] float radius(const surface& surface) const {
+      if (auto it = std::ranges::find(cache_, &surface, &kv::first); it != cache_.end()) {
+        return it->second;
+      }
+      return 0.f;
+    }
+
+
+
+  private:
+    using kv = std::pair<const surface*, float>;
+
+    std::vector<config::surface_rounded_corners>  conditions_;
+    std::vector<kv>                               cache_;
+
+
+
+    [[nodiscard]] float radius(const surface& surf, const workspace& ws) const {
+      float value = surf.radius();
+
+      for (const auto& setting: conditions_) {
+        if (setting.condition.evaluate(surf, ws)) {
+          value = setting.radius;
+        }
+      }
+
+      return value;
+    }
+};
 
 
 
@@ -484,17 +523,17 @@ struct layout_painter::wallpaper_context {
       std::span<const config::border_effect>                    border_effects,
       const workspace&                                          ws,
       std::span<const std::pair<surface, workspace_expression>> fixed,
-      std::span<const config::surface_rounded_corners>          rc
+      const radius_cache&                                       radii
   ) const {
     for (const auto& be: border_effects) {
       for (const auto& surface: ws.surfaces()) {
         if (be.condition.evaluate(surface, ws)) {
-          draw_border_effect(geo, be, surface, radius(rc, surface, ws));
+          draw_border_effect(geo, be, surface, radii.radius(surface));
         }
       }
       for (const auto& [surface, condition]: fixed) {
         if (condition.evaluate(ws) && be.condition.evaluate(surface, ws)) {
-          draw_border_effect(geo, be, surface, radius(rc, surface, ws));
+          draw_border_effect(geo, be, surface, radii.radius(surface));
         }
       }
     }
@@ -509,7 +548,7 @@ struct layout_painter::wallpaper_context {
       const config::background&                                 bg,
       const workspace&                                          ws,
       std::span<const std::pair<surface, workspace_expression>> fixed,
-      std::span<const config::surface_rounded_corners>          rc
+      const radius_cache&                                       radii
   ) const {
     glDisable(GL_BLEND);
 
@@ -518,13 +557,13 @@ struct layout_painter::wallpaper_context {
 
       for (const auto& surface: ws.surfaces()) {
         if (bg.condition.evaluate(surface, ws)) {
-          draw_rounded_rectangle(geo, surface.rect(), radius(rc, surface, ws));
+          draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface));
         }
       }
 
       for (const auto& [surface, condition]: fixed) {
         if (condition.evaluate(ws) && bg.condition.evaluate(surface, ws)) {
-          draw_rounded_rectangle(geo, surface.rect(), radius(rc, surface, ws));
+          draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface));
         }
       }
 
@@ -583,7 +622,8 @@ struct layout_painter::clipping_context {
 
 layout_painter::layout_painter(config::output&& config) :
   config_             {std::move(config)},
-  texture_provider_   {app().texture_provider()}
+  texture_provider_   {app().texture_provider()},
+  radius_cache_       {std::make_unique<radius_cache>(std::move(config_.rounded_corners))}
 {}
 
 layout_painter::layout_painter(layout_painter&&) noexcept = default;
@@ -684,12 +724,14 @@ void layout_painter::render_wallpaper(const workspace& ws, float alpha) const {
     wallpaper_context_->draw_wallpaper(*active);
   }
 
+  radius_cache_->update(ws, fixed_panels_);
+
   wallpaper_context_->draw_surface_effects(geometry_, config_.border_effects, ws,
-      fixed_panels_, config_.rounded_corners);
+      fixed_panels_, *radius_cache_);
 
   if (active != nullptr) {
     wallpaper_context_->draw_background(geometry_, active->background, ws,
-        fixed_panels_, config_.rounded_corners);
+        fixed_panels_, *radius_cache_);
   }
 
   if (alpha < 254.f / 255.f) {
