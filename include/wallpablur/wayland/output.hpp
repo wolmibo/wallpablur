@@ -1,7 +1,6 @@
 #ifndef WALLPABLUR_WAYLAND_OUTPUT_HPP_INCLUDED
 #define WALLPABLUR_WAYLAND_OUTPUT_HPP_INCLUDED
 
-#include <bitset>
 #include <wayland-client.h>
 
 #include "wallpablur/wayland/utils.hpp"
@@ -20,8 +19,6 @@ class client;
 class surface;
 
 class output {
-  friend class surface;
-
   public:
     output(const output&) = delete;
     output(output&&)      = delete;
@@ -34,61 +31,47 @@ class output {
 
 
 
+    [[nodiscard]] wl_output* wl_raw() {
+      return output_.get();
+    }
+
+
 
     [[nodiscard]] std::string_view name() const {
       return name_ ? *name_ : std::string_view{"<?>"};
     }
 
-
-
-    [[nodiscard]] bool           ready()             const;
-
-    [[nodiscard]] const surface& wallpaper_surface() const;
-    [[nodiscard]] const surface& clipping_surface()  const;
-
-    [[nodiscard]] bool has_clipping() const {
-      return static_cast<bool>(clipping_surface_);
+    [[nodiscard]] const geometry& current_geometry() const {
+      return current_geometry_;
     }
 
 
 
-    void set_render_cb(std::move_only_function<void(geometry)>&& fnc) {
-      render_cb_ = std::move(fnc);
+    void set_done_cb(std::move_only_function<void(void)> fnc) {
+      done_cb_ = std::move(fnc);
     }
 
-    void set_update_cb(std::move_only_function<bool(geometry)>&& fnc) {
-      update_cb_ = std::move(fnc);
+    void set_geometry_cb(std::move_only_function<void(const geometry&)> fnc) {
+      geometry_cb_ = std::move(fnc);
     }
 
-    void set_ready_cb(std::move_only_function<void(output&)>&& fnc) {
-      ready_surfaces_.reset();
-      ready_cb_ = std::move(fnc);
-    }
+
+
+    [[nodiscard]] std::unique_ptr<surface> create_surface(std::string, bool);
+
+
 
 
 
   private:
-    client*                                 client_;
+    client*                                         client_;
+    wl_ptr<wl_output>                               output_;
 
-    wl_ptr<wl_output>                       output_;
+    geometry                                        current_geometry_;
+    std::optional<std::string>                      name_;
 
-    geometry                                current_geometry_;
-    std::optional<std::string>              name_;
-
-    std::unique_ptr<surface>                wallpaper_surface_;
-    std::unique_ptr<surface>                clipping_surface_;
-
-
-
-    std::move_only_function<void(geometry)> render_cb_;
-    std::move_only_function<bool(geometry)> update_cb_;
-    std::move_only_function<void(output&)>  ready_cb_;
-
-    std::bitset<2>                          ready_surfaces_;
-    size_t                                  required_surfaces_;
-
-    void mark_surface_ready(size_t);
-
+    std::move_only_function<void(void)>             done_cb_;
+    std::move_only_function<void(const geometry&)>  geometry_cb_;
 
 
 

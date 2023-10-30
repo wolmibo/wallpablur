@@ -1,12 +1,13 @@
 #include "wallpablur/wayland/client.hpp"
 
+#include "wallpablur/wayland/output.hpp"
+
 #include <array>
+#include <cstdint>
+#include <cstdio>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-
-#include <cstdint>
-#include <cstdio>
 
 #include <logcerr/log.hpp>
 
@@ -100,16 +101,10 @@ void wayland::client::registry_global_(
   if (is_interface(interface, wl_compositor_interface)) {
     self->compositor_ = registry_bind<wl_compositor>(registry, name, 4);
   } else if (is_interface(interface, wl_output_interface)) {
-    auto& new_output = self->outputs_.find_or_create(name);
-
-    new_output =
-      std::make_unique<output>(registry_bind<wl_output>(registry, name, 4), *self);
-
-    new_output->set_ready_cb([self](output& op) {
-      if (self->output_add_callback_) {
-        self->output_add_callback_(op);
-      }
-    });
+    if (self->output_add_callback_) {
+      self->output_add_callback_(name,
+        std::make_unique<output>(registry_bind<wl_output>(registry, name, 4), *self));
+    }
   } else if (is_interface(interface, zwlr_layer_shell_v1_interface)) {
     self->layer_shell_ = registry_bind<zwlr_layer_shell_v1>(registry, name, 1);
   } else if (is_interface(interface, wp_viewporter_interface)) {
@@ -126,10 +121,7 @@ void wayland::client::registry_global_remove_(
 ) {
   auto* self = static_cast<client*>(data);
 
-  if (auto index = self->outputs_.find_index(name)) {
-    if (self->output_remove_callback_) {
-      self->output_remove_callback_(*self->outputs_.value(*index));
-    }
-    self->outputs_.erase(*index);
+  if (self->output_remove_callback_) {
+    self->output_remove_callback_(name);
   }
 }

@@ -17,6 +17,7 @@
 
 #include "wallpablur/egl/context.hpp"
 
+#include <functional>
 #include <memory>
 
 
@@ -38,9 +39,6 @@ class surface {
     surface(std::string, client&, output&, bool);
 
 
-    [[nodiscard]] bool ready() const {
-      return ready_;
-    }
 
     [[nodiscard]] std::shared_ptr<egl::context> share_context() const {
       return context_;
@@ -52,11 +50,20 @@ class surface {
 
 
 
+    void set_update_cb(std::move_only_function<bool(void)> fnc) {
+      update_cb_ = std::move(fnc);
+    }
+
+    void set_render_cb(std::move_only_function<void(void)> fnc) {
+      render_cb_ = std::move(fnc);
+    }
+
+
+
   private:
     std::string                             name_;
 
     client*                                 client_;
-    output*                                 output_;
 
 
     wl_ptr<wl_surface>                      surface_;
@@ -67,9 +74,12 @@ class surface {
     wl_ptr<wl_callback>                     frame_callback_;
 
     geometry                                current_geometry_;
+    bool                                    geometry_changed_   {false};
 
-    bool                                    ready_              {false};
     bool                                    first_configuration_{true};
+
+    std::move_only_function<bool(void)>     update_cb_;
+    std::move_only_function<void(void)>     render_cb_;
 
 
 

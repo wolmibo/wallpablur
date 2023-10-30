@@ -9,8 +9,6 @@
 #include "viewporter-client-protocol.h"
 
 #include "wallpablur/egl/context.hpp"
-#include "wallpablur/flat-map.hpp"
-#include "wallpablur/wayland/output.hpp"
 #include "wallpablur/wayland/utils.hpp"
 
 #include <functional>
@@ -19,6 +17,8 @@
 
 
 namespace wayland {
+
+class output;
 
 class client {
   public:
@@ -48,11 +48,13 @@ class client {
     [[nodiscard]] std::shared_ptr<egl::context> share_context() { return context_;  }
 
 
-    void set_output_add_cb(std::move_only_function<void(output&)>&& fnc) {
+    void set_output_add_cb(
+        std::move_only_function<void(uint32_t, std::unique_ptr<output>)>&& fnc
+    ) {
       output_add_callback_ = std::move(fnc);
     }
 
-    void set_output_remove_cb(std::move_only_function<void(output&)>&& fnc) {
+    void set_output_remove_cb(std::move_only_function<void(uint32_t)>&& fnc) {
       output_remove_callback_ = std::move(fnc);
     }
 
@@ -67,11 +69,10 @@ class client {
     wl_ptr<zwlr_layer_shell_v1>                 layer_shell_;
     wl_ptr<wp_viewporter>                       viewporter_;
 
-    flat_map<uint32_t, std::unique_ptr<output>> outputs_;
 
-
-    std::move_only_function<void(output&)>      output_add_callback_;
-    std::move_only_function<void(output&)>      output_remove_callback_;
+    std::move_only_function<void(uint32_t, std::unique_ptr<output>)>
+                                                output_add_callback_;
+    std::move_only_function<void(uint32_t)>     output_remove_callback_;
 
 
 

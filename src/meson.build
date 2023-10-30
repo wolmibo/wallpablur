@@ -80,6 +80,8 @@ sources = [
   'texture-provider.cpp',
   'layout-painter.cpp',
 
+  'output.cpp',
+
   'application.cpp',
   'application-args.cpp',
   'main.cpp',

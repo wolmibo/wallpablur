@@ -1,6 +1,8 @@
 #include "wallpablur/application.hpp"
 #include "wallpablur/application-args.hpp"
 #include "wallpablur/config/config.hpp"
+#include "wallpablur/output.hpp"
+#include "wallpablur/wayland/output.hpp"
 #include "wallpablur/wayland/surface.hpp"
 #include "wallpablur/wm/i3ipc-socket.hpp"
 
@@ -58,13 +60,19 @@ namespace {
     std::signal(SIGINT,  signal_handler);
     std::signal(SIGTERM, signal_handler);
   }
+
+
+
+  namespace global_state {
+    application* app = nullptr;
+  }
 }
 
 
 
 application::application(const application_args& args) :
   i3ipc_ {i3ipc_from_args_and_config(args)},
-  texture_provider_{std::make_shared<texture_provider>(wayland_client_.share_context())},
+  texture_provider_{std::make_shared<::texture_provider>(wayland_client_.share_context())},
 
   app_start_{std::chrono::high_resolution_clock::now()}
 {
@@ -72,69 +80,25 @@ application::application(const application_args& args) :
 
 
 
-  wayland_client_.set_output_add_cb([this](auto& output) {
-    logcerr::verbose("added output {}", output.name());
+  wayland_client_.set_output_add_cb([this](uint32_t name, auto op) {
+    logcerr::verbose("added output {}", name);
 
-    output_data data {
-      .name          = std::string{output.name()},
-      .painter       = layout_painter{
-                         config::global_config().output_config_for(output.name()),
-                         output.wallpaper_surface().share_context(),
-                         output.has_clipping() ?
-                            output.clipping_surface().share_context() : nullptr,
-                         texture_provider_
-                       },
-      .layout_source = {},
-      .last_alpha    = alpha()
-    };
-
-    if (i3ipc_) {
-      data.layout_source = i3ipc_->layout_token(output.name());
+    if (auto index = outputs_.find_index(name)) {
+      logcerr::warn("output with id {} already existed", name);
+      outputs_.value(*index) = std::make_unique<output>(std::move(op));
+    } else {
+      outputs_.emplace(name, std::make_unique<output>(std::move(op)));
     }
-
-
-
-    data_.push_back(std::make_unique<output_data>(std::move(data)));
-    auto *data_ptr = data_.back().get();
-
-    output.set_update_cb([data_ptr, this](auto geometry) {
-      auto update = data_ptr->painter.update_geometry(geometry);
-      update = update || data_ptr->layout_source.changed();
-
-      if (std::fabs(data_ptr->last_alpha - alpha()) > 1.f/255.f) {
-        update = true;
-      }
-
-      return update;
-    });
-
-    output.set_render_cb([data_ptr, this](auto geometry) {
-      data_ptr->painter.update_geometry(geometry);
-      data_ptr->last_alpha = alpha();
-      data_ptr->painter.draw_layout(*data_ptr->layout_source.get(),
-          data_ptr->last_alpha);
-    });
   });
 
 
 
-  wayland_client_.set_output_remove_cb([this](auto& output) {
-    if (!output.ready()) {
-      logcerr::debug("removing output before it got a name");
-      return;
-    }
-
-    auto name = output.name();
-
-    logcerr::verbose("removed output {}", name);
-
-    if (auto it = std::ranges::find_if(data_, [name](const auto& ptr){
-          return ptr->name == name;
-        }); it != data_.end()) {
-      std::swap(*it, data_.back());
-      data_.pop_back();
+  wayland_client_.set_output_remove_cb([this](uint32_t name) {
+    if (auto index = outputs_.find_index(name)) {
+      outputs_.erase(*index);
+      logcerr::verbose("removed output {}", name);
     } else {
-      logcerr::warn("unable to remove output {} from list: not found", name);
+      logcerr::warn("cannot find output {} for removal", name);
     }
   });
 
@@ -150,6 +114,28 @@ namespace {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::high_resolution_clock::now() - tp);
   }
+}
+
+
+
+application& app() {
+  return *global_state::app;
+}
+
+
+
+std::shared_ptr<texture_provider> application::texture_provider() {
+  return texture_provider_;
+}
+
+
+
+change_token<workspace> application::layout_token(std::string_view name) {
+  if (i3ipc_) {
+    return i3ipc_->layout_token(name);
+  }
+
+  return {};
 }
 
 
@@ -182,6 +168,8 @@ float application::alpha() const {
 
 
 int application::run() {
+  global_state::app = this;
+
   wayland_client_.explore();
 
   while (wayland_client_.dispatch() != -1 && !exit_signal_received) {}
@@ -196,6 +184,8 @@ int application::run() {
   exit_start_ = std::chrono::high_resolution_clock::now();
 
   while (wayland_client_.dispatch() != -1 && !exit_signal_received) {}
+
+  global_state::app = nullptr;
 
   return EXIT_SUCCESS;
 }

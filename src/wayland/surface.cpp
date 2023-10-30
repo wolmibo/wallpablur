@@ -51,8 +51,7 @@ namespace {
 wayland::surface::surface(std::string name, client& cl, output& op, bool as_overlay) :
   name_            {std::move(name)},
   client_          {&cl},
-  output_          {&op},
-  current_geometry_{output_->current_geometry_}
+  current_geometry_{op.current_geometry()}
 {
   logcerr::verbose("{}: creating surface", name_);
   surface_.reset(wl_compositor_create_surface(client_->compositor()));
@@ -81,8 +80,7 @@ wayland::surface::surface(std::string name, client& cl, output& op, bool as_over
 
   logcerr::debug("{}: creating layer surface", name_);
   layer_surface_ =
-    ::create_layer_surface(client_->layer_shell(),
-                           output_->output_.get(), surface_.get(),
+    ::create_layer_surface(client_->layer_shell(), op.wl_raw(), surface_.get(),
                            name_.c_str(), as_overlay);
 
   zwlr_layer_surface_v1_add_listener(layer_surface_.get(),
@@ -136,10 +134,12 @@ void wayland::surface::render() {
     throw std::runtime_error{"attempting to render without active egl context"};
   }
 
+  geometry_changed_ = false;
+
   context_->make_current();
 
-  if (output_->render_cb_ && !current_geometry_.empty()) {
-    output_->render_cb_(current_geometry_);
+  if (render_cb_ && !current_geometry_.empty()) {
+    render_cb_();
   }
 
   context_->swap_buffers();
@@ -152,7 +152,7 @@ void wayland::surface::render() {
 void wayland::surface::callback_done_(void* data, wl_callback* /*cb*/, uint32_t /*ser*/) {
   auto* self = static_cast<surface*>(data);
 
-  if (self->output_->update_cb_ && self->output_->update_cb_(self->current_geometry_)) {
+  if ((self->update_cb_ && self->update_cb_()) || self->geometry_changed_) {
     self->render();
   }
 
@@ -192,8 +192,6 @@ void wayland::surface::layer_surface_configure_(
 
   zwlr_layer_surface_v1_ack_configure(zwlr_layer_surface, serial);
 
-  self->output_->mark_surface_ready(self->name_.contains("clipping") ? 1 : 0);
-
   if (self->first_configuration_) {
     self->render();
     self->first_configuration_ = false;
@@ -224,5 +222,9 @@ void wayland::surface::update_viewport() const {
 
 
 void wayland::surface::update_geometry(const geometry& geo) {
+  if (geo != current_geometry_) {
+    geometry_changed_ = true;
+  }
+
   current_geometry_ = geo;
 }
