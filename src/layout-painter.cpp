@@ -620,7 +620,7 @@ struct layout_painter::clipping_context {
 
 
 
-layout_painter::layout_painter(config::output&& config) :
+layout_painter::layout_painter(config::output config) :
   config_             {std::move(config)},
   texture_provider_   {app().texture_provider()},
   radius_cache_       {std::make_unique<radius_cache>(std::move(config_.rounded_corners))}

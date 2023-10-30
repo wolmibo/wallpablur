@@ -21,7 +21,7 @@ class layout_painter {
 
     ~layout_painter();
 
-    explicit layout_painter(config::output&&);
+    explicit layout_painter(config::output);
 
 
 
