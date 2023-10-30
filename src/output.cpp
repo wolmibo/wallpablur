@@ -18,6 +18,7 @@ output::output(std::unique_ptr<wayland::output> wl_output) :
     layout_token_ = app().layout_token(wl_output_->name());
 
     painter_.emplace(config::global_config().output_config_for(wl_output_->name()));
+    painter_->update_geometry(wl_output_->current_geometry());
 
     create_surfaces();
     setup_surfaces();

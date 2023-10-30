@@ -646,9 +646,9 @@ void layout_painter::set_clipping_context(std::shared_ptr<egl::context> context)
 
 
 
-bool layout_painter::update_geometry(const wayland::geometry& geometry) {
+void layout_painter::update_geometry(const wayland::geometry& geometry) {
   if (geometry == geometry_) {
-    return false;
+    return;
   }
 
   geometry_ = geometry;
@@ -698,8 +698,6 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 
   texture_provider_->cleanup();
-
-  return true;
 }
 
 
@@ -707,7 +705,8 @@ bool layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 
 void layout_painter::render_wallpaper(const workspace& ws, float alpha) const {
-  logcerr::debug("{}: rendering", config_.name);
+  logcerr::debug("{}: rendering {}x{}", config_.name,
+      geometry_.physical_width(), geometry_.physical_height());
 
   if (!wallpaper_context_) {
     logcerr::warn("{}: trying to render without context", config_.name);

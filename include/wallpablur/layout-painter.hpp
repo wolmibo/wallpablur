@@ -30,7 +30,7 @@ class layout_painter {
 
 
 
-    bool update_geometry(const wayland::geometry&);
+    void update_geometry(const wayland::geometry&);
 
     void render_wallpaper(const workspace&, float) const;
 
