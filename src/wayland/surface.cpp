@@ -180,6 +180,10 @@ void wayland::surface::layer_surface_configure_(
 
   if (self->first_configuration_) {
     self->create_context();
+
+    if (self->context_cb_) {
+      self->context_cb_(self->context_);
+    }
   } else {
     wl_egl_window_resize(
         self->egl_window_.get(),

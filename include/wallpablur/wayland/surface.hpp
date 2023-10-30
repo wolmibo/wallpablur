@@ -40,12 +40,6 @@ class surface {
 
 
 
-    [[nodiscard]] std::shared_ptr<egl::context> share_context() const {
-      return context_;
-    }
-
-
-
     void update_geometry(const geometry&);
 
 
@@ -56,6 +50,10 @@ class surface {
 
     void set_render_cb(std::move_only_function<void(void)> fnc) {
       render_cb_ = std::move(fnc);
+    }
+
+    void set_context_cb(std::move_only_function<void(std::shared_ptr<egl::context>)> f) {
+      context_cb_ = std::move(f);
     }
 
 
@@ -80,6 +78,8 @@ class surface {
 
     std::move_only_function<bool(void)>     update_cb_;
     std::move_only_function<void(void)>     render_cb_;
+    std::move_only_function<void(std::shared_ptr<egl::context>)>
+                                            context_cb_;
 
 
 

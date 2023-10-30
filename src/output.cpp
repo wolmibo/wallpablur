@@ -64,6 +64,11 @@ void output::create_surfaces() {
 
 void output::setup_surfaces() {
   if (wallpaper_surface_) {
+    wallpaper_surface_->set_context_cb([this](std::shared_ptr<egl::context> ctx) {
+      painter_->set_wallpaper_context(std::move(ctx));
+    });
+
+
     wallpaper_surface_->set_update_cb([this]() {
       return layout_token_.changed() ||
         std::abs(last_wallpaper_alpha_ - app().alpha()) > 1.f / 255.f;
