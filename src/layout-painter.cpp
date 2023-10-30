@@ -1,3 +1,4 @@
+#include "wallpablur/application.hpp"
 #include "wallpablur/config/border-effect.hpp"
 #include "wallpablur/config/output.hpp"
 #include "wallpablur/gl/utils.hpp"
@@ -75,120 +76,17 @@ namespace {
 
 
 
-  std::shared_ptr<egl::context> assert_non_nullptr(std::shared_ptr<egl::context> cx) {
-    if (!cx) {
-      throw std::runtime_error{"expected non-null context"};
-    }
-    return cx;
-  }
-}
+  void draw_mesh(const wayland::geometry& geo, const rectangle& r, const gl::mesh& mesh) {
+    glUniformMatrix4fv(0, 1, GL_FALSE,
+        r.to_matrix(geo.logical_width(), geo.logical_height()).data());
 
-
-
-
-
-layout_painter::layout_painter(
-  config::output&&                  config,
-  std::shared_ptr<egl::context>     context,
-  std::shared_ptr<egl::context>     context_clipping,
-  std::shared_ptr<texture_provider> provider
-) :
-  config_             {std::move(config)},
-  context_            {assert_non_nullptr(std::move(context))},
-  context_clipping_   {std::move(context_clipping)},
-  texture_provider_   {std::move(provider)},
-  quad_               {[](const auto& cx) {
-                         cx.make_current();
-                         return gl::create_quad();
-                       }(*context_)},
-  sector_             {gl::create_sector(16)},
-  sector_outside_     {[](const auto& cxp) {
-                         if (cxp) {
-                           cxp->make_current();
-                           return gl::create_sector_outside(16);
-                         }
-                         return gl::mesh{};
-                       }(context_clipping_)},
-  solid_color_shader_ {resources::solid_color_vs(), resources::solid_color_fs()},
-  solid_color_uniform_{solid_color_shader_.uniform("color_rgba")},
-
-  texture_shader_     {resources::texture_vs(), resources::texture_fs()}
-{}
-
-
-
-
-
-bool layout_painter::update_geometry(const wayland::geometry& geometry) {
-  if (geometry == geometry_) {
-    return false;
-  }
-
-  geometry_ = geometry;
-
-  logcerr::verbose("{}: update geometry to logical = {}x{}@{}, pixel = {}x{}",
-      config_.name,
-      geometry_.logical_width(), geometry_.logical_height(), geometry_.scale(),
-      geometry_.physical_width(), geometry_.physical_height());
-
-
-
-  fixed_panels_.clear();
-  fixed_panels_.reserve(config_.fixed_panels.size());
-
-  for (const auto& panel : config_.fixed_panels) {
-    fixed_panels_.emplace_back(surface{
-        panel.to_rect(geometry_.logical_width(), geometry_.logical_height()),
-        panel.app_id,
-        panel.mask,
-        panel.radius
-      },
-      panel.condition
-    );
+    mesh.draw();
   }
 
 
 
-  for (auto& wp: config_.wallpapers) {
-    if (wp.description.fgraph) {
-      wp.description.realization = texture_provider_->get(geometry, wp.description);
-
-      if (!wp.description.realization) {
-        logcerr::warn("{}: retrieved empty wallpaper image", config_.name);
-      }
-    }
-
-    if (wp.background.description.fgraph) {
-      wp.background.description.realization
-        = texture_provider_->get(geometry, wp.background.description);
-
-      if (!wp.background.description.realization) {
-        logcerr::warn("{}: retrieved empty background image", config_.name);
-      }
-    }
-  }
 
 
-
-  texture_provider_->cleanup();
-
-  return true;
-}
-
-
-
-
-
-void layout_painter::draw_mesh(const rectangle& rect, const gl::mesh& mesh) const {
-  glUniformMatrix4fv(0, 1, GL_FALSE,
-      rect.to_matrix(geometry_.logical_width(), geometry_.logical_height()).data());
-
-  mesh.draw();
-}
-
-
-
-namespace {
   [[nodiscard]] std::bitset<4> realize_sides(
       const config::sides_type& sides,
       layout_orientation        orientation
@@ -318,287 +216,483 @@ namespace {
       rectangle{r.x(),         r.y() - t,     t, t, r.rot_cw90() + 0}
     };
   }
+
+
+
+
+
+  [[nodiscard]] float radius(
+      std::span<const config::surface_rounded_corners> rc,
+      const surface&                                   surf,
+      const workspace&                                 ws
+  ) {
+    float value = surf.radius();
+
+    for (const auto& setting: rc) {
+      if (setting.condition.evaluate(surf, ws)) {
+        value = setting.radius;
+      }
+    }
+
+    return value;
+  }
+
+
+
+
+
+  [[nodiscard]] const config::wallpaper* active_wallpaper(
+      const workspace&                   ws,
+      std::span<const config::wallpaper> wallpapers
+  ) {
+    for (const auto& wp: wallpapers) {
+      if (wp.condition.evaluate(ws)) {
+        return &wp;
+      }
+    }
+
+    return nullptr;
+  }
+
+
+
+
+
+  class context_guard {
+    public:
+      context_guard(const context_guard&) = delete;
+      context_guard(context_guard&&) = delete;
+      context_guard& operator=(const context_guard&) = delete;
+      context_guard& operator=(context_guard&&) = delete;
+
+      context_guard(std::shared_ptr<egl::context> context)
+          : context_{std::move(context)} {
+        if (!context_) {
+          throw std::runtime_error{"expected non-null context"};
+        }
+        context_->make_current();
+      }
+
+      ~context_guard() {
+        context_->make_current();
+      }
+
+      egl::context* operator->() {
+        return context_.get();
+      }
+
+
+
+    private:
+      std::shared_ptr<egl::context> context_;
+  };
 }
 
 
 
 
 
-void layout_painter::draw_rounded_rectangle(const rectangle& rect, float radius) const {
-  radius = std::min({radius, rect.width(), rect.height()});
+struct layout_painter::wallpaper_context {
+  context_guard context;
+  gl::mesh      quad;
+  gl::mesh      sector;
+  gl::program   solid_color_shader;
+  GLint         solid_color_uniform;
+  gl::program   texture_shader;
 
-  if (radius < std::numeric_limits<float>::epsilon()) {
-    draw_mesh(rect, quad_);
-    return;
+  enum class shader {
+    border_step,
+    border_linear,
+    border_sinusoidal
+  };
+
+  mutable flat_map<shader, gl::program> shader_cache;
+
+
+
+  wallpaper_context(std::shared_ptr<egl::context> ctx) :
+    context            {std::move(ctx)},
+    quad               {gl::create_quad()},
+    sector             {gl::create_sector(16)},
+    solid_color_shader {resources::solid_color_vs(), resources::solid_color_fs()},
+    solid_color_uniform{solid_color_shader.uniform("color_rgba")},
+    texture_shader     {resources::texture_vs(), resources::texture_fs()}
+  {}
+
+
+
+
+
+  void draw_rounded_rectangle(
+      const wayland::geometry& geo,
+      const rectangle&         rect,
+      float                    radius
+  ) const {
+    radius = std::min({radius, rect.width(), rect.height()});
+
+    if (radius < std::numeric_limits<float>::epsilon()) {
+      draw_mesh(geo, rect, quad);
+      return;
+    }
+
+    auto center = rect;
+    center.inset(radius);
+
+    draw_mesh(geo, center, quad);
+
+    for (const auto& bord: border_rectangles(center, radius)) {
+      draw_mesh(geo, bord, quad);
+    }
+
+    for (const auto& corn: corner_rectangles(center, radius)) {
+      draw_mesh(geo, corn, sector);
+    }
   }
 
-  auto center = rect;
-  center.inset(radius);
-
-  draw_mesh(center, quad_);
 
 
-  for (const auto& bord: border_rectangles(center, radius)) {
-    draw_mesh(bord, quad_);
+
+
+  void bind_effect_border(const config::border_effect& effect, float radius) const {
+    switch (effect.foff) {
+      case config::falloff::none:
+        break;
+
+      case config::falloff::linear:
+        shader_cache.find_or_create(shader::border_linear,
+            resources::border_vs(), resources::border_linear_fs()).use();
+        set_border_uniforms(effect, radius);
+        break;
+
+      case config::falloff::sinusoidal:
+        shader_cache.find_or_create(shader::border_sinusoidal,
+            resources::border_vs(), resources::border_sinusoidal_fs()).use();
+        set_border_uniforms(effect, radius);
+        break;
+    }
   }
 
-  for (const auto& corn: corner_rectangles(center, radius)) {
-    draw_mesh(corn, sector_);
+
+
+
+
+  void draw_sides(
+      const wayland::geometry& geo,
+      std::bitset<4>           sides,
+      rectangle                center,
+      float                    thickness
+  ) const {
+    auto borders    = border_rectangles(center, thickness);
+    auto borders_in = border_rectangles_in(center, thickness);
+
+    constexpr auto S = sides.size();
+
+    static_assert(borders.size() == S && borders_in.size() == S);
+    for (size_t side = 0; side < S; ++side) {
+      if (!sides[side]) {
+        continue;
+      }
+
+      draw_mesh(geo, borders[side], quad);                //NOLINT(*-constant-array-index)
+
+      if (!sides.all()) {
+        draw_mesh(geo, borders_in[side], quad);           //NOLINT(*-constant-array-index)
+      }
+    }
+
+    auto corners     = corner_rectangles(center, thickness);
+    auto corners_alt = corner_rectangles_alt(center, thickness);
+
+    static_assert(corners.size() == S && corners_alt.size() == S * 2);
+    for (size_t side = 0; side < S; ++side) {
+      if (!sides[(side + S - 1) % S] && sides[side]) {
+        draw_mesh(geo, corners_alt[side], sector);        //NOLINT(*-constant-array-index)
+      }
+
+      if (sides[side] && !sides[(side + 1) % S]) {
+        draw_mesh(geo, corners_alt[side + S], sector);    //NOLINT(*-constant-array-index)
+      }
+
+      if (sides[side] || sides[(side + 1) % S]) {
+        draw_mesh(geo, corners[side], sector);            //NOLINT(*-constant-array-index)
+      }
+    }
   }
-}
 
 
 
 
 
-void layout_painter::draw_border_effect(
+  void draw_border_effect(
+    const wayland::geometry&     geo,
     const config::border_effect& effect,
     const surface&               surf,
     float                        radius
-) const {
-  auto sides = realize_sides(effect.sides, surf.orientation());
+  ) const {
+    auto sides = realize_sides(effect.sides, surf.orientation());
 
-  if (sides.none()) {
-    return;
-  }
-
-  set_blend_mode(effect.blend);
-
-  auto center = center_tile(surf.rect(), effect);
-  center.inset(radius);
-
-  if (sides.all()) {
-    solid_color_shader_.use();
-    invoke_append_color(glUniform4f, effect.col, solid_color_uniform_);
-    draw_mesh(center, quad_);
-  }
-
-
-  switch (effect.foff) {
-    case config::falloff::none:
-      break;
-
-    case config::falloff::linear:
-      shader_cache_.find_or_create(shader::border_linear,
-          resources::border_vs(), resources::border_linear_fs()).use();
-      set_border_uniforms(effect, radius);
-      break;
-
-    case config::falloff::sinusoidal:
-      shader_cache_.find_or_create(shader::border_sinusoidal,
-          resources::border_vs(), resources::border_sinusoidal_fs()).use();
-      set_border_uniforms(effect, radius);
-      break;
-  }
-
-
-
-  float thickness = effect.thickness + radius;
-  if (thickness < std::numeric_limits<float>::epsilon()) {
-    return;
-  }
-
-
-
-  auto borders    = border_rectangles(center, thickness);
-  auto borders_in = border_rectangles_in(center, thickness);
-
-  constexpr auto S = sides.size();
-
-  static_assert(borders.size() == S && borders_in.size() == S);
-  for (size_t side = 0; side < S; ++side) {
-    if (!sides[side]) {
-      continue;
+    if (sides.none()) {
+      return;
     }
 
-    draw_mesh(borders[side], quad_);                    //NOLINT(*-constant-array-index)
+    set_blend_mode(effect.blend);
 
-    if (!sides.all()) {
-      draw_mesh(borders_in[side], quad_);               //NOLINT(*-constant-array-index)
+    auto center = center_tile(surf.rect(), effect);
+    center.inset(radius);
+
+    if (sides.all()) {
+      solid_color_shader.use();
+      invoke_append_color(glUniform4f, effect.col, solid_color_uniform);
+      draw_mesh(geo, center, quad);
+    }
+
+    bind_effect_border(effect, radius);
+
+    float thickness = effect.thickness + radius;
+    if (thickness < std::numeric_limits<float>::epsilon()) {
+      return;
+    }
+
+    draw_sides(geo, sides, center, thickness);
+  }
+
+
+
+
+
+  void draw_wallpaper(const config::wallpaper& wp) const {
+    if (wp.description.realization) {
+      glClearColor(0.f, 0.f, 0.f, 0.f);
+      glClear(GL_COLOR_BUFFER_BIT);
+
+      texture_shader.use();
+
+      wp.description.realization->bind();
+      quad.draw();
+    } else {
+      invoke_append_color(glClearColor, wp.description.solid);
+      glClear(GL_COLOR_BUFFER_BIT);
     }
   }
 
-  auto corners     = corner_rectangles(center, thickness);
-  auto corners_alt = corner_rectangles_alt(center, thickness);
 
-  static_assert(corners.size() == S && corners_alt.size() == S * 2);
-  for (size_t side = 0; side < S; ++side) {
-    if (!sides[(side + S - 1) % S] && sides[side]) {
-      draw_mesh(corners_alt[side], sector_);            //NOLINT(*-constant-array-index)
-    }
 
-    if (sides[side] && !sides[(side + 1) % S]) {
-      draw_mesh(corners_alt[side + S], sector_);        //NOLINT(*-constant-array-index)
-    }
 
-    if (sides[side] || sides[(side + 1) % S]) {
-      draw_mesh(corners[side], sector_);                //NOLINT(*-constant-array-index)
+
+  void draw_surface_effects(
+      const wayland::geometry&                                  geo,
+      std::span<const config::border_effect>                    border_effects,
+      const workspace&                                          ws,
+      std::span<const std::pair<surface, workspace_expression>> fixed,
+      std::span<const config::surface_rounded_corners>          rc
+  ) const {
+    for (const auto& be: border_effects) {
+      for (const auto& surface: ws.surfaces()) {
+        if (be.condition.evaluate(surface, ws)) {
+          draw_border_effect(geo, be, surface, radius(rc, surface, ws));
+        }
+      }
+      for (const auto& [surface, condition]: fixed) {
+        if (condition.evaluate(ws) && be.condition.evaluate(surface, ws)) {
+          draw_border_effect(geo, be, surface, radius(rc, surface, ws));
+        }
+      }
     }
   }
+
+
+
+
+
+  void draw_background(
+      const wayland::geometry&                                  geo,
+      const config::background&                                 bg,
+      const workspace&                                          ws,
+      std::span<const std::pair<surface, workspace_expression>> fixed,
+      std::span<const config::surface_rounded_corners>          rc
+  ) const {
+    glDisable(GL_BLEND);
+
+    draw_stenciled([&]() {
+      solid_color_shader.use();
+
+      for (const auto& surface: ws.surfaces()) {
+        if (bg.condition.evaluate(surface, ws)) {
+          draw_rounded_rectangle(geo, surface.rect(), radius(rc, surface, ws));
+        }
+      }
+
+      for (const auto& [surface, condition]: fixed) {
+        if (condition.evaluate(ws) && bg.condition.evaluate(surface, ws)) {
+          draw_rounded_rectangle(geo, surface.rect(), radius(rc, surface, ws));
+        }
+      }
+
+    }, [&](){
+      if (bg.description.realization) {
+        texture_shader.use();
+
+        bg.description.realization->bind();
+        quad.draw();
+
+      } else {
+        solid_color_shader.use();
+
+        invoke_append_color(glUniform4f, bg.description.solid, solid_color_uniform);
+
+        glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
+        quad.draw();
+      }
+    });
+  }
+
+
+
+
+  void set_buffer_alpha(float alpha) const {
+    solid_color_shader.use();
+    glUniform4f(solid_color_uniform, 0, 0, 0, 0);
+
+    glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
+
+    glEnable(GL_BLEND);
+    glBlendColor(alpha, alpha, alpha, alpha);
+    glBlendFunc(GL_CONSTANT_COLOR, GL_CONSTANT_COLOR);
+
+    quad.draw();
+  }
+};
+
+
+
+
+
+struct layout_painter::clipping_context {
+  context_guard context;
+  gl::mesh      sector_outside;
+
+  clipping_context(std::shared_ptr<egl::context> ctx) :
+    context       {std::move(ctx)},
+    sector_outside{gl::create_sector_outside(16)}
+  {}
+};
+
+
+
+
+
+layout_painter::layout_painter(config::output&& config) :
+  config_             {std::move(config)},
+  texture_provider_   {app().texture_provider()}
+{}
+
+layout_painter::layout_painter(layout_painter&&) noexcept = default;
+layout_painter& layout_painter::operator=(layout_painter&&) noexcept = default;
+layout_painter::~layout_painter() = default;
+
+
+
+
+
+void layout_painter::set_wallpaper_context(std::shared_ptr<egl::context> context) {
+  wallpaper_context_ = std::make_unique<wallpaper_context>(std::move(context));
+}
+
+void layout_painter::set_clipping_context(std::shared_ptr<egl::context> context) {
+  clipping_context_ = std::make_unique<clipping_context>(std::move(context));
 }
 
 
 
 
 
-const config::wallpaper* layout_painter::active_wallpaper(const workspace& ws) const {
-  for (const auto& wp: config_.wallpapers) {
-    if (wp.condition.evaluate(ws)) {
-      return &wp;
+bool layout_painter::update_geometry(const wayland::geometry& geometry) {
+  if (geometry == geometry_) {
+    return false;
+  }
+
+  geometry_ = geometry;
+
+  logcerr::verbose("{}: update geometry to logical = {}x{}@{}, pixel = {}x{}",
+      config_.name,
+      geometry_.logical_width(), geometry_.logical_height(), geometry_.scale(),
+      geometry_.physical_width(), geometry_.physical_height());
+
+
+
+  fixed_panels_.clear();
+  fixed_panels_.reserve(config_.fixed_panels.size());
+
+  for (const auto& panel : config_.fixed_panels) {
+    fixed_panels_.emplace_back(surface{
+        panel.to_rect(geometry_.logical_width(), geometry_.logical_height()),
+        panel.app_id,
+        panel.mask,
+        panel.radius
+      },
+      panel.condition
+    );
+  }
+
+
+
+  for (auto& wp: config_.wallpapers) {
+    if (wp.description.fgraph) {
+      wp.description.realization = texture_provider_->get(geometry, wp.description);
+
+      if (!wp.description.realization) {
+        logcerr::warn("{}: retrieved empty wallpaper image", config_.name);
+      }
+    }
+
+    if (wp.background.description.fgraph) {
+      wp.background.description.realization
+        = texture_provider_->get(geometry, wp.background.description);
+
+      if (!wp.background.description.realization) {
+        logcerr::warn("{}: retrieved empty background image", config_.name);
+      }
     }
   }
 
-  return nullptr;
+
+
+  texture_provider_->cleanup();
+
+  return true;
 }
 
 
 
 
 
-void layout_painter::draw_layout(const workspace& ws, float alpha) const {
+void layout_painter::render_wallpaper(const workspace& ws, float alpha) const {
   logcerr::debug("{}: rendering", config_.name);
-  context_->make_current();
+
+  if (!wallpaper_context_) {
+    logcerr::warn("{}: trying to render without context", config_.name);
+    return;
+  }
+
+  wallpaper_context_->context->make_current();
 
   glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
 
-  const auto* active = active_wallpaper(ws);
+  const auto* active = active_wallpaper(ws, config_.wallpapers);
 
   if (active != nullptr) {
-    draw_wallpaper(*active);
+    wallpaper_context_->draw_wallpaper(*active);
   }
 
-  draw_surface_effects(ws);
+  wallpaper_context_->draw_surface_effects(geometry_, config_.border_effects, ws,
+      fixed_panels_, config_.rounded_corners);
 
   if (active != nullptr) {
-    draw_background(active->background, ws);
+    wallpaper_context_->draw_background(geometry_, active->background, ws,
+        fixed_panels_, config_.rounded_corners);
   }
 
   if (alpha < 254.f / 255.f) {
-    set_buffer_alpha(alpha);
+    wallpaper_context_->set_buffer_alpha(alpha);
   }
-}
-
-
-
-void layout_painter::draw_wallpaper(const config::wallpaper& wp) const {
-  if (wp.description.realization) {
-    glClearColor(0.f, 0.f, 0.f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    texture_shader_.use();
-
-    wp.description.realization->bind();
-    quad_.draw();
-  } else {
-    invoke_append_color(glClearColor, wp.description.solid);
-    glClear(GL_COLOR_BUFFER_BIT);
-  }
-}
-
-
-
-void layout_painter::draw_surface_effects(const workspace& ws) const {
-  for (const auto& be: config_.border_effects) {
-    for (const auto& surface: ws.surfaces()) {
-      if (be.condition.evaluate(surface, ws)) {
-        draw_border_effect(be, surface, radius(surface, ws));
-      }
-    }
-    for (const auto& [surface, condition]: fixed_panels_) {
-      if (condition.evaluate(ws) && be.condition.evaluate(surface, ws)) {
-        draw_border_effect(be, surface, radius(surface, ws));
-      }
-    }
-  }
-}
-
-
-
-void layout_painter::draw_background(
-    const config::background& bg,
-    const workspace&          ws
-) const {
-  glDisable(GL_BLEND);
-
-  draw_stenciled([&]() {
-    solid_color_shader_.use();
-
-    for (const auto& surface: ws.surfaces()) {
-      if (bg.condition.evaluate(surface, ws)) {
-        draw_rounded_rectangle(surface.rect(), radius(surface, ws));
-      }
-    }
-
-    for (const auto& [surface, condition]: fixed_panels_) {
-      if (condition.evaluate(ws) && bg.condition.evaluate(surface, ws)) {
-        draw_rounded_rectangle(surface.rect(), radius(surface, ws));
-      }
-    }
-
-  }, [&](){
-    if (bg.description.realization) {
-      texture_shader_.use();
-
-      bg.description.realization->bind();
-      quad_.draw();
-
-    } else {
-      solid_color_shader_.use();
-
-      invoke_append_color(glUniform4f, bg.description.solid, solid_color_uniform_);
-
-      glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
-      quad_.draw();
-    }
-  });
-}
-
-
-
-void layout_painter::set_buffer_alpha(float alpha) const {
-  solid_color_shader_.use();
-  glUniform4f(solid_color_uniform_, 0, 0, 0, 0);
-
-  glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
-
-  glEnable(GL_BLEND);
-  glBlendColor(alpha, alpha, alpha, alpha);
-  glBlendFunc(GL_CONSTANT_COLOR, GL_CONSTANT_COLOR);
-
-  quad_.draw();
-}
-
-
-
-
-
-layout_painter::~layout_painter() {
-  try {
-    if (context_clipping_) {
-      context_clipping_->make_current();
-      sector_outside_ = {};
-    }
-
-    if (context_) {
-      context_->make_current();
-    }
-  } catch (std::exception& ex) {
-    logcerr::error(ex.what());
-  }
-}
-
-
-
-
-
-float layout_painter::radius(const surface& surf, const workspace& ws) const {
-  float value = surf.radius();
-
-  for (const auto& setting: config_.rounded_corners) {
-    if (setting.condition.evaluate(surf, ws)) {
-      value = setting.radius;
-    }
-  }
-
-  return value;
 }

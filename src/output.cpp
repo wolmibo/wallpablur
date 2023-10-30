@@ -17,13 +17,9 @@ output::output(std::unique_ptr<wayland::output> wl_output) :
   wl_output_->set_done_cb([this](){
     layout_token_ = app().layout_token(wl_output_->name());
 
+    painter_.emplace(config::global_config().output_config_for(wl_output_->name()));
+
     create_surfaces();
-
-    painter_.emplace(config::global_config().output_config_for(wl_output_->name()),
-                     wallpaper_surface_->share_context(),
-                     clipping_surface_ ? clipping_surface_->share_context() : nullptr,
-                     app().texture_provider());
-
     setup_surfaces();
   });
 
@@ -76,7 +72,7 @@ void output::setup_surfaces() {
 
     wallpaper_surface_->set_render_cb([this]() {
       last_wallpaper_alpha_ = app().alpha();
-      painter_.value().draw_layout(*layout_token_.get(), last_wallpaper_alpha_);
+      painter_.value().render_wallpaper(*layout_token_.get(), last_wallpaper_alpha_);
     });
   }
 }
