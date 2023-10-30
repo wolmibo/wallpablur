@@ -17,10 +17,14 @@ output::output(std::unique_ptr<wayland::output> wl_output) :
   wl_output_->set_done_cb([this](){
     layout_token_ = app().layout_token(wl_output_->name());
 
-    painter_.emplace(config::global_config().output_config_for(wl_output_->name()));
+    auto config = config::global_config().output_config_for(wl_output_->name());
+
+    bool clipping = config.clipping;
+
+    painter_.emplace(std::move(config));
     painter_->update_geometry(wl_output_->current_geometry());
 
-    create_surfaces();
+    create_surfaces(clipping);
     setup_surfaces();
   });
 
@@ -43,7 +47,7 @@ output::output(std::unique_ptr<wayland::output> wl_output) :
 
 
 
-void output::create_surfaces() {
+void output::create_surfaces(bool clipping) {
   if (!wallpaper_surface_) {
     wallpaper_surface_ = wl_output_->create_surface(
         "wallpablur-wallpaper." + std::string{wl_output_->name()},
@@ -51,7 +55,7 @@ void output::create_surfaces() {
     );
   }
 
-  if (!clipping_surface_ && config::global_config().clipping()) {
+  if (!clipping_surface_ && clipping) {
     clipping_surface_ = wl_output_->create_surface(
         "wallpablur-clipping." + std::string{wl_output_->name()},
         true

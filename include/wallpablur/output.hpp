@@ -42,7 +42,7 @@ class output {
 
 
 
-    void create_surfaces();
+    void create_surfaces(bool);
     void setup_surfaces();
 };
 

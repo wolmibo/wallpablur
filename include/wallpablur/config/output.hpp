@@ -65,6 +65,8 @@ struct output {
 
   std::vector<border_effect>           border_effects;
   std::vector<surface_rounded_corners> rounded_corners;
+
+  bool                                 clipping{false};
 };
 
 }

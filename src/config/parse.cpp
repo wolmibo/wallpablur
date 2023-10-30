@@ -571,12 +571,22 @@ namespace {
 
     auto [rounded_corners, border_effects] = parse_surface_effects(s_e_section);
 
+    bool clipping{false};
+    if (auto key = sec.unique_key("clipping")) {
+      clipping = parse<bool>(*key);
+    } else if (fallback) {
+      if (auto key = sec.unique_key("clipping")) {
+        clipping = parse<bool>(*key);
+      }
+    }
+
     return output {
       .name                 = std::string{sec.name()},
       .wallpapers           = std::move(wallpapers),
       .fixed_panels         = parse_panels(panel_section),
       .border_effects       = std::move(border_effects),
-      .rounded_corners      = std::move(rounded_corners)
+      .rounded_corners      = std::move(rounded_corners),
+      .clipping             = clipping
     };
   }
 }
@@ -599,8 +609,6 @@ namespace {
     update(root, opacity_,       "opacity");
     update(root, gl_samples_,    "gl-samples");
 
-    update(root, clipping_,      "clipping");
-
 
 
     default_output_ = parse_output(root, {});
@@ -617,6 +625,10 @@ namespace {
       }
 
       outputs_.emplace_back(parse_output(section, root));
+
+      if (as_overlay_) {
+        outputs_.back().clipping = false;
+      }
     }
 
     if (auto message =
