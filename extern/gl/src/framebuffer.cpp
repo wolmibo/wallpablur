@@ -78,6 +78,23 @@ namespace {
     glGenFramebuffers(1, &name);
     return name;
   }
+
+
+
+  void init_framebuffer() {
+    static constexpr std::array<GLenum, 1> draw_buffers = {
+      GL_COLOR_ATTACHMENT0
+    };
+    glDrawBuffers(draw_buffers.size(), draw_buffers.data());
+
+
+    if (auto res = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        res != GL_FRAMEBUFFER_COMPLETE) {
+
+      throw std::runtime_error{"unable to create framebuffer: "
+        + std::string{framebuffer_status_to_string(res)}};
+    }
+  }
 }
 
 
@@ -90,16 +107,20 @@ gl::framebuffer::framebuffer(const gl::texture& texture) :
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_TEXTURE_2D, texture.get(), 0);
 
-  static constexpr std::array<GLenum, 1> draw_buffers = {
-    GL_COLOR_ATTACHMENT0
-  };
-  glDrawBuffers(draw_buffers.size(), draw_buffers.data());
+  init_framebuffer();
+}
 
 
-  if (auto res = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-      res != GL_FRAMEBUFFER_COMPLETE) {
 
-    throw std::runtime_error{"unable to create framebuffer: "
-      + std::string{framebuffer_status_to_string(res)}};
-  }
+gl::framebuffer::framebuffer(const gl::texture& texture, const gl::texture& stencil) :
+  framebuffer_{generate_framebuffer()}
+{
+  auto fb_lock = bind();
+
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+      GL_TEXTURE_2D, texture.get(), 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+      GL_TEXTURE_2D, stencil.get(), 0);
+
+  init_framebuffer();
 }

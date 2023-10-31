@@ -617,6 +617,7 @@ struct layout_painter::clipping_context {
   GLint             texture_global_alpha_uniform;
 
   gl::texture       cached;
+  gl::texture       cached_stencil;
   wayland::geometry cached_size;
   uint64_t          cached_workspace_id{0};
 
@@ -790,6 +791,10 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
     requires_update = true;
     clipping_context_->cached = gl::texture(geometry_.physical_width(),
                                             geometry_.physical_height());
+
+    clipping_context_->cached_stencil = gl::texture(geometry_.physical_width(),
+                                                    geometry_.physical_height(),
+                                                    gl::texture::format::depth24_stencil8);
     clipping_context_->cached_size = geometry_;
   }
 
@@ -800,7 +805,7 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
 
   logcerr::debug("{}: update cache", config_.name);
 
-  gl::framebuffer fb{clipping_context_->cached};
+  gl::framebuffer fb{clipping_context_->cached, clipping_context_->cached_stencil};
   auto lock = fb.bind();
 
   draw_wallpaper(ws);
