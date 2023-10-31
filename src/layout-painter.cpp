@@ -11,6 +11,8 @@
 #include <array>
 #include <limits>
 
+#include <gl/framebuffer.hpp>
+
 #include <logcerr/log.hpp>
 
 
@@ -608,13 +610,43 @@ struct layout_painter::wallpaper_context {
 
 
 struct layout_painter::clipping_context {
-  context_guard context;
-  gl::mesh      sector_outside;
+  context_guard     context;
+  gl::mesh          sector_outside;
+  gl::program       texture_global_shader;
+
+  gl::texture       cached;
+  wayland::geometry cached_size;
+  uint64_t          cached_workspace_id{0};
+
 
   clipping_context(std::shared_ptr<egl::context> ctx) :
-    context       {std::move(ctx)},
-    sector_outside{gl::create_sector_outside(16)}
+    context              {std::move(ctx)},
+    sector_outside       {gl::create_sector_outside(16)},
+    texture_global_shader{resources::texture_global_vs(), resources::texture_global_fs()}
   {}
+
+
+
+
+
+  void draw_corner_clipping(
+      const wayland::geometry& geo,
+      const rectangle&         rect,
+      float                    radius
+  ) const {
+    radius = std::min({radius, rect.width(), rect.height()});
+
+    if (radius < std::numeric_limits<float>::epsilon()) {
+      return;
+    }
+
+    auto center = rect;
+    center.inset(radius);
+
+    for (const auto& corn: corner_rectangles(center, radius)) {
+      draw_mesh(geo, corn, sector_outside);
+    }
+  }
 };
 
 
@@ -706,6 +738,8 @@ void layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 
 void layout_painter::draw_wallpaper(const workspace& ws) const {
+  logcerr::debug("{}: drawing wallpaper", config_.name);
+
   glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
 
   const auto* active = active_wallpaper(ws, config_.wallpapers);
@@ -729,20 +763,109 @@ void layout_painter::draw_wallpaper(const workspace& ws) const {
 
 
 
-void layout_painter::render_wallpaper(const workspace& ws, float alpha) const {
-  logcerr::debug("{}: rendering {}x{}", config_.name,
-      geometry_.physical_width(), geometry_.physical_height());
+void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
+  if (!clipping_context_) {
+    logcerr::warn("{}: trying to update cache without clipping context", config_.name);
+    return;
+  }
 
   if (!wallpaper_context_) {
-    logcerr::warn("{}: trying to render without context", config_.name);
+    logcerr::warn("{}: trying to update cache without wallpaper context", config_.name);
     return;
+  }
+
+  bool requires_update{false};
+
+  if (clipping_context_->cached_workspace_id != id) {
+    requires_update = true;
+    clipping_context_->cached_workspace_id = id;
   }
 
   wallpaper_context_->context->make_current();
 
-  draw_wallpaper(ws);
+  if (!clipping_context_->cached || clipping_context_->cached_size != geometry_) {
+    requires_update = true;
+    clipping_context_->cached = gl::texture(geometry_.physical_width(),
+                                            geometry_.physical_height());
+    clipping_context_->cached_size = geometry_;
+  }
 
-  if (alpha < 254.f / 255.f) {
-    wallpaper_context_->set_buffer_alpha(alpha);
+
+  if (!requires_update) {
+    return;
+  }
+
+  logcerr::debug("{}: update cache", config_.name);
+
+  gl::framebuffer fb{clipping_context_->cached};
+  auto lock = fb.bind();
+
+  draw_wallpaper(ws);
+}
+
+
+
+
+
+void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id) const {
+  logcerr::debug("{}: rendering {}x{}", config_.name,
+      geometry_.physical_width(), geometry_.physical_height());
+
+  if (!wallpaper_context_) {
+    logcerr::warn("{}: trying to render wallpaper without context", config_.name);
+    return;
+  }
+
+  if (clipping_context_) {
+    update_cache(ws, id);
+
+    glDisable(GL_BLEND);
+
+    clipping_context_->texture_global_shader.use();
+    glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
+
+    clipping_context_->cached.bind();
+    wallpaper_context_->quad.draw();
+  } else {
+    draw_wallpaper(ws);
+  }
+
+  if (a < 254.f / 255.f) {
+    wallpaper_context_->set_buffer_alpha(a);
+  }
+}
+
+
+
+
+
+void layout_painter::render_clipping(const workspace& ws, uint64_t id) const {
+  if (!clipping_context_) {
+    logcerr::warn("{}: trying to render clipping without context", config_.name);
+    return;
+  }
+
+  update_cache(ws, id);
+
+  clipping_context_->context->make_current();
+
+  glClearColor(0.f, 0.f, 0.f, 0.f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  clipping_context_->texture_global_shader.use();
+  clipping_context_->cached.bind();
+
+
+
+  for (const auto& surface: ws.surfaces()) {
+    clipping_context_->draw_corner_clipping(geometry_, surface.rect(),
+        radius_cache_->radius(surface));
+  }
+
+  for (const auto& [surface, condition]: fixed_panels_) {
+    if (condition.evaluate(ws)) {
+      clipping_context_->draw_corner_clipping(geometry_, surface.rect(),
+          radius_cache_->radius(surface));
+    }
   }
 }

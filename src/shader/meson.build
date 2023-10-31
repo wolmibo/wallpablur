@@ -5,6 +5,9 @@ shader_files = [
   ['texture_vs',           'texture.vs.glsl'],
   ['texture_fs',           'texture.fs.glsl'],
 
+  ['texture_global_vs',    'texture-global.vs.glsl'],
+  ['texture_global_fs',    'texture-global.fs.glsl'],
+
   ['rescale_texture_vs',   'rescale-texture.vs.glsl'],
   ['rescale_texture_fs',   'rescale-texture.fs.glsl'],
 

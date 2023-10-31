@@ -41,9 +41,16 @@ class output {
     std::optional<layout_painter>     painter_;
 
 
+    std::bitset<2>                    surface_updated_;
+    uint64_t                          last_layout_id_ {0};
+    workspace                         last_layout_;
+
+
 
     void create_surfaces(bool);
     void setup_surfaces();
+
+    void update();
 };
 
 #endif // WALLPABLUR_OUTPUT_HPP_INCLUDED

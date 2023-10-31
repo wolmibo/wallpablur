@@ -32,7 +32,8 @@ class layout_painter {
 
     void update_geometry(const wayland::geometry&);
 
-    void render_wallpaper(const workspace&, float) const;
+    void render_wallpaper(const workspace&, float, uint64_t) const;
+    void render_clipping(const workspace&, uint64_t) const;
 
 
 
@@ -57,6 +58,7 @@ class layout_painter {
 
 
     void draw_wallpaper(const workspace&) const;
+    void update_cache(const workspace&, uint64_t) const;
 };
 
 

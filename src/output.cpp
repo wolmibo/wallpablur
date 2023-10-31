@@ -67,6 +67,18 @@ void output::create_surfaces(bool clipping) {
 
 
 
+void output::update() {
+  if (layout_token_.changed()) {
+    last_layout_ = *layout_token_.get();
+    last_layout_id_++;
+    surface_updated_.reset();
+  }
+}
+
+
+
+
+
 void output::setup_surfaces() {
   if (wallpaper_surface_) {
     wallpaper_surface_->set_context_cb([this](std::shared_ptr<egl::context> ctx) {
@@ -75,14 +87,17 @@ void output::setup_surfaces() {
 
 
     wallpaper_surface_->set_update_cb([this]() {
-      return layout_token_.changed() ||
+      update();
+      return !surface_updated_[0] ||
         std::abs(last_wallpaper_alpha_ - app().alpha()) > 1.f / 255.f;
     });
 
 
     wallpaper_surface_->set_render_cb([this]() {
       last_wallpaper_alpha_ = app().alpha();
-      painter_.value().render_wallpaper(*layout_token_.get(), last_wallpaper_alpha_);
+      painter_.value().render_wallpaper(last_layout_, last_wallpaper_alpha_,
+          last_layout_id_);
+      surface_updated_[0] = true;
     });
   }
 
@@ -91,6 +106,18 @@ void output::setup_surfaces() {
   if (clipping_surface_) {
     clipping_surface_->set_context_cb([this](std::shared_ptr<egl::context> ctx) {
       painter_->set_clipping_context(std::move(ctx));
+    });
+
+
+    clipping_surface_->set_update_cb([this]() {
+      update();
+      return !surface_updated_[1];
+    });
+
+
+    clipping_surface_->set_render_cb([this]() {
+      painter_.value().render_clipping(last_layout_, last_layout_id_);
+      surface_updated_[1] = true;
     });
   }
 }
