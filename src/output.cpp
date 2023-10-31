@@ -111,12 +111,15 @@ void output::setup_surfaces() {
 
     clipping_surface_->set_update_cb([this]() {
       update();
-      return !surface_updated_[1];
+      return !surface_updated_[1] ||
+        std::abs(last_clipping_alpha_ - app().alpha()) > 1.f / 255.f;
     });
 
 
     clipping_surface_->set_render_cb([this]() {
-      painter_.value().render_clipping(last_layout_, last_layout_id_);
+      last_clipping_alpha_ = app().alpha();
+      painter_.value().render_clipping(last_layout_, last_clipping_alpha_,
+          last_layout_id_);
       surface_updated_[1] = true;
     });
   }

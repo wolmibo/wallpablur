@@ -35,6 +35,7 @@ class output {
     std::unique_ptr<wayland::surface> clipping_surface_;
 
     float                             last_wallpaper_alpha_{-1.f};
+    float                             last_clipping_alpha_ {-1.f};
 
     change_token<workspace>           layout_token_;
 

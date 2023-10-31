@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <epoxy/gl_generated.h>
 #include <limits>
 
 #include <gl/framebuffer.hpp>
@@ -613,6 +614,7 @@ struct layout_painter::clipping_context {
   context_guard     context;
   gl::mesh          sector_outside;
   gl::program       texture_global_shader;
+  GLint             texture_global_alpha_uniform;
 
   gl::texture       cached;
   wayland::geometry cached_size;
@@ -622,7 +624,8 @@ struct layout_painter::clipping_context {
   clipping_context(std::shared_ptr<egl::context> ctx) :
     context              {std::move(ctx)},
     sector_outside       {gl::create_sector_outside(16)},
-    texture_global_shader{resources::texture_global_vs(), resources::texture_global_fs()}
+    texture_global_shader{resources::texture_global_vs(), resources::texture_global_fs()},
+    texture_global_alpha_uniform{texture_global_shader.uniform("alpha")}
   {}
 
 
@@ -819,19 +822,25 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
   if (clipping_context_) {
     update_cache(ws, id);
 
-    glDisable(GL_BLEND);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     clipping_context_->texture_global_shader.use();
     glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
+    glUniform1f(clipping_context_->texture_global_alpha_uniform, a);
 
     clipping_context_->cached.bind();
     wallpaper_context_->quad.draw();
+
   } else {
     draw_wallpaper(ws);
-  }
 
-  if (a < 254.f / 255.f) {
-    wallpaper_context_->set_buffer_alpha(a);
+    if (a < 254.f / 255.f) {
+      wallpaper_context_->set_buffer_alpha(a);
+    }
   }
 }
 
@@ -839,7 +848,7 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
 
 
 
-void layout_painter::render_clipping(const workspace& ws, uint64_t id) const {
+void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) const {
   if (!clipping_context_) {
     logcerr::warn("{}: trying to render clipping without context", config_.name);
     return;
@@ -852,8 +861,13 @@ void layout_painter::render_clipping(const workspace& ws, uint64_t id) const {
   glClearColor(0.f, 0.f, 0.f, 0.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
   clipping_context_->texture_global_shader.use();
   clipping_context_->cached.bind();
+
+  glUniform1f(clipping_context_->texture_global_alpha_uniform, a);
 
 
 
