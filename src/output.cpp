@@ -85,4 +85,12 @@ void output::setup_surfaces() {
       painter_.value().render_wallpaper(*layout_token_.get(), last_wallpaper_alpha_);
     });
   }
+
+
+
+  if (clipping_surface_) {
+    clipping_surface_->set_context_cb([this](std::shared_ptr<egl::context> ctx) {
+      painter_->set_clipping_context(std::move(ctx));
+    });
+  }
 }
