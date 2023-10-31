@@ -32,6 +32,10 @@ class texture {
 
 
 
+    [[nodiscard]] operator bool() const { return texture_.get() != 0; }
+
+
+
     [[nodiscard]] GLuint get()    const { return texture_.get();    }
     void                 bind()   const { bind_tex(texture_.get()); }
     static void          unbind()       { bind_tex(0);              }
