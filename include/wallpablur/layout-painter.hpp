@@ -54,6 +54,9 @@ class layout_painter {
     wayland::geometry                     geometry_;
     std::vector<std::pair<surface, workspace_expression>>
                                           fixed_panels_;
+
+
+    void draw_wallpaper(const workspace&) const;
 };
 
 

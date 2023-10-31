@@ -588,6 +588,7 @@ struct layout_painter::wallpaper_context {
 
 
 
+
   void set_buffer_alpha(float alpha) const {
     solid_color_shader.use();
     glUniform4f(solid_color_uniform, 0, 0, 0, 0);
@@ -704,17 +705,7 @@ void layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 
 
-void layout_painter::render_wallpaper(const workspace& ws, float alpha) const {
-  logcerr::debug("{}: rendering {}x{}", config_.name,
-      geometry_.physical_width(), geometry_.physical_height());
-
-  if (!wallpaper_context_) {
-    logcerr::warn("{}: trying to render without context", config_.name);
-    return;
-  }
-
-  wallpaper_context_->context->make_current();
-
+void layout_painter::draw_wallpaper(const workspace& ws) const {
   glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
 
   const auto* active = active_wallpaper(ws, config_.wallpapers);
@@ -732,6 +723,24 @@ void layout_painter::render_wallpaper(const workspace& ws, float alpha) const {
     wallpaper_context_->draw_background(geometry_, active->background, ws,
         fixed_panels_, *radius_cache_);
   }
+}
+
+
+
+
+
+void layout_painter::render_wallpaper(const workspace& ws, float alpha) const {
+  logcerr::debug("{}: rendering {}x{}", config_.name,
+      geometry_.physical_width(), geometry_.physical_height());
+
+  if (!wallpaper_context_) {
+    logcerr::warn("{}: trying to render without context", config_.name);
+    return;
+  }
+
+  wallpaper_context_->context->make_current();
+
+  draw_wallpaper(ws);
 
   if (alpha < 254.f / 255.f) {
     wallpaper_context_->set_buffer_alpha(alpha);
