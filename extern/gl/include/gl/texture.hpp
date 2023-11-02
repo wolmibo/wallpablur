@@ -21,7 +21,6 @@ class texture {
     enum class format {
       rgba8,
       rgb8,
-      depth24_stencil8,
     };
 
 

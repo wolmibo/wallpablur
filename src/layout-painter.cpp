@@ -34,41 +34,6 @@ namespace {
 
 
 
-  template<typename MASK, typename DRAW>
-  void draw_stenciled(MASK mask_fnc, DRAW draw_fnc) {
-    struct guard {
-      guard(const guard&) = delete;
-      guard(guard&&)      = delete;
-      guard& operator=(const guard&) = delete;
-      guard& operator=(guard&&)      = delete;
-
-      guard() {
-        glEnable(GL_STENCIL_TEST);
-      }
-
-      ~guard() {
-        glDisable(GL_STENCIL_TEST);
-      }
-    } stencil_guard;
-
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-    glStencilMask(0xFF);
-    glClear(GL_STENCIL_BUFFER_BIT);
-
-    mask_fnc();
-
-    glStencilFunc(GL_EQUAL, 1, 0xFF);
-    glStencilMask(0x00);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-    draw_fnc();
-  }
-
-
-
-
-
   template<typename FNC, typename ...ARGS>
   void invoke_append_color(FNC&& f, const config::color& c, ARGS&&... args) {
     std::forward<FNC>(f)(std::forward<ARGS>(args)...,
@@ -322,6 +287,7 @@ struct layout_painter::wallpaper_context {
   gl::program                   solid_color_shader;
   GLint                         solid_color_uniform;
   gl::program                   texture_shader;
+  GLint                         texture_shader_alpha;
 
   enum class shader {
     border_step,
@@ -338,12 +304,13 @@ struct layout_painter::wallpaper_context {
   wallpaper_context& operator=(const wallpaper_context&) = delete;
 
   wallpaper_context(std::shared_ptr<egl::context> ctx) :
-    context            {activate_context(std::move(ctx))},
-    quad               {gl::create_quad()},
-    sector             {gl::create_sector(16)},
-    solid_color_shader {resources::solid_color_vs(), resources::solid_color_fs()},
-    solid_color_uniform{solid_color_shader.uniform("color_rgba")},
-    texture_shader     {resources::texture_vs(), resources::texture_fs()}
+    context             {activate_context(std::move(ctx))},
+    quad                {gl::create_quad()},
+    sector              {gl::create_sector(16)},
+    solid_color_shader  {resources::solid_color_vs(), resources::solid_color_fs()},
+    solid_color_uniform {solid_color_shader.uniform("color_rgba")},
+    texture_shader      {resources::texture_vs(), resources::texture_fs()},
+    texture_shader_alpha{texture_shader.uniform("alpha")}
   {}
 
   ~wallpaper_context() {
@@ -497,6 +464,8 @@ struct layout_painter::wallpaper_context {
       glClear(GL_COLOR_BUFFER_BIT);
 
       texture_shader.use();
+      glUniform1f(texture_shader_alpha, 1.f);
+      glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
 
       wp.description.realization->bind();
       quad.draw();
@@ -542,39 +511,32 @@ struct layout_painter::wallpaper_context {
       std::span<const std::pair<surface, workspace_expression>> fixed,
       const radius_cache&                                       radii
   ) const {
-    glDisable(GL_BLEND);
+    if (bg.description.realization) {
+      texture_shader.use();
 
-    draw_stenciled([&]() {
+      glUniform1f(texture_shader_alpha, 1.f);
+
+      bg.description.realization->bind();
+
+    } else {
       solid_color_shader.use();
 
-      for (const auto& surface: ws.surfaces()) {
-        if (bg.condition.evaluate(surface, ws)) {
-          draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface));
-        }
+      invoke_append_color(glUniform4f, bg.description.solid, solid_color_uniform);
+    }
+
+
+
+    for (const auto& surface: ws.surfaces()) {
+      if (bg.condition.evaluate(surface, ws)) {
+        draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface));
       }
+    }
 
-      for (const auto& [surface, condition]: fixed) {
-        if (condition.evaluate(ws) && bg.condition.evaluate(surface, ws)) {
-          draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface));
-        }
+    for (const auto& [surface, condition]: fixed) {
+      if (condition.evaluate(ws) && bg.condition.evaluate(surface, ws)) {
+        draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface));
       }
-
-    }, [&](){
-      if (bg.description.realization) {
-        texture_shader.use();
-
-        bg.description.realization->bind();
-        quad.draw();
-
-      } else {
-        solid_color_shader.use();
-
-        invoke_append_color(glUniform4f, bg.description.solid, solid_color_uniform);
-
-        glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
-        quad.draw();
-      }
-    });
+    }
   }
 
 
@@ -602,11 +564,8 @@ struct layout_painter::wallpaper_context {
 struct layout_painter::clipping_context {
   std::shared_ptr<egl::context> context;
   gl::mesh                      sector_outside;
-  gl::program                   texture_global_shader;
-  GLint                         texture_global_alpha_uniform;
 
   gl::texture                   cached;
-  gl::texture                   cached_stencil;
   wayland::geometry             cached_size;
   uint64_t                      cached_workspace_id{0};
 
@@ -617,10 +576,8 @@ struct layout_painter::clipping_context {
   clipping_context& operator=(const clipping_context&) = delete;
 
   clipping_context(std::shared_ptr<egl::context> ctx) :
-    context              {activate_context(std::move(ctx))},
-    sector_outside       {gl::create_sector_outside(16)},
-    texture_global_shader{resources::texture_global_vs(), resources::texture_global_fs()},
-    texture_global_alpha_uniform{texture_global_shader.uniform("alpha")}
+    context       {activate_context(std::move(ctx))},
+    sector_outside{gl::create_sector_outside(16)}
   {}
 
   ~clipping_context() {
@@ -790,9 +747,6 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
     clipping_context_->cached = gl::texture(geometry_.physical_width(),
                                             geometry_.physical_height());
 
-    clipping_context_->cached_stencil = gl::texture(geometry_.physical_width(),
-                                                    geometry_.physical_height(),
-                                                    gl::texture::format::depth24_stencil8);
     clipping_context_->cached_size = geometry_;
   }
 
@@ -803,7 +757,7 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
 
   logcerr::debug("{}: update cache", config_.name);
 
-  gl::framebuffer fb{clipping_context_->cached, clipping_context_->cached_stencil};
+  gl::framebuffer fb{clipping_context_->cached};
   auto lock = fb.bind();
 
   draw_wallpaper(ws);
@@ -831,9 +785,9 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    clipping_context_->texture_global_shader.use();
+    wallpaper_context_->texture_shader.use();
     glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
-    glUniform1f(clipping_context_->texture_global_alpha_uniform, a);
+    glUniform1f(wallpaper_context_->texture_shader_alpha, a);
 
     clipping_context_->cached.bind();
     wallpaper_context_->quad.draw();
@@ -867,10 +821,10 @@ void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) 
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-  clipping_context_->texture_global_shader.use();
+  wallpaper_context_->texture_shader.use();
   clipping_context_->cached.bind();
 
-  glUniform1f(clipping_context_->texture_global_alpha_uniform, a);
+  glUniform1f(wallpaper_context_->texture_shader_alpha, a);
 
 
 

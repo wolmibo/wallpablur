@@ -186,7 +186,6 @@ namespace {
       EGL_GREEN_SIZE,      8,
       EGL_BLUE_SIZE,       8,
       EGL_ALPHA_SIZE,      8,
-      EGL_STENCIL_SIZE,    8,
       EGL_SAMPLES,         config::global_config().gl_samples(),
       EGL_NONE,            EGL_NONE,
     };

@@ -12,7 +12,6 @@ class texture;
 class framebuffer {
   public:
     explicit framebuffer(const gl::texture&);
-    framebuffer(const gl::texture&, const gl::texture&);
 
 
 

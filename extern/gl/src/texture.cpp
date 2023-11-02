@@ -10,7 +10,6 @@ namespace {
     switch (format) {
       case gl::texture::format::rgb8:             return GL_RGB8;
       case gl::texture::format::rgba8:            return GL_RGBA8;
-      case gl::texture::format::depth24_stencil8: return GL_DEPTH24_STENCIL8;
     }
     throw std::runtime_error{"unsupported texture format"};
   }
@@ -21,7 +20,6 @@ namespace {
     switch (format) {
       case gl::texture::format::rgb8:             return GL_RGB;
       case gl::texture::format::rgba8:            return GL_RGBA;
-      case gl::texture::format::depth24_stencil8: return GL_DEPTH_STENCIL;
     }
     throw std::runtime_error{"unsupported texture format"};
   }
@@ -30,7 +28,6 @@ namespace {
 
   [[nodiscard]] GLenum format_to_type(gl::texture::format format) {
     switch (format) {
-      case gl::texture::format::depth24_stencil8: return GL_UNSIGNED_INT_24_8;
       case gl::texture::format::rgb8:
       case gl::texture::format::rgba8:            return GL_UNSIGNED_BYTE;
     }
@@ -53,7 +50,6 @@ namespace {
 
   [[nodiscard]] GLint pixels_per_stride(size_t stride, gl::texture::format format) {
     switch (format) {
-      case gl::texture::format::depth24_stencil8: return stride / 4;
       case gl::texture::format::rgb8:             return stride / 3;
       case gl::texture::format::rgba8:            return stride / 4;
     }
