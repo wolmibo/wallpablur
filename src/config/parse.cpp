@@ -607,7 +607,6 @@ namespace {
 
     update(root, as_overlay_,    "as-overlay");
     update(root, opacity_,       "opacity");
-    update(root, gl_samples_,    "gl-samples");
 
 
 

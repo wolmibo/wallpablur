@@ -29,7 +29,6 @@ class config {
     [[nodiscard]] bool     disable_i3ipc() const { return disable_i3ipc_;            }
     [[nodiscard]] bool     as_overlay()    const { return as_overlay_;               }
     [[nodiscard]] float    opacity()       const { return opacity_;                  }
-    [[nodiscard]] uint16_t gl_samples()    const { return gl_samples_;               }
 
 
 
@@ -50,7 +49,6 @@ class config {
     bool                      disable_i3ipc_{false};
     bool                      as_overlay_   {false};
     float                     opacity_      {1.f};
-    uint16_t                  gl_samples_   {0};
 
 
 

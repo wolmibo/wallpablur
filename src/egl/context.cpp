@@ -1,5 +1,4 @@
 #include <wayland-egl.h>
-#include "wallpablur/config/config.hpp"
 #include "wallpablur/egl/context.hpp"
 
 #include <array>
@@ -186,7 +185,6 @@ namespace {
       EGL_GREEN_SIZE,      8,
       EGL_BLUE_SIZE,       8,
       EGL_ALPHA_SIZE,      8,
-      EGL_SAMPLES,         config::global_config().gl_samples(),
       EGL_NONE,            EGL_NONE,
     };
 
