@@ -241,34 +241,15 @@ namespace {
 
 
 
-  class context_guard {
-    public:
-      context_guard(const context_guard&) = delete;
-      context_guard(context_guard&&) = delete;
-      context_guard& operator=(const context_guard&) = delete;
-      context_guard& operator=(context_guard&&) = delete;
-
-      context_guard(std::shared_ptr<egl::context> context)
-          : context_{std::move(context)} {
-        if (!context_) {
-          throw std::runtime_error{"expected non-null context"};
-        }
-        context_->make_current();
-      }
-
-      ~context_guard() {
-        context_->make_current();
-      }
-
-      egl::context* operator->() {
-        return context_.get();
-      }
-
-
-
-    private:
-      std::shared_ptr<egl::context> context_;
-  };
+  [[nodiscard]] std::shared_ptr<egl::context> activate_context(
+      std::shared_ptr<egl::context> ctx
+  ) {
+    if (!ctx) {
+      throw std::runtime_error{"expected non-null context"};
+    }
+    ctx->make_current();
+    return ctx;
+  }
 }
 
 
@@ -335,12 +316,12 @@ class layout_painter::radius_cache {
 
 
 struct layout_painter::wallpaper_context {
-  context_guard context;
-  gl::mesh      quad;
-  gl::mesh      sector;
-  gl::program   solid_color_shader;
-  GLint         solid_color_uniform;
-  gl::program   texture_shader;
+  std::shared_ptr<egl::context> context;
+  gl::mesh                      quad;
+  gl::mesh                      sector;
+  gl::program                   solid_color_shader;
+  GLint                         solid_color_uniform;
+  gl::program                   texture_shader;
 
   enum class shader {
     border_step,
@@ -351,15 +332,23 @@ struct layout_painter::wallpaper_context {
   mutable flat_map<shader, gl::program> shader_cache;
 
 
+  wallpaper_context(wallpaper_context&&) = delete;
+  wallpaper_context(const wallpaper_context&) = delete;
+  wallpaper_context& operator=(wallpaper_context&&) = delete;
+  wallpaper_context& operator=(const wallpaper_context&) = delete;
 
   wallpaper_context(std::shared_ptr<egl::context> ctx) :
-    context            {std::move(ctx)},
+    context            {activate_context(std::move(ctx))},
     quad               {gl::create_quad()},
     sector             {gl::create_sector(16)},
     solid_color_shader {resources::solid_color_vs(), resources::solid_color_fs()},
     solid_color_uniform{solid_color_shader.uniform("color_rgba")},
     texture_shader     {resources::texture_vs(), resources::texture_fs()}
   {}
+
+  ~wallpaper_context() {
+    context->make_current();
+  }
 
 
 
@@ -611,23 +600,32 @@ struct layout_painter::wallpaper_context {
 
 
 struct layout_painter::clipping_context {
-  context_guard     context;
-  gl::mesh          sector_outside;
-  gl::program       texture_global_shader;
-  GLint             texture_global_alpha_uniform;
+  std::shared_ptr<egl::context> context;
+  gl::mesh                      sector_outside;
+  gl::program                   texture_global_shader;
+  GLint                         texture_global_alpha_uniform;
 
-  gl::texture       cached;
-  gl::texture       cached_stencil;
-  wayland::geometry cached_size;
-  uint64_t          cached_workspace_id{0};
+  gl::texture                   cached;
+  gl::texture                   cached_stencil;
+  wayland::geometry             cached_size;
+  uint64_t                      cached_workspace_id{0};
 
+
+  clipping_context(clipping_context&&) = delete;
+  clipping_context(const clipping_context&) = delete;
+  clipping_context& operator=(clipping_context&&) = delete;
+  clipping_context& operator=(const clipping_context&) = delete;
 
   clipping_context(std::shared_ptr<egl::context> ctx) :
-    context              {std::move(ctx)},
+    context              {activate_context(std::move(ctx))},
     sector_outside       {gl::create_sector_outside(16)},
     texture_global_shader{resources::texture_global_vs(), resources::texture_global_fs()},
     texture_global_alpha_uniform{texture_global_shader.uniform("alpha")}
   {}
+
+  ~clipping_context() {
+    context->make_current();
+  }
 
 
 
