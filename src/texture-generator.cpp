@@ -52,7 +52,7 @@ namespace {
   [[nodiscard]] std::array<float, 4> scale_matrix(float x, float y) {
     return {
         x, 0.f,
-      0.f,   y,
+      0.f,  -y,
     };
   }
 
@@ -123,12 +123,6 @@ gl::texture texture_generator::create_base_texture(
   auto texture = load_to_gl_texture(brush.fgraph->path);
   texture.bind();
   auto size = gl::active_texture_size();
-
-  if (static_cast<unsigned int>(size.width)  == geometry.physical_width() &&
-      static_cast<unsigned int>(size.height) == geometry.physical_height() &&
-      brush.solid[3] == 0.f) {
-    return texture;
-  }
 
   logcerr::verbose("rescaling image {}x{} -> {}x{} ontop of ({:.2},{:.2},{:.2},{:.2})",
       size.width, size.height,
