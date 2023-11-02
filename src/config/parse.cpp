@@ -523,7 +523,7 @@ namespace {
 
   [[nodiscard]] std::vector<const section*> list_wallpaper_sections(
       const section& sec,
-      opt_sec        fallback
+      opt_sec        /*fallback*/
   ) {
     std::vector<std::pair<size_t, const section*>> list;
     for (const auto& s: sec.subsections()) {
