@@ -64,7 +64,6 @@ sources = [
 
   'config/config.cpp',
   'config/panel.cpp',
-  'config/parse.cpp',
 
   'rectangle.cpp',
 
@@ -76,7 +75,6 @@ sources = [
   'expression/tokenizer.cpp',
 
   'texture-generator.cpp',
-  'texture-generator-filter.cpp',
   'texture-provider.cpp',
   'layout-painter.cpp',
 
