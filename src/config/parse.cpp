@@ -624,10 +624,6 @@ namespace {
       }
 
       outputs_.emplace_back(parse_output(section, root));
-
-      if (as_overlay_) {
-        outputs_.back().clipping = false;
-      }
     }
 
     if (auto message =

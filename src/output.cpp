@@ -55,7 +55,7 @@ void output::create_surfaces(bool clipping) {
     );
   }
 
-  if (!clipping_surface_ && clipping) {
+  if (!clipping_surface_ && clipping && !config::global_config().as_overlay()) {
     clipping_surface_ = wl_output_->create_surface(
         "wallpablur-clipping." + std::string{wl_output_->name()},
         true
