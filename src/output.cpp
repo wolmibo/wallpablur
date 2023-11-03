@@ -79,6 +79,14 @@ void output::update() {
 
 
 
+namespace {
+  [[nodiscard]] bool alpha_changed(float last, float current) {
+    return (current >= 1.f && last < 1.f) || std::abs(last - current) > 1.f / 255.f;
+  }
+}
+
+
+
 void output::setup_surfaces() {
   if (wallpaper_surface_) {
     wallpaper_surface_->set_context_cb([this](std::shared_ptr<egl::context> ctx) {
@@ -88,8 +96,7 @@ void output::setup_surfaces() {
 
     wallpaper_surface_->set_update_cb([this]() {
       update();
-      return !surface_updated_[0] ||
-        std::abs(last_wallpaper_alpha_ - app().alpha()) > 1.f / 255.f;
+      return !surface_updated_[0] || alpha_changed(last_wallpaper_alpha_, app().alpha());
     });
 
 
@@ -111,8 +118,7 @@ void output::setup_surfaces() {
 
     clipping_surface_->set_update_cb([this]() {
       update();
-      return !surface_updated_[1] ||
-        std::abs(last_clipping_alpha_ - app().alpha()) > 1.f / 255.f;
+      return !surface_updated_[1] || alpha_changed(last_clipping_alpha_, app().alpha());
     });
 
 
