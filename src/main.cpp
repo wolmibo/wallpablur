@@ -2,8 +2,35 @@
 #include "wallpablur/application-args.hpp"
 
 #include <cstdlib>
+#include <iostream>
+
+#include <iconfigp/format.hpp>
 
 #include <logcerr/log.hpp>
+
+#include <gl/program.hpp>
+
+
+
+
+namespace {
+  void print_gl_error(const gl::program_error& err) {
+    logcerr::error(err.what());
+    for (const auto& message: err.messages()) {
+      logcerr::print_raw_sync(std::cerr, message.message + "\n");
+
+      if (auto src = err.source()) {
+        auto offset = iconfigp::line_offset(*src, message.row).value_or(0)
+                        + message.column;
+
+        logcerr::print_raw_sync(std::cerr,
+            iconfigp::highlight_text_segment(*src, offset, 0,
+              logcerr::is_colored() ? iconfigp::message_color::error
+                                    : iconfigp::message_color::none));
+      }
+    }
+  }
+}
 
 
 
@@ -15,6 +42,9 @@ int main(int argc, char** argv) {
       application app{*args};
       return app.run();
     }
+  } catch (const gl::program_error& err) {
+    print_gl_error(err);
+    return EXIT_FAILURE;
   } catch (std::exception& ex) {
     logcerr::error(ex.what());
     return EXIT_FAILURE;

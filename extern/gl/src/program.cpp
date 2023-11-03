@@ -1,80 +1,188 @@
 #include "gl/program.hpp"
 
+#include <charconv>
 #include <stdexcept>
 
 
 
+
 namespace {
-  [[nodiscard]] bool program_good(GLint program) {
+  template<typename Fnc>
+  [[nodiscard]] bool get_status(GLint id, Fnc&& f, GLenum query) {
     GLint status{GL_FALSE};
-
-    glGetProgramiv(program, GL_LINK_STATUS, &status);
-
-    return status != GL_FALSE && program != 0;
+    std::forward<Fnc>(f)(id, query, &status);
+    return status != GL_FALSE && id != 0;
   }
 
 
 
-  [[nodiscard]] std::string get_program_message(GLint program) {
+  template<typename FncIv, typename FncIL>
+  [[nodiscard]] std::string get_message(GLint id, FncIv&& iv, FncIL&& il) {
     GLint length{0};
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+    std::forward<FncIv>(iv)(id, GL_INFO_LOG_LENGTH, &length);
 
     if (length < 0) {
-      throw std::runtime_error("unable to obtain program message");
+      return "<unable to obtain message>";
     }
 
     std::string buffer(static_cast<size_t>(length), ' ');
-    glGetProgramInfoLog(program, buffer.size(), nullptr, buffer.data());
+    std::forward<FncIL>(il)(id, buffer.size(), nullptr, buffer.data());
+
+    while (!buffer.empty() && buffer.back() == 0) {
+      buffer.pop_back();
+    }
 
     return buffer;
   }
 
 
 
-
-
-  [[nodiscard]] bool shader_good(GLint shader) {
-    GLint status{GL_FALSE};
-
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-
-    return status != GL_FALSE && shader != 0;
-  }
-
-
-
-  [[nodiscard]] std::string get_shader_message(GLint shader) {
-    GLint length{0};
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-
-    if (length < 0) {
-      throw std::runtime_error("unable to obtain shader message");
-    }
-
-    std::string buffer(static_cast<size_t>(length), ' ');
-    glGetShaderInfoLog(shader, buffer.size(), nullptr, buffer.data());
-
-    return buffer;
-  }
-
-
-
-
-
-  [[nodiscard]] constexpr std::string shader_type_to_string(GLenum type) {
+  [[nodiscard]] std::string get_message(GLint id, gl::shader_type type) {
     switch (type) {
-      case GL_VERTEX_SHADER:   return "vertex shader";
-      case GL_FRAGMENT_SHADER: return "fragment shader";
-      default:                 return "unknown shader type";
+      case gl::shader_type::vertex:
+      case gl::shader_type::fragment:
+        return get_message(id, glGetShaderiv, glGetShaderInfoLog);
+      case gl::shader_type::linking:
+        return get_message(id, glGetProgramiv, glGetProgramInfoLog);
+    }
+    return "<unable to obtain message>";
+  }
+
+
+
+  [[nodiscard]] constexpr std::string shader_type_to_string(gl::shader_type type) {
+    switch (type) {
+      case gl::shader_type::vertex:   return "compile vertex shader";
+      case gl::shader_type::fragment: return "compile fragment shader";
+      case gl::shader_type::linking:  return "link program";
+    }
+
+    return "unknown shader action";
+  }
+
+
+
+
+
+  [[nodiscard]] size_t str_to_size_t(std::string_view str) {
+    size_t value{0};
+    std::from_chars(str.data(), str.data() + str.size(), value);
+    return value;
+  }
+
+
+
+
+
+  [[nodiscard]] std::string_view trim_front(std::string_view message) {
+    while (!message.empty() &&
+           std::string_view{" \t\n\r"}.find(message.front()) != std::string_view::npos) {
+      message.remove_prefix(1);
+    }
+    return message;
+  }
+
+
+
+  [[nodiscard]] gl::program_error::message message_from_string(std::string_view line) {
+    auto end = line.find("):");
+    auto start = line.find(':');
+
+    if (end == std::string_view::npos || start > end) {
+      return {std::string{line}, 0, 0, std::string{line}};
+    }
+
+    auto split = line.find('(', start + 1);
+
+    auto message = trim_front(line.substr(end + 2));
+
+    if (message.starts_with("error:")) {
+      message.remove_prefix(6);
+      message = trim_front(message);
+    }
+
+    return {
+      std::string{line},
+      str_to_size_t(line.substr(start + 1, split - start - 1)) - 1,
+      str_to_size_t(line.substr(split + 1, end   - split - 1)) - 1,
+      std::string{message}
+    };
+  }
+
+
+
+
+
+  [[nodiscard]] std::vector<gl::program_error::message> split_messages(
+      std::string_view in
+  ) {
+    std::vector<gl::program_error::message> messages;
+
+    for (auto pos = in.find('\n'); !in.empty(); pos = in.find('\n')) {
+      if (auto line = trim_front(in.substr(0, pos)); !line.empty()) {
+        messages.emplace_back(message_from_string(line));
+      }
+      if (pos == std::string_view::npos) {
+        return messages;
+      }
+      in.remove_prefix(pos + 1);
+    }
+
+    return messages;
+  }
+}
+
+
+
+
+
+gl::program_error::program_error(GLint id, shader_type type, std::string source) :
+  std::runtime_error{"failed to " + shader_type_to_string(type)},
+  type_    {type},
+  source_  {std::move(source)},
+  messages_{split_messages(get_message(id, type))}
+{}
+
+
+
+std::optional<std::string_view> gl::program_error::source() const {
+  if (source_.empty()) {
+    return {};
+  }
+  return source_;
+}
+
+
+
+
+
+
+namespace {
+  void assert_object(GLint id, gl::shader_type type, std::string_view source) {
+    switch (type) {
+      case gl::shader_type::vertex:
+      case gl::shader_type::fragment:
+        if (!get_status(id, glGetShaderiv, GL_COMPILE_STATUS)) {
+          throw gl::program_error{id, type, std::string{source}};
+        }
+        break;
+
+      case gl::shader_type::linking:
+        if (!get_status(id, glGetProgramiv, GL_LINK_STATUS)) {
+          throw gl::program_error{id, type, std::string{source}};
+        }
+        break;
     }
   }
+
+
 
 
 
   class shader {
     public:
-      shader(GLenum type, std::string_view source) :
-        shader_{glCreateShader(type)}
+      shader(gl::shader_type type, std::string_view source) :
+        shader_{glCreateShader(std::to_underlying(type))}
       {
         GLint length       = source.length();
         const GLchar* data = source.data();
@@ -82,13 +190,7 @@ namespace {
         glShaderSource(shader_.get(), 1, &data, &length);
         glCompileShader(shader_.get());
 
-        if (!shader_good(shader_.get())) {
-          auto message = get_shader_message(shader_.get());
-          glDeleteShader(shader_.get());
-
-          throw std::runtime_error{"failed to compile "
-            + shader_type_to_string(type) + ":\n" + message};
-        }
+        assert_object(shader_.get(), type, source);
       }
 
 
@@ -111,21 +213,16 @@ namespace {
 gl::program::program(std::string_view vs, std::string_view fs) :
   program_{glCreateProgram()}
 {
-  shader vertex  {GL_VERTEX_SHADER,   vs};
+  shader vertex  {gl::shader_type::vertex,   vs};
   glAttachShader(program_.get(), vertex.get());
 
-  shader fragment{GL_FRAGMENT_SHADER, fs};
+  shader fragment{gl::shader_type::fragment, fs};
   glAttachShader(program_.get(), fragment.get());
 
 
   glLinkProgram(program_.get());
 
-  if (!program_good(program_.get())) {
-    auto message = get_program_message(program_.get());
-    glDeleteProgram(program_.get());
-
-    throw std::runtime_error{"failed to compile program:\n" + message};
-  }
+  assert_object(program_.get(), gl::shader_type::linking, "");
 
   glDetachShader(program_.get(), vertex.get());
   glDetachShader(program_.get(), fragment.get());
