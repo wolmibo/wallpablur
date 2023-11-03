@@ -78,7 +78,7 @@ namespace {
 
 
 
-  void set_blend_mode(config::blend_mode mode) {
+  void set_blend_mode(config::blend_mode mode = config::blend_mode::alpha) {
     switch (mode) {
       case config::blend_mode::add:
         glEnable(GL_BLEND);
@@ -451,6 +451,8 @@ struct layout_painter::wallpaper_context {
     }
 
     draw_sides(geo, sides, center, thickness);
+
+    set_blend_mode();
   }
 
 
@@ -512,7 +514,6 @@ struct layout_painter::wallpaper_context {
   ) const {
     if (bg.description.realization) {
       texture_shader.use();
-
       glUniform1f(texture_shader_alpha, 1.f);
 
       bg.description.realization->bind();
@@ -553,6 +554,8 @@ struct layout_painter::wallpaper_context {
     glBlendFunc(GL_CONSTANT_COLOR, GL_CONSTANT_COLOR);
 
     quad.draw();
+
+    set_blend_mode();
   }
 };
 
@@ -700,6 +703,8 @@ void layout_painter::draw_wallpaper(const workspace& ws) const {
 
   glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
 
+  set_blend_mode();
+
   const auto* active = active_wallpaper(ws, config_.wallpapers);
 
   if (active != nullptr) {
@@ -767,13 +772,15 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
 
 
 void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id) const {
-  logcerr::debug("{}: rendering {}x{}", config_.name,
-      geometry_.physical_width(), geometry_.physical_height());
+  logcerr::debug("{}: rendering wallpaper {}x{}, alpha = {}", config_.name,
+      geometry_.physical_width(), geometry_.physical_height(), a);
 
   if (!wallpaper_context_) {
     logcerr::warn("{}: trying to render wallpaper without context", config_.name);
     return;
   }
+
+  set_blend_mode();
 
   if (clipping_context_) {
     update_cache(ws, id);
@@ -781,12 +788,9 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
     wallpaper_context_->texture_shader.use();
-    glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
     glUniform1f(wallpaper_context_->texture_shader_alpha, a);
+    glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
 
     clipping_context_->cached.bind();
     wallpaper_context_->quad.draw();
@@ -805,10 +809,15 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
 
 
 void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) const {
+  logcerr::debug("{}: rendering clipping {}x{}, alpha = {}", config_.name,
+      geometry_.physical_width(), geometry_.physical_height(), a);
+
   if (!clipping_context_) {
     logcerr::warn("{}: trying to render clipping without context", config_.name);
     return;
   }
+
+  set_blend_mode();
 
   update_cache(ws, id);
 
@@ -817,13 +826,10 @@ void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) 
   glClearColor(0.f, 0.f, 0.f, 0.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
   wallpaper_context_->texture_shader.use();
-  clipping_context_->cached.bind();
-
   glUniform1f(wallpaper_context_->texture_shader_alpha, a);
+
+  clipping_context_->cached.bind();
 
 
 
