@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <array>
-#include <epoxy/gl_generated.h>
 #include <limits>
 
 #include <gl/framebuffer.hpp>
