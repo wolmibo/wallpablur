@@ -631,9 +631,7 @@ cfg::config(std::string_view input) {
       outputs_.emplace_back(parse_output(section, root));
     }
 
-    if (auto message =
-        generate_unused_message(root, input, logcerr::is_colored())) {
-
+    if (auto message = format_unused_message(root, input, logcerr::is_colored())) {
       logcerr::warn("config file contains unused keys");
       logcerr::print_raw_sync(std::cout, *message);
     }
