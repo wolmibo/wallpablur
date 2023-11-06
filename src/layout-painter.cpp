@@ -565,7 +565,10 @@ struct layout_painter::wallpaper_context {
 
 struct layout_painter::clipping_context {
   std::shared_ptr<egl::context> context;
-  gl::mesh                      sector_outside;
+  gl::mesh                      quad;
+  gl::program                   texture_aa_shader;
+  GLint                         texture_aa_shader_alpha;
+  GLint                         texture_aa_shader_cutoff;
 
   gl::texture                   cached;
   wayland::geometry             cached_size;
@@ -578,8 +581,11 @@ struct layout_painter::clipping_context {
   clipping_context& operator=(const clipping_context&) = delete;
 
   clipping_context(std::shared_ptr<egl::context> ctx) :
-    context       {activate_context(std::move(ctx))},
-    sector_outside{gl::create_sector_outside(16)}
+    context                 {activate_context(std::move(ctx))},
+    quad                    {gl::create_quad()},
+    texture_aa_shader       {resources::texture_vs(), resources::texture_aa_fs()},
+    texture_aa_shader_alpha {texture_aa_shader.uniform("alpha")},
+    texture_aa_shader_cutoff{texture_aa_shader.uniform("cutoff")}
   {}
 
   ~clipping_context() {
@@ -601,11 +607,13 @@ struct layout_painter::clipping_context {
       return;
     }
 
+    glUniform1f(texture_aa_shader_cutoff, 0.75f / radius);
+
     auto center = rect;
     center.inset(radius);
 
     for (const auto& corn: corner_rectangles(center, radius)) {
-      draw_mesh(geo, corn, sector_outside);
+      draw_mesh(geo, corn, quad);
     }
   }
 };
@@ -826,8 +834,8 @@ void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) 
   glClearColor(0.f, 0.f, 0.f, 0.f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  wallpaper_context_->texture_shader.use();
-  glUniform1f(wallpaper_context_->texture_shader_alpha, a);
+  clipping_context_->texture_aa_shader.use();
+  glUniform1f(clipping_context_->texture_aa_shader_alpha, a);
 
   clipping_context_->cached.bind();
 
