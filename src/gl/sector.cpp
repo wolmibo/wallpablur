@@ -17,15 +17,11 @@ namespace {
 
 
 
-  [[nodiscard]] std::vector<GLfloat> triangle_fan_vertices(size_t res, bool outside) {
+  [[nodiscard]] std::vector<GLfloat> triangle_fan_vertices(size_t res) {
     std::vector<GLfloat> output;
     output.reserve(4 * (2 + res));
 
-    if (outside) {
-      append_vec2_weight(output,  1,  1, 1);
-    } else {
-      append_vec2_weight(output, -1, -1, 1);
-    }
+    append_vec2_weight(output, -1, -1, 1);
 
     for (size_t i = 0; i <= res; ++i) {
       float phi = static_cast<float>(i) / static_cast<float>(res) * std::numbers::pi / 2;
@@ -56,13 +52,6 @@ namespace {
 
 
 gl::mesh gl::create_sector(size_t resolution) {
-  return mesh_from_vertices_indices(triangle_fan_vertices(resolution, false),
-          triangle_fan_indices(resolution));
-}
-
-
-
-gl::mesh gl::create_sector_outside(size_t resolution) {
-  return mesh_from_vertices_indices(triangle_fan_vertices(resolution, true),
+  return mesh_from_vertices_indices(triangle_fan_vertices(resolution),
           triangle_fan_indices(resolution));
 }

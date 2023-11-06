@@ -16,7 +16,6 @@ namespace gl {
 
 [[nodiscard]] gl::mesh create_quad();
 [[nodiscard]] gl::mesh create_sector(size_t);
-[[nodiscard]] gl::mesh create_sector_outside(size_t);
 
 }
 
