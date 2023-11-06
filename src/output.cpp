@@ -15,6 +15,10 @@ output::output(std::unique_ptr<wayland::output> wl_output) :
   wl_output_{std::move(wl_output)}
 {
   wl_output_->set_done_cb([this](){
+    if (painter_) {
+      return;
+    }
+
     layout_token_ = app().layout_token(wl_output_->name());
 
     auto config = config::global_config().output_config_for(wl_output_->name());
