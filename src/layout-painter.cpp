@@ -284,9 +284,14 @@ struct layout_painter::wallpaper_context {
   gl::mesh                      quad;
   gl::mesh                      sector;
   gl::program                   solid_color_shader;
-  GLint                         solid_color_uniform;
+  GLint                         solid_color_color;
+  gl::program                   solid_color_aa_shader;
+  GLint                         solid_color_aa_color;
   gl::program                   texture_shader;
-  GLint                         texture_shader_alpha;
+  GLint                         texture_alpha;
+  gl::program                   texture_aa_shader;
+  GLint                         texture_aa_alpha;
+  GLint                         aa_cutoff;
 
   enum class shader {
     border_step,
@@ -303,14 +308,24 @@ struct layout_painter::wallpaper_context {
   wallpaper_context& operator=(const wallpaper_context&) = delete;
 
   wallpaper_context(std::shared_ptr<egl::context> ctx) :
-    context             {activate_context(std::move(ctx))},
-    quad                {gl::create_quad()},
-    sector              {gl::create_sector(16)},
-    solid_color_shader  {resources::solid_color_vs(), resources::solid_color_fs()},
-    solid_color_uniform {solid_color_shader.uniform("color_rgba")},
-    texture_shader      {resources::texture_vs(), resources::texture_fs()},
-    texture_shader_alpha{texture_shader.uniform("alpha")}
-  {}
+    context              {activate_context(std::move(ctx))},
+    quad                 {gl::create_quad()},
+    sector               {gl::create_sector(16)},
+    solid_color_shader   {resources::solid_color_vs(), resources::solid_color_fs()},
+    solid_color_color    {solid_color_shader.uniform("color_rgba")},
+    solid_color_aa_shader{resources::solid_color_vs(),
+                          resources::solid_color_aa_inner_fs()},
+    solid_color_aa_color {solid_color_shader.uniform("color_rgba")},
+    texture_shader       {resources::texture_vs(), resources::texture_fs()},
+    texture_alpha        {texture_shader.uniform("alpha")},
+    texture_aa_shader    {resources::texture_vs(), resources::texture_aa_inner_fs()},
+    texture_aa_alpha     {texture_aa_shader.uniform("alpha")},
+    aa_cutoff            {texture_aa_shader.uniform("cutoff")}
+  {
+    if (aa_cutoff != solid_color_aa_shader.uniform("cutoff")) {
+      throw std::runtime_error{"uniform mismatch cutoff"};
+    }
+  }
 
   ~wallpaper_context() {
     context->make_current();
@@ -323,7 +338,9 @@ struct layout_painter::wallpaper_context {
   void draw_rounded_rectangle(
       const wayland::geometry& geo,
       const rectangle&         rect,
-      float                    radius
+      float                    radius,
+      const gl::program&       shader,
+      const gl::program&       corner_shader
   ) const {
     radius = std::min({radius, rect.width(), rect.height()});
 
@@ -335,14 +352,19 @@ struct layout_painter::wallpaper_context {
     auto center = rect;
     center.inset(radius);
 
+    shader.use();
+
     draw_mesh(geo, center, quad);
 
     for (const auto& bord: border_rectangles(center, radius)) {
       draw_mesh(geo, bord, quad);
     }
 
+    corner_shader.use();
+    glUniform1f(aa_cutoff, 0.75f / radius);
+
     for (const auto& corn: corner_rectangles(center, radius)) {
-      draw_mesh(geo, corn, sector);
+      draw_mesh(geo, corn, quad);
     }
   }
 
@@ -439,7 +461,7 @@ struct layout_painter::wallpaper_context {
 
     if (sides.all()) {
       solid_color_shader.use();
-      invoke_append_color(glUniform4f, effect.col, solid_color_uniform);
+      invoke_append_color(glUniform4f, effect.col, solid_color_color);
       draw_mesh(geo, center, quad);
     }
 
@@ -465,7 +487,7 @@ struct layout_painter::wallpaper_context {
       glClear(GL_COLOR_BUFFER_BIT);
 
       texture_shader.use();
-      glUniform1f(texture_shader_alpha, 1.f);
+      glUniform1f(texture_alpha, 1.f);
       glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
 
       wp.description.realization->bind();
@@ -505,6 +527,33 @@ struct layout_painter::wallpaper_context {
 
 
 
+  [[nodiscard]] std::pair<const gl::program*, const gl::program*>
+  setup_aa_shader(const config::background& bg) const {
+    if (bg.description.realization) {
+      texture_aa_shader.use();
+      glUniform1f(texture_aa_alpha, 1.f);
+
+      texture_shader.use();
+      glUniform1f(texture_alpha, 1.f);
+
+      bg.description.realization->bind();
+
+      return {&texture_shader, &texture_aa_shader};
+    }
+
+    solid_color_aa_shader.use();
+    invoke_append_color(glUniform4f, bg.description.solid, solid_color_aa_color);
+
+    solid_color_shader.use();
+    invoke_append_color(glUniform4f, bg.description.solid, solid_color_color);
+
+    return {&solid_color_shader, &solid_color_aa_shader};
+  }
+
+
+
+
+
   void draw_background(
       const wayland::geometry&                                  geo,
       const config::background&                                 bg,
@@ -512,29 +561,19 @@ struct layout_painter::wallpaper_context {
       std::span<const std::pair<surface, workspace_expression>> fixed,
       const radius_cache&                                       radii
   ) const {
-    if (bg.description.realization) {
-      texture_shader.use();
-      glUniform1f(texture_shader_alpha, 1.f);
-
-      bg.description.realization->bind();
-
-    } else {
-      solid_color_shader.use();
-
-      invoke_append_color(glUniform4f, bg.description.solid, solid_color_uniform);
-    }
-
-
+    auto [shader, corner_shader] = setup_aa_shader(bg);
 
     for (const auto& surface: ws.surfaces()) {
       if (bg.condition.evaluate(surface, ws)) {
-        draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface));
+        draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface),
+            *shader, *corner_shader);
       }
     }
 
     for (const auto& [surface, condition]: fixed) {
       if (condition.evaluate(ws) && bg.condition.evaluate(surface, ws)) {
-        draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface));
+        draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface),
+            *shader, *corner_shader);
       }
     }
   }
@@ -545,7 +584,7 @@ struct layout_painter::wallpaper_context {
 
   void set_buffer_alpha(float alpha) const {
     solid_color_shader.use();
-    glUniform4f(solid_color_uniform, 0, 0, 0, 0);
+    glUniform4f(solid_color_color, 0, 0, 0, 0);
 
     glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
 
@@ -797,7 +836,7 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
     glClear(GL_COLOR_BUFFER_BIT);
 
     wallpaper_context_->texture_shader.use();
-    glUniform1f(wallpaper_context_->texture_shader_alpha, a);
+    glUniform1f(wallpaper_context_->texture_alpha, a);
     glUniformMatrix4fv(0, 1, GL_FALSE, mat4_unity.data());
 
     clipping_context_->cached.bind();

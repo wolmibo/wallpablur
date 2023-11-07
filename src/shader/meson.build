@@ -1,21 +1,23 @@
 shader_files = [
-  ['solid_color_vs',       'solid-color.vs.glsl'],
-  ['solid_color_fs',       'solid-color.fs.glsl'],
+  ['solid_color_vs',          'solid-color.vs.glsl'],
+  ['solid_color_fs',          'solid-color.fs.glsl'],
+  ['solid_color_aa_inner_fs', 'solid-color-aa-inner.fs.glsl'],
 
-  ['texture_vs',           'texture.vs.glsl'],
-  ['texture_fs',           'texture.fs.glsl'],
-  ['texture_aa_outer_fs',  'texture-aa-outer.fs.glsl'],
+  ['texture_vs',              'texture.vs.glsl'],
+  ['texture_fs',              'texture.fs.glsl'],
+  ['texture_aa_outer_fs',     'texture-aa-outer.fs.glsl'],
+  ['texture_aa_inner_fs',     'texture-aa-inner.fs.glsl'],
 
-  ['rescale_texture_vs',   'rescale-texture.vs.glsl'],
-  ['rescale_texture_fs',   'rescale-texture.fs.glsl'],
+  ['rescale_texture_vs',      'rescale-texture.vs.glsl'],
+  ['rescale_texture_fs',      'rescale-texture.fs.glsl'],
 
-  ['filter_vs',            'filter.vs.glsl'],
-  ['filter_invert_fs',     'filter-invert.fs.glsl'],
-  ['filter_line_blur_fs',  'filter-line-blur.fs.glsl'],
+  ['filter_vs',               'filter.vs.glsl'],
+  ['filter_invert_fs',        'filter-invert.fs.glsl'],
+  ['filter_line_blur_fs',     'filter-line-blur.fs.glsl'],
 
-  ['border_vs',            'border.vs.glsl'],
-  ['border_linear_fs',     'border-linear.fs.glsl'],
-  ['border_sinusoidal_fs', 'border-sinusoidal.fs.glsl']
+  ['border_vs',               'border.vs.glsl'],
+  ['border_linear_fs',        'border-linear.fs.glsl'],
+  ['border_sinusoidal_fs',    'border-sinusoidal.fs.glsl']
 ]
 
 
