@@ -373,7 +373,7 @@ namespace {
     update(grp, output.anchor,    "anchor");
     update(grp, output.size,      "size");
     update(grp, output.margin,    "margin");
-    update(grp, output.radius,    "border-radius");
+    update(grp, output.radius,    "radius");
     update(grp, output.app_id,    "app-id", "app_id"sv);
     update(grp, output.condition, "enable-if");
 

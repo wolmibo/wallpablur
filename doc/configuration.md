@@ -31,9 +31,11 @@ fade-out-ms   = 0
 fade-in-ms    = 0
 disable-i3ipc = false
 
+clipping      = false
+
 [panels]
 # - anchor =; size = 0:0; margin = 0:0:0:0; focused = false; urgent = false; app-id = ""
-#   enable-if = true
+#   radius = 0; enable-if = true
 
 [wallpaper]
 color  = #00000000
@@ -58,6 +60,10 @@ enable-if = true
 #   enable-if = true
 # - type = glow; thickness = 20; position = outside; offset = 0,0; sides = lrtb;
 #   color = #ffffff; blend = add; falloff = linear; exponent = 3; enable-if = true
+# - type = rounded-corners; radius = 10; enable-if = true
+
+# [OUTPUT]
+# clipping = false
 
 # [OUTPUT.panels]
 # override panels for OUTPUT
@@ -83,6 +89,13 @@ The following options are defined in the global section, e.g. on top of the file
 * `fade-in-ms`: How long to perform an alpha cross-fade on startup
 * `fade-out-ms`: How long to perform an alpha cross-fade on receiving `SIGTERM` or
   `SIGINT` (e.g. `kill` or C-c in a terminal)
+* `clipping`: Whether to spawn a layer surface *in front* of all windows to clip rounded
+  corners.
+  This setting can:
+  - affect overall graphics performance
+  - punch holes in surfaces above tiled windows (e.g. floating windows, dialogs)
+  Can be overwritten per output.
+
 
 
 
@@ -109,6 +122,9 @@ properties of the layer-shell protocol:
   How much space to leave between the screen edges and the panel. It can be either
   specified as a uniform margin `<int>` or explicitly for each side as
   `<left>:<right>:<top>:<bottom>`.
+* `radius`:
+  Sets the border radius of this panel. For not fully transparent panels, check out the
+  `clipping` option (c.f. global options).
 
 To show the panel conditionally (e.g. only on certain workspaces) you can use the
 `enable-if` property set to a workspace expression (see below).
@@ -311,6 +327,12 @@ restrict the effect to specific surfaces or workspaces
   Same as `type = border`, but with changed defaults:
   `thickness = 20`, `color = #ffffff`, `blend = add`, `falloff = linear`, `exponent = 3`
 
+* `type = rounded-corners`:
+  Set the border radius of affected surfaces. For not fully transparent surfaces, check
+  out the `clipping` option (c.f. global options).
+  Additional properties:
+    - `radius`: The new border radius (Default: 10)
+
 
 ### Example
 To enable shadows for all surfaces and highlight the focused window with a blue glow:
@@ -318,6 +340,7 @@ To enable shadows for all surfaces and highlight the focused window with a blue 
 [surface-effects]
 - type = shadow
 - type = glow; color = #4488ff; enable-if = focused
+- type = rounded-corners; radius = 12; enable-if = (tiled || decoration) && !unique(tiled)
 ```
 
 

@@ -45,6 +45,7 @@ in combination with upstream Sway.
 * filter for *wallpaper* and *background*: blur, box-blur, color inversion
 * (optional) alpha fade-in and fade-out on startup and `SIGTERM`, respectively
 * border effects like shadows, glow, etc. depending on window properties
+* rounded corners with per-window radius
 
 ## Non-Features
 
