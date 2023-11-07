@@ -583,7 +583,7 @@ struct layout_painter::clipping_context {
   clipping_context(std::shared_ptr<egl::context> ctx) :
     context                 {activate_context(std::move(ctx))},
     quad                    {gl::create_quad()},
-    texture_aa_shader       {resources::texture_vs(), resources::texture_aa_fs()},
+    texture_aa_shader       {resources::texture_vs(), resources::texture_aa_outer_fs()},
     texture_aa_shader_alpha {texture_aa_shader.uniform("alpha")},
     texture_aa_shader_cutoff{texture_aa_shader.uniform("cutoff")}
   {}

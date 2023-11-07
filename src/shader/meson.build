@@ -4,7 +4,7 @@ shader_files = [
 
   ['texture_vs',           'texture.vs.glsl'],
   ['texture_fs',           'texture.fs.glsl'],
-  ['texture_aa_fs',        'texture-aa.fs.glsl'],
+  ['texture_aa_outer_fs',  'texture-aa-outer.fs.glsl'],
 
   ['rescale_texture_vs',   'rescale-texture.vs.glsl'],
   ['rescale_texture_fs',   'rescale-texture.fs.glsl'],
