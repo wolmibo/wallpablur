@@ -40,35 +40,19 @@ std::string_view iconfigp::value_parser<surface_expression>::format() {
 
 
 
-template<>
-struct iconfigp::case_insensitive_parse_lut<surface_flag> {
-  static constexpr std::string_view name {"surface-flag"};
-  static constexpr std::array<std::pair<std::string_view, surface_flag>, 7> lut
-  {
-    std::make_pair("focused",    surface_flag::focused),
-    std::make_pair("urgent",     surface_flag::urgent),
+ICONFIGP_DEFINE_ENUM_LUT(surface_flag,
+    "focused",    focused,
+    "urgent",     urgent,
+    "panel",      panel,
+    "floating",   floating,
+    "tiled",      tiled,
+    "decoration", decoration,
+    "fullscreen", fullscreen);
 
-    std::make_pair("panel",      surface_flag::panel),
-    std::make_pair("floating",   surface_flag::floating),
-    std::make_pair("tiled",      surface_flag::tiled),
-    std::make_pair("decoration", surface_flag::decoration),
+ICONFIGP_DEFINE_ENUM_LUT_NAMED(surface_expression_condition::string_var,
+    "surface-variable",
+    "app_id", app_id, "app-id", app_id);
 
-    std::make_pair("fullscreen", surface_flag::fullscreen),
-  };
-};
-
-
-
-template<>
-struct iconfigp::case_insensitive_parse_lut<surface_expression_condition::string_var> {
-  static constexpr std::string_view name {"surface-variable"};
-  static constexpr std::array<std::pair<std::string_view,
-                                        surface_expression_condition::string_var>, 2> lut
-  {
-    std::make_pair("app_id", surface_expression_condition::string_var::app_id),
-    std::make_pair("app-id", surface_expression_condition::string_var::app_id),
-  };
-};
 
 
 

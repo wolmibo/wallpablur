@@ -36,239 +36,174 @@ using opt_sec = iconfigp::opt_ref<const iconfigp::section>;
 
 
 
+ICONFIGP_DEFINE_ENUM_LUT(wrap_mode,
+    "none",         none,
+    "stretch-edge", stretch_edge,
+    "tiled",        tiled,
+    "tiled-mirror", tiled_mirror)
 
-template<> struct iconfigp::case_insensitive_parse_lut<wrap_mode> {
-  static constexpr std::string_view name {"wrap-mode"};
-  static constexpr std::array<std::pair<std::string_view, wrap_mode>, 4> lut {
-    std::make_pair("none",         wrap_mode::none),
-    std::make_pair("stretch-edge", wrap_mode::stretch_edge),
-    std::make_pair("tiled",        wrap_mode::tiled),
-    std::make_pair("tiled-mirror", wrap_mode::tiled_mirror),
-  };
-};
+ICONFIGP_DEFINE_ENUM_LUT(scale_mode,
+    "fit",          fit,
+    "zoom",         zoom,
+    "stretch",      stretch,
+    "centered",     centered)
 
-template<> struct iconfigp::case_insensitive_parse_lut<scale_mode> {
-  static constexpr std::string_view name {"scale-mode"};
-  static constexpr std::array<std::pair<std::string_view, scale_mode>, 4> lut {
-    std::make_pair("fit",      scale_mode::fit),
-    std::make_pair("zoom",     scale_mode::zoom),
-    std::make_pair("stretch",  scale_mode::stretch),
-    std::make_pair("centered", scale_mode::centered),
-  };
-};
+ICONFIGP_DEFINE_ENUM_LUT(scale_filter,
+    "linear",       linear,
+    "nearest",      nearest)
 
-template<> struct iconfigp::case_insensitive_parse_lut<scale_filter> {
-  static constexpr std::string_view name{"scale-filter"};
-  static constexpr std::array<std::pair<std::string_view, scale_filter>, 2> lut {
-    std::make_pair("linear",  scale_filter::linear),
-    std::make_pair("nearest", scale_filter::nearest)
-  };
-};
+ICONFIGP_DEFINE_ENUM_LUT(blend_mode,
+    "add",          add,
+    "alpha",        alpha,
+    "replace",      replace)
 
-template<> struct iconfigp::case_insensitive_parse_lut<blend_mode> {
-  static constexpr std::string_view name{"blend-mode"};
-  static constexpr std::array<std::pair<std::string_view, blend_mode>, 3> lut {
-    std::make_pair("add",     blend_mode::add),
-    std::make_pair("alpha",   blend_mode::alpha),
-    std::make_pair("replace", blend_mode::replace)
-  };
-};
+ICONFIGP_DEFINE_ENUM_LUT(falloff,
+    "none",         none,
+    "linear",       linear,
+    "sinusoidal",   sinusoidal)
 
-template<> struct iconfigp::case_insensitive_parse_lut<falloff> {
-  static constexpr std::string_view name{"falloff"};
-  static constexpr std::array<std::pair<std::string_view, falloff>, 3> lut {
-    std::make_pair("none",       falloff::none),
-    std::make_pair("linear",     falloff::linear),
-    std::make_pair("sinusoidal", falloff::sinusoidal)
-  };
-};
-
-template<> struct iconfigp::case_insensitive_parse_lut<border_position> {
-  static constexpr std::string_view name{"border-position"};
-  static constexpr std::array<std::pair<std::string_view, border_position>, 3>
-  lut {
-    std::make_pair("outside",  border_position::outside),
-    std::make_pair("inside",   border_position::inside),
-    std::make_pair("centered", border_position::centered)
-  };
-};
+ICONFIGP_DEFINE_ENUM_LUT(border_position,
+    "outside",      outside,
+    "inside",       inside,
+    "centered",     centered)
 
 
 
-enum class surface_effect_e {
-  border,
-  shadow,
-  glow,
+
+
+enum class surface_effect_type : size_t {
+  border   = 0,
+  shadow   = 1,
+  glow     = 2,
 
   rounded_corners
 };
 
-template<> struct iconfigp::case_insensitive_parse_lut<surface_effect_e> {
-  static constexpr std::string_view name{"surface-effect-type"};
-  static constexpr std::array<std::pair<std::string_view, surface_effect_e>, 4>
-  lut {
-    std::make_pair("border",          surface_effect_e::border),
-    std::make_pair("shadow",          surface_effect_e::shadow),
-    std::make_pair("glow",            surface_effect_e::glow),
-    std::make_pair("rounded-corners", surface_effect_e::rounded_corners)
-  };
-};
 
-static const sides_type sides_type_all_sides {
-  .relative = {},
-  .absolute = anchor_type::all()
-};
-
-static const border_effect surface_effect_e_border {
-  .condition = true,
-  .thickness = 2,
-  .position  = border_position::outside,
-  .offset    = border_effect::offset_type{},
-  .col       = {0.f, 0.f, 0.f, 1.f},
-  .blend     = blend_mode::alpha,
-  .foff      = falloff::none,
-  .exponent  = 1.f,
-  .sides     = sides_type_all_sides
-};
-
-static const border_effect surface_effect_e_shadow {
-  .condition = true,
-  .thickness = 30,
-  .position  = border_position::centered,
-  .offset    = border_effect::offset_type {.x = 2, .y = 2},
-  .col       = {0.f, 0.f, 0.f, 0.8f},
-  .blend     = blend_mode::alpha,
-  .foff      = falloff::sinusoidal,
-  .exponent  = 1.5f,
-  .sides     = sides_type_all_sides
-};
-
-static const border_effect surface_effect_e_glow {
-  .condition = true,
-  .thickness = 20,
-  .position  = border_position::outside,
-  .offset    = border_effect::offset_type{},
-  .col       = {1.f, 1.f, 1.f, 1.f},
-  .blend     = blend_mode::add,
-  .foff      = falloff::linear,
-  .exponent  = 3.f,
-  .sides     = sides_type_all_sides
-};
 
 namespace {
-  [[nodiscard]] const border_effect& surface_effect_e_default(surface_effect_e var) {
-    switch (var) {
-      case surface_effect_e::border: return surface_effect_e_border;
-      case surface_effect_e::shadow: return surface_effect_e_shadow;
-      case surface_effect_e::glow:   return surface_effect_e_glow;
+  constexpr sides_type sides_type_all_sides {
+    .relative = {},
+    .absolute = anchor_type::all()
+  };
 
-      default:                       return surface_effect_e_border;
+  const std::array<border_effect, 3> border_effects_default {
+    border_effect /*border*/ {
+      .condition = true,
+      .thickness = 2,
+      .position  = border_position::outside,
+      .offset    = border_effect::offset_type{},
+      .col       = {0.f, 0.f, 0.f, 1.f},
+      .blend     = blend_mode::alpha,
+      .foff      = falloff::none,
+      .exponent  = 1.f,
+      .sides     = sides_type_all_sides
+    },
+
+    border_effect /*shadow*/ {
+      .condition = true,
+      .thickness = 30,
+      .position  = border_position::centered,
+      .offset    = border_effect::offset_type {.x = 2, .y = 2},
+      .col       = {0.f, 0.f, 0.f, 0.8f},
+      .blend     = blend_mode::alpha,
+      .foff      = falloff::sinusoidal,
+      .exponent  = 1.5f,
+      .sides     = sides_type_all_sides
+    },
+
+    border_effect /*glow*/ {
+      .condition = true,
+      .thickness = 20,
+      .position  = border_position::outside,
+      .offset    = border_effect::offset_type{},
+      .col       = {1.f, 1.f, 1.f, 1.f},
+      .blend     = blend_mode::add,
+      .foff      = falloff::linear,
+      .exponent  = 3.f,
+      .sides     = sides_type_all_sides
     }
-  }
+  };
 }
 
 
 
-enum class filter_e {
+ICONFIGP_DEFINE_ENUM_LUT(surface_effect_type,
+    "border",          border,
+    "shadow",          shadow,
+    "glow",            glow,
+    "rounded-corners", rounded_corners)
+
+
+
+enum class filter_type {
   invert,
   blur,
   box_blur
 };
 
-template<> struct iconfigp::case_insensitive_parse_lut<filter_e> {
-  static constexpr std::string_view name {"filter-type"};
-  static constexpr std::array<std::pair<std::string_view, filter_e>, 3> lut {
-    std::make_pair("invert",   filter_e::invert),
-    std::make_pair("box-blur", filter_e::box_blur),
-    std::make_pair("blur",     filter_e::blur)
-  };
-};
+ICONFIGP_DEFINE_ENUM_LUT(filter_type,
+    "invert",   invert,
+    "box-blur", box_blur,
+    "blur",     blur)
 
 
 
-template<> struct iconfigp::value_parser<margin_type> {
-  static constexpr std::string_view name {"margin"};
-  static constexpr std::string_view format() {
-    return "<all:i32> or <left:i32>:<right:i32>:<top:i32>:<bottom:i32>";
-  }
-  static std::optional<margin_type> parse(std::string_view input) {
-    return std::bit_cast<margin_type>(parse_as_array<int32_t, 4>(input));
-  }
-};
+ICONFIGP_DEFINE_VALUE_PARSER_NAMED(margin_type, "margin",
+    "<all:i32> or <left:i32>:<right:i32>:<top:i32>:<bottom:i32>",
+    [](std::string_view input) {
+      return std::bit_cast<margin_type>(parse_as_array<int32_t, 4>(input));
+    })
 
+ICONFIGP_DEFINE_VALUE_PARSER_NAMED(panel::size_type, "size",
+    "<width:u32>:<height:u32>",
+    [](std::string_view input) {
+      return std::bit_cast<panel::size_type>(parse_as_array<uint32_t, 2>(input));
+    })
 
+ICONFIGP_DEFINE_VALUE_PARSER_NAMED(border_effect::offset_type, "offset",
+    "<x:i32>,<y:i32>",
+    [](std::string_view input) {
+      return std::bit_cast<border_effect::offset_type>(parse_as_array<int32_t, 2>(input));
+    })
 
-template<> struct iconfigp::value_parser<anchor_type> {
-  static constexpr std::string_view name {"anchor"};
-  static constexpr std::string_view format() {
-    return "string made up of l, r, b and t";
-  }
-  static std::optional<anchor_type> parse(std::string_view input) {
-    anchor_type anchor;
-    for (auto character: input) {
-      switch (character) {
-        case 'l': case 'L': anchor.left(true);   break;
-        case 'r': case 'R': anchor.right(true);  break;
-        case 'b': case 'B': anchor.bottom(true); break;
-        case 't': case 'T': anchor.top(true);    break;
-        default: return {};
+ICONFIGP_DEFINE_VALUE_PARSER_NAMED(anchor_type, "anchor",
+    "string made up of l, r, b, and t",
+    [](std::string_view input) -> std::optional<anchor_type> {
+      anchor_type anchor;
+      for (auto character: input) {
+        switch (character) {
+          case 'l': case 'L': anchor.left(true);   break;
+          case 'r': case 'R': anchor.right(true);  break;
+          case 'b': case 'B': anchor.bottom(true); break;
+          case 't': case 'T': anchor.top(true);    break;
+          default: return {};
+        }
       }
-    }
-    return anchor;
-  }
-};
+      return anchor;
+    })
 
+ICONFIGP_DEFINE_VALUE_PARSER_NAMED(sides_type, "sides",
+    "string made up of l, r, b, t, n, e, s, and w",
+    [](std::string_view input) -> std::optional<sides_type> {
+      anchor_type relative;
+      anchor_type absolute;
+      for (auto character: input) {
+        switch (character) {
+          case 'w': case 'W': relative.left(true);   break;
+          case 'e': case 'E': relative.right(true);  break;
+          case 's': case 'S': relative.bottom(true); break;
+          case 'n': case 'N': relative.top(true);    break;
 
-
-template<> struct iconfigp::value_parser<sides_type> {
-  static constexpr std::string_view name {"sides"};
-  static constexpr std::string_view format() {
-    return "string made up of l, r, b, t, n, e, s, and w";
-  }
-  static std::optional<sides_type> parse(std::string_view input) {
-    anchor_type relative;
-    anchor_type absolute;
-    for (auto character: input) {
-      switch (character) {
-        case 'w': case 'W': relative.left(true);   break;
-        case 'e': case 'E': relative.right(true);  break;
-        case 's': case 'S': relative.bottom(true); break;
-        case 'n': case 'N': relative.top(true);    break;
-
-        case 'l': case 'L': absolute.left(true);   break;
-        case 'r': case 'R': absolute.right(true);  break;
-        case 'b': case 'B': absolute.bottom(true); break;
-        case 't': case 'T': absolute.top(true);    break;
-        default: return {};
+          case 'l': case 'L': absolute.left(true);   break;
+          case 'r': case 'R': absolute.right(true);  break;
+          case 'b': case 'B': absolute.bottom(true); break;
+          case 't': case 'T': absolute.top(true);    break;
+          default: return {};
+        }
       }
-    }
-    return sides_type{relative, absolute};
-  }
-};
-
-
-
-template<> struct iconfigp::value_parser<panel::size_type> {
-  static constexpr std::string_view name {"size"};
-  static constexpr std::string_view format() { return "<width:u32>:<height:u32>"; }
-
-  static std::optional<panel::size_type> parse(std::string_view input) {
-    return std::bit_cast<panel::size_type>(parse_as_array<uint32_t, 2>(input));
-  }
-};
-
-
-
-template<> struct iconfigp::value_parser<border_effect::offset_type> {
-  static constexpr std::string_view name {"size"};
-  static constexpr std::string_view format() { return "<x:i32>,<y:i32>"; }
-
-  static std::optional<border_effect::offset_type> parse(std::string_view input) {
-    return std::bit_cast<border_effect::offset_type>(parse_as_array<int32_t, 2>(input));
-  }
-};
-
-
+      return sides_type(relative, absolute);
+    })
 
 
 
@@ -330,10 +265,10 @@ namespace {
 
     for (const auto& grp: sec->groups()) {
       if (auto type = grp.unique_key("type")) {
-        auto tp = parse<surface_effect_e>(*type);
+        auto tp = parse<surface_effect_type>(*type);
 
         switch (tp) {
-          case surface_effect_e::rounded_corners:
+          case surface_effect_type::rounded_corners:
             if (auto effect = parse_rounded_corners(grp);
                 !effect.condition.is_always_false()) {
               rounded_corners.emplace_back(std::move(effect));
@@ -341,7 +276,8 @@ namespace {
             break;
 
           default:
-            if (auto effect = parse_border_effect(grp, surface_effect_e_default(tp));
+            if (auto effect = parse_border_effect(grp,
+                                border_effects.at(std::to_underlying(tp)));
                 !effect.condition.is_always_false()) {
               border_effects.emplace_back(std::move(effect));
             }
@@ -401,13 +337,13 @@ namespace {
 
 
   [[nodiscard]] filter parse_filter(const group& filter) {
-    auto filter_type = parse<filter_e>(filter.require_unique_key("filter"));
+    auto type = parse<filter_type>(filter.require_unique_key("filter"));
 
-    switch (filter_type) {
-      case filter_e::blur:
-      case filter_e::box_blur: {
+    switch (type) {
+      case filter_type::blur:
+      case filter_type::box_blur: {
         box_blur_filter output;
-        if (filter_type == filter_e::blur) {
+        if (type == filter_type::blur) {
           output.iterations = 2;
         }
         update(filter, output.width,      "width",  "radius"sv);
@@ -417,7 +353,7 @@ namespace {
 
         return output;
       }
-      case filter_e::invert:
+      case filter_type::invert:
         return invert_filter{};
     }
     throw std::runtime_error{"filter type is not implemented"};

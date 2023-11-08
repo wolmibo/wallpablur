@@ -15,8 +15,8 @@ bool workspace_expression_condition::evaluate(const workspace& ws) const {
       const auto& [expr, var] = std::get<0>(cond_);
 
       switch (var) {
-        case string_var::name:   return expr.evaluate(ws.name());
-        case string_var::output: return expr.evaluate(ws.output());
+        case string_var::ws_name: return expr.evaluate(ws.name());
+        case string_var::output:  return expr.evaluate(ws.output());
       }
 
       return false;
@@ -67,18 +67,11 @@ std::string_view iconfigp::value_parser<workspace_expression>::format() {
 
 
 
-template<>
-struct iconfigp::case_insensitive_parse_lut<workspace_expression_condition::string_var> {
-  static constexpr std::string_view name {"surface-variable"};
-  static constexpr std::array<std::pair<std::string_view,
-                                      workspace_expression_condition::string_var>, 3> lut
-  {
-    std::make_pair("ws_name", workspace_expression_condition::string_var::name),
-    std::make_pair("ws-name", workspace_expression_condition::string_var::name),
-    std::make_pair("output",  workspace_expression_condition::string_var::output),
-  };
-};
 
+ICONFIGP_DEFINE_ENUM_LUT_NAMED(workspace_expression_condition::string_var,
+    "workspace-variable",
+    "ws_name", ws_name, "ws-name", ws_name,
+    "output",  output);
 
 
 

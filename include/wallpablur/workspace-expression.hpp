@@ -22,7 +22,7 @@ namespace expression {
 class workspace_expression_condition {
   public:
     enum class string_var {
-      name,
+      ws_name,
       output
     };
 
