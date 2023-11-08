@@ -377,6 +377,7 @@ A surface condition is checked for an individual surface and has the following t
 * `focused`, `urgent`: whether the surface is focused / urgent
 * `panel`, `floating`, `tiled`: whether the surface is a panel
    (i.e., defined in `[panels]`), a floating window, or a tiled window, respectively
+* `fullscreen`: whether the surface is in fullscreen mode
 
 And string variables:
 * `app_id`: the app id of the current surface

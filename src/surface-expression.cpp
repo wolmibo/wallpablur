@@ -43,7 +43,7 @@ std::string_view iconfigp::value_parser<surface_expression>::format() {
 template<>
 struct iconfigp::case_insensitive_parse_lut<surface_flag> {
   static constexpr std::string_view name {"surface-flag"};
-  static constexpr std::array<std::pair<std::string_view, surface_flag>, 6> lut
+  static constexpr std::array<std::pair<std::string_view, surface_flag>, 7> lut
   {
     std::make_pair("focused",    surface_flag::focused),
     std::make_pair("urgent",     surface_flag::urgent),
@@ -52,6 +52,8 @@ struct iconfigp::case_insensitive_parse_lut<surface_flag> {
     std::make_pair("floating",   surface_flag::floating),
     std::make_pair("tiled",      surface_flag::tiled),
     std::make_pair("decoration", surface_flag::decoration),
+
+    std::make_pair("fullscreen", surface_flag::fullscreen),
   };
 };
 

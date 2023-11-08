@@ -138,6 +138,10 @@ namespace {
       set_surface_flag(mask, surface_flag::urgent);
     }
 
+    if (json::member_to_int(value, "fullscreen_mode").value_or(0) > 0) {
+      set_surface_flag(mask, surface_flag::fullscreen);
+    }
+
     if (floating) {
       set_surface_flag(mask, surface_flag::floating);
     } else {

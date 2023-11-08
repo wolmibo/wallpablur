@@ -29,6 +29,8 @@ enum class surface_flag : size_t {
   focused,
   urgent,
 
+  fullscreen,
+
   eoec_marker
 };
 
