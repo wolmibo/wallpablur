@@ -277,7 +277,7 @@ namespace {
 
           default:
             if (auto effect = parse_border_effect(grp,
-                                border_effects.at(std::to_underlying(tp)));
+                                border_effects_default.at(std::to_underlying(tp)));
                 !effect.condition.is_always_false()) {
               border_effects.emplace_back(std::move(effect));
             }
