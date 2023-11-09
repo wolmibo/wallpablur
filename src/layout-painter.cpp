@@ -235,11 +235,19 @@ class layout_painter::radius_cache {
       cache_.clear();
 
       for (const auto& surf: ws.surfaces()) {
-        cache_.emplace_back(&surf, radius(surf, ws));
+        if (auto r = radius(surf, ws); r > std::numeric_limits<float>::epsilon()) {
+          cache_.emplace_back(&surf, radius(surf, ws));
+        }
       }
 
-      for (const auto& [surf, _]: fixed) {
-        cache_.emplace_back(&surf, radius(surf, ws));
+      for (const auto& [surf, condition]: fixed) {
+        if (!condition.evaluate(ws)) {
+          continue;
+        }
+
+        if (auto r = radius(surf, ws); r > std::numeric_limits<float>::epsilon()) {
+          cache_.emplace_back(&surf, radius(surf, ws));
+        }
       }
     }
 
@@ -251,6 +259,10 @@ class layout_painter::radius_cache {
       }
       return 0.f;
     }
+
+
+
+    [[nodiscard]] bool empty() const { return cache_.empty(); }
 
 
 
