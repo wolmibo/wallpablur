@@ -16,6 +16,10 @@ namespace {
     ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
     ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
 
+  constexpr uint32_t anchor_top_left =
+    ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP    |
+    ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+
 
 
   [[nodiscard]] wl_ptr<zwlr_layer_surface_v1> create_layer_surface(
@@ -89,6 +93,28 @@ wayland::surface::surface(std::string name, client& cl, output& op, bool as_over
 
 
   wl_surface_commit(surface_.get());
+}
+
+
+
+
+
+void wayland::surface::show() {
+  zwlr_layer_surface_v1_set_size  (layer_surface_.get(), 0, 0);
+  zwlr_layer_surface_v1_set_anchor(layer_surface_.get(), anchor_all);
+  wl_surface_commit(surface_.get());
+
+  visible_ = true;
+}
+
+
+
+void wayland::surface::hide() {
+  zwlr_layer_surface_v1_set_size  (layer_surface_.get(), 1, 1);
+  zwlr_layer_surface_v1_set_anchor(layer_surface_.get(), anchor_top_left);
+  wl_surface_commit(surface_.get());
+
+  visible_ = false;
 }
 
 
@@ -210,6 +236,13 @@ void wayland::surface::update_viewport() const {
   logcerr::debug("{}: viewport transform {}x{}->{}x{}", name_,
       current_geometry_.physical_width(), current_geometry_.physical_height(),
       current_geometry_.logical_width(),  current_geometry_.logical_height());
+
+  if (!visible()) {
+    wp_viewport_set_destination(viewport_.get(), 1, 1);
+    wp_viewport_set_source(viewport_.get(), wl_fixed_from_int(0), wl_fixed_from_int(0),
+        wl_fixed_from_int(1), wl_fixed_from_int(1));
+    return;
+  }
 
   wp_viewport_set_destination(viewport_.get(),
       current_geometry_.logical_width(), current_geometry_.logical_height());

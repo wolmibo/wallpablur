@@ -40,6 +40,13 @@ class surface {
 
 
 
+    void hide();
+    void show();
+
+    [[nodiscard]] bool visible() const { return visible_; }
+
+
+
     void update_geometry(const geometry&);
 
 
@@ -75,6 +82,7 @@ class surface {
     bool                                    geometry_changed_   {false};
 
     bool                                    first_configuration_{true};
+    bool                                    visible_            {true};
 
     std::move_only_function<bool(void)>     update_cb_;
     std::move_only_function<void(void)>     render_cb_;
