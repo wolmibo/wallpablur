@@ -35,6 +35,7 @@ class layout_painter {
     void render_wallpaper(const workspace&, float, uint64_t) const;
     void render_clipping(const workspace&, float, uint64_t) const;
 
+    bool update_rounded_corners(const workspace&, uint64_t);
 
 
 
@@ -57,7 +58,7 @@ class layout_painter {
                                           fixed_panels_;
 
 
-    void draw_wallpaper(const workspace&) const;
+    void draw_wallpaper(const workspace&, uint64_t) const;
     void update_cache(const workspace&, uint64_t) const;
 };
 

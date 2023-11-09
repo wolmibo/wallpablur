@@ -76,6 +76,12 @@ void output::update() {
     last_layout_ = *layout_token_.get();
     last_layout_id_++;
     surface_updated_.reset();
+
+    if (painter_->update_rounded_corners(last_layout_, last_layout_id_)) {
+      clipping_surface_->show();
+    } else {
+      clipping_surface_->hide();
+    }
   }
 }
 
@@ -127,10 +133,15 @@ void output::setup_surfaces() {
 
 
     clipping_surface_->set_render_cb([this]() {
+      surface_updated_[1] = true;
+
+      if (!clipping_surface_->visible()) {
+        return;
+      }
+
       last_clipping_alpha_ = app().alpha();
       painter_.value().render_clipping(last_layout_, last_clipping_alpha_,
           last_layout_id_);
-      surface_updated_[1] = true;
     });
   }
 }

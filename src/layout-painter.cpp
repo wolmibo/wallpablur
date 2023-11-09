@@ -230,8 +230,14 @@ class layout_painter::radius_cache {
 
     void update(
         const workspace&                                          ws,
-        std::span<const std::pair<surface, workspace_expression>> fixed
+        std::span<const std::pair<surface, workspace_expression>> fixed,
+        uint64_t                                                  id
     ) {
+      if (id == id_) {
+        return;
+      }
+
+      id_ = id;
       cache_.clear();
 
       for (const auto& surf: ws.surfaces()) {
@@ -269,8 +275,9 @@ class layout_painter::radius_cache {
   private:
     using kv = std::pair<const surface*, float>;
 
-    std::vector<config::surface_rounded_corners>  conditions_;
-    std::vector<kv>                               cache_;
+    std::vector<config::surface_rounded_corners> conditions_;
+    std::vector<kv>                              cache_;
+    uint64_t                                     id_{std::numeric_limits<uint64_t>::max()};
 
 
 
@@ -757,7 +764,7 @@ void layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 
 
-void layout_painter::draw_wallpaper(const workspace& ws) const {
+void layout_painter::draw_wallpaper(const workspace& ws, uint64_t id) const {
   logcerr::debug("{}: drawing wallpaper", config_.name);
 
   glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
@@ -770,7 +777,7 @@ void layout_painter::draw_wallpaper(const workspace& ws) const {
     wallpaper_context_->draw_wallpaper(*active);
   }
 
-  radius_cache_->update(ws, fixed_panels_);
+  radius_cache_->update(ws, fixed_panels_, id);
 
   wallpaper_context_->draw_surface_effects(geometry_, config_.border_effects, ws,
       fixed_panels_, *radius_cache_);
@@ -823,7 +830,7 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
   gl::framebuffer fb{clipping_context_->cached};
   auto lock = fb.bind();
 
-  draw_wallpaper(ws);
+  draw_wallpaper(ws, id);
 }
 
 
@@ -855,7 +862,7 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
     wallpaper_context_->quad.draw();
 
   } else {
-    draw_wallpaper(ws);
+    draw_wallpaper(ws, id);
 
     if (a < 254.f / 255.f) {
       wallpaper_context_->set_buffer_alpha(a);
@@ -903,4 +910,13 @@ void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) 
           radius_cache_->radius(surface));
     }
   }
+}
+
+
+
+
+
+bool layout_painter::update_rounded_corners(const workspace& ws, uint64_t id) {
+  radius_cache_->update(ws, fixed_panels_, id);
+  return !radius_cache_->empty();
 }
