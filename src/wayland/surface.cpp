@@ -100,6 +100,10 @@ wayland::surface::surface(std::string name, client& cl, output& op, bool as_over
 
 
 void wayland::surface::show() {
+  if (visible_) {
+    return;
+  }
+
   zwlr_layer_surface_v1_set_size  (layer_surface_.get(), 0, 0);
   zwlr_layer_surface_v1_set_anchor(layer_surface_.get(), anchor_all);
   wl_surface_commit(surface_.get());
@@ -110,6 +114,10 @@ void wayland::surface::show() {
 
 
 void wayland::surface::hide() {
+  if (!visible_) {
+    return;
+  }
+
   zwlr_layer_surface_v1_set_size  (layer_surface_.get(), 1, 1);
   zwlr_layer_surface_v1_set_anchor(layer_surface_.get(), anchor_top_left);
   wl_surface_commit(surface_.get());
