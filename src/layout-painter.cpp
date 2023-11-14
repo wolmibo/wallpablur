@@ -363,6 +363,8 @@ struct layout_painter::wallpaper_context {
   ) const {
     radius = std::min({radius, rect.width(), rect.height()});
 
+    shader.use();
+
     if (radius < std::numeric_limits<float>::epsilon()) {
       draw_mesh(geo, rect, quad);
       return;
@@ -370,8 +372,6 @@ struct layout_painter::wallpaper_context {
 
     auto center = rect;
     center.inset(radius);
-
-    shader.use();
 
     draw_mesh(geo, center, quad);
 
