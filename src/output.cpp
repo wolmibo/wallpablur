@@ -28,6 +28,8 @@ output::output(std::unique_ptr<wayland::output> wl_output) :
     painter_.emplace(std::move(config));
     painter_->update_geometry(wl_output_->current_geometry());
 
+    update();
+
     create_surfaces(clipping);
     setup_surfaces();
   });
@@ -77,8 +79,10 @@ void output::update() {
     last_layout_id_++;
     surface_updated_.reset();
 
+    auto round_corners = painter_->update_rounded_corners(last_layout_, last_layout_id_);
+
     if (clipping_surface_) {
-      if (painter_->update_rounded_corners(last_layout_, last_layout_id_)) {
+      if (round_corners) {
         clipping_surface_->show();
       } else {
         clipping_surface_->hide();
