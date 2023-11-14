@@ -77,10 +77,12 @@ void output::update() {
     last_layout_id_++;
     surface_updated_.reset();
 
-    if (painter_->update_rounded_corners(last_layout_, last_layout_id_)) {
-      clipping_surface_->show();
-    } else {
-      clipping_surface_->hide();
+    if (clipping_surface_) {
+      if (painter_->update_rounded_corners(last_layout_, last_layout_id_)) {
+        clipping_surface_->show();
+      } else {
+        clipping_surface_->hide();
+      }
     }
   }
 }
