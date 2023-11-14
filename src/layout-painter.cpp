@@ -846,6 +846,8 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
     return;
   }
 
+  wallpaper_context_->context->make_current();
+
   set_blend_mode();
 
   if (clipping_context_) {
@@ -883,14 +885,14 @@ void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) 
     return;
   }
 
-  set_blend_mode();
-
   update_cache(ws, id);
 
   clipping_context_->context->make_current();
 
   glClearColor(0.f, 0.f, 0.f, 0.f);
   glClear(GL_COLOR_BUFFER_BIT);
+
+  set_blend_mode();
 
   clipping_context_->texture_aa_shader.use();
   glUniform1f(clipping_context_->texture_aa_shader_alpha, a);
