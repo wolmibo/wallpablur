@@ -26,7 +26,6 @@ output::output(std::unique_ptr<wayland::output> wl_output) :
     bool clipping = config.clipping;
 
     painter_.emplace(std::move(config));
-    painter_->update_geometry(wl_output_->current_geometry());
 
     update();
 
@@ -34,17 +33,13 @@ output::output(std::unique_ptr<wayland::output> wl_output) :
     setup_surfaces();
   });
 
-  wl_output_->set_geometry_cb([this](const wayland::geometry& geo) {
+  wl_output_->set_size_cb([this](wayland::vec2<uint32_t> size) {
     if (wallpaper_surface_) {
-      wallpaper_surface_->update_geometry(geo);
+      wallpaper_surface_->update_screen_size(size);
     }
 
     if (clipping_surface_) {
-      clipping_surface_->update_geometry(geo);
-    }
-
-    if (painter_) {
-      painter_->update_geometry(geo);
+      clipping_surface_->update_screen_size(size);
     }
   });
 }
@@ -105,6 +100,13 @@ namespace {
 
 void output::setup_surfaces() {
   if (wallpaper_surface_) {
+    wallpaper_surface_->set_geometry_cb([this](const wayland::geometry& geo) {
+      if (painter_) {
+        painter_->update_geometry(geo);
+      }
+    });
+
+
     wallpaper_surface_->set_context_cb([this](std::shared_ptr<egl::context> ctx) {
       painter_->set_wallpaper_context(std::move(ctx));
     });

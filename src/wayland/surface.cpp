@@ -52,11 +52,15 @@ namespace {
 
 
 
+
 wayland::surface::surface(std::string name, client& cl, output& op, bool as_overlay) :
   name_            {std::move(name)},
-  client_          {&cl},
-  current_geometry_{op.current_geometry()}
+  client_          {&cl}
 {
+  auto size = op.current_size();
+  current_geometry_.physical_width(size.x);
+  current_geometry_.physical_height(size.y);
+
   logcerr::verbose("{}: creating surface", name_);
   surface_.reset(wl_compositor_create_surface(client_->compositor()));
 
@@ -212,6 +216,10 @@ void wayland::surface::layer_surface_configure_(
       static_cast<float>(self->current_geometry_.physical_width())
       / static_cast<float>(width));
 
+  if (self->geometry_cb_) {
+    self->geometry_cb_(self->current_geometry_);
+  }
+
   if (self->first_configuration_) {
     self->create_context();
 
@@ -266,10 +274,12 @@ void wayland::surface::update_viewport() const {
 
 
 
-void wayland::surface::update_geometry(const geometry& geo) {
-  if (geo != current_geometry_) {
+void wayland::surface::update_screen_size(vec2<uint32_t> size) {
+  if (size.x != current_geometry_.physical_width() ||
+      size.y != current_geometry_.physical_height()) {
     geometry_changed_ = true;
   }
 
-  current_geometry_ = geo;
+  current_geometry_.physical_width(size.x);
+  current_geometry_.physical_height(size.y);
 }

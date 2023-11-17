@@ -47,7 +47,7 @@ class surface {
 
 
 
-    void update_geometry(const geometry&);
+    void update_screen_size(vec2<uint32_t>);
 
 
 
@@ -61,6 +61,10 @@ class surface {
 
     void set_context_cb(std::move_only_function<void(std::shared_ptr<egl::context>)> f) {
       context_cb_ = std::move(f);
+    }
+
+    void set_geometry_cb(std::move_only_function<void(const geometry&)> fnc) {
+      geometry_cb_ = std::move(fnc);
     }
 
 
@@ -88,6 +92,8 @@ class surface {
     std::move_only_function<void(void)>     render_cb_;
     std::move_only_function<void(std::shared_ptr<egl::context>)>
                                             context_cb_;
+    std::move_only_function<void(const geometry&)>
+                                            geometry_cb_;
 
 
 

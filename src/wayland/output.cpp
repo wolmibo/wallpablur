@@ -41,11 +41,11 @@ void wayland::output::output_mode_(
 ) {
   auto* self = static_cast<output*>(data);
 
-  self->current_geometry_.physical_width(width);
-  self->current_geometry_.physical_height(height);
+  self->current_size_.x = width;
+  self->current_size_.y = height;
 
-  if (self->geometry_cb_) {
-    self->geometry_cb_(self->current_geometry_);
+  if (self->size_cb_) {
+    self->size_cb_(self->current_size_);
   }
 }
 
@@ -56,8 +56,8 @@ void wayland::output::output_mode_(
 void wayland::output::output_done_(void* data, wl_output* /*output*/) {
   auto* self = static_cast<output*>(data);
   logcerr::debug("{}: output done {}x{}", self->name(),
-      self->current_geometry_.physical_width(),
-      self->current_geometry_.physical_height());
+      self->current_size_.x,
+      self->current_size_.y);
 
   if (self->done_cb_) {
     self->done_cb_();

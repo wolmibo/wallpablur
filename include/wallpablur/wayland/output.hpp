@@ -41,8 +41,8 @@ class output {
       return name_ ? *name_ : std::string_view{"<?>"};
     }
 
-    [[nodiscard]] const geometry& current_geometry() const {
-      return current_geometry_;
+    [[nodiscard]] vec2<uint32_t> current_size() const {
+      return current_size_;
     }
 
 
@@ -51,8 +51,8 @@ class output {
       done_cb_ = std::move(fnc);
     }
 
-    void set_geometry_cb(std::move_only_function<void(const geometry&)> fnc) {
-      geometry_cb_ = std::move(fnc);
+    void set_size_cb(std::move_only_function<void(vec2<uint32_t>)> fnc) {
+      size_cb_ = std::move(fnc);
     }
 
 
@@ -64,14 +64,14 @@ class output {
 
 
   private:
-    client*                                         client_;
-    wl_ptr<wl_output>                               output_;
+    client*                                        client_;
+    wl_ptr<wl_output>                              output_;
 
-    geometry                                        current_geometry_;
-    std::optional<std::string>                      name_;
+    vec2<uint32_t>                                 current_size_{};
+    std::optional<std::string>                     name_;
 
-    std::move_only_function<void(void)>             done_cb_;
-    std::move_only_function<void(const geometry&)>  geometry_cb_;
+    std::move_only_function<void(void)>            done_cb_;
+    std::move_only_function<void(vec2<uint32_t>)>  size_cb_;
 
 
 

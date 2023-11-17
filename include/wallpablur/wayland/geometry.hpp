@@ -6,6 +6,16 @@
 
 namespace wayland {
 
+
+
+template<typename T>
+struct vec2 {
+  T x;
+  T y;
+};
+
+
+
 class geometry {
   public:
     bool operator==(const geometry&) const = default;
@@ -36,7 +46,7 @@ class geometry {
     void physical_width (uint32_t width)  { width_  = width;  }
     void physical_height(uint32_t height) { height_ = height; }
 
-    void scale       (float s)         { scale_  = s;      }
+    void scale          (float s)         { scale_  = s;      }
 
 
 
