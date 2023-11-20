@@ -238,10 +238,8 @@ void wayland::surface::layer_surface_configure_(
 
   zwlr_layer_surface_v1_ack_configure(zwlr_layer_surface, serial);
 
-  if (self->first_configuration_) {
-    self->render();
-    self->first_configuration_ = false;
-  }
+  self->render();
+  self->first_configuration_ = false;
 }
 
 
