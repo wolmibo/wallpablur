@@ -129,6 +129,13 @@ void output::setup_surfaces() {
 
 
   if (clipping_surface_) {
+    clipping_surface_->set_geometry_cb([this](const wayland::geometry& geo) {
+      if (painter_) {
+        painter_->update_geometry(geo);
+      }
+    });
+
+
     clipping_surface_->set_context_cb([this](std::shared_ptr<egl::context> ctx) {
       painter_->set_clipping_context(std::move(ctx));
     });
