@@ -830,6 +830,8 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
   gl::framebuffer fb{clipping_context_->cached};
   auto lock = fb.bind();
 
+  glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
+
   draw_wallpaper(ws, id);
 }
 

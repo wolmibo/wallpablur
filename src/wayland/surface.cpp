@@ -186,6 +186,9 @@ void wayland::surface::render() {
 
   context_->make_current();
 
+  glViewport(0, 0, current_geometry_.physical_width(),
+      current_geometry_.physical_height());
+
   if (render_cb_ && !current_geometry_.empty()) {
     render_cb_();
   }
