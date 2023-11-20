@@ -133,7 +133,13 @@ void wayland::surface::hide() {
 
 
 
-void wayland::surface::create_context() {
+void wayland::surface::update_context() {
+  if (egl_window_) {
+    wl_egl_window_resize(egl_window_.get(), current_geometry_.physical_width(),
+        current_geometry_.physical_height(), 0, 0);
+    return;
+  }
+
   logcerr::debug("{}: creating egl context", name_);
 
   egl_window_.reset(wl_egl_window_create(surface_.get(),
@@ -146,6 +152,10 @@ void wayland::surface::create_context() {
   context_ = std::make_shared<egl::context>(client_->context().share(egl_window_.get()));
 
   reset_frame_listener();
+
+  if (context_cb_) {
+    context_cb_(context_);
+  }
 }
 
 
@@ -220,26 +230,12 @@ void wayland::surface::layer_surface_configure_(
     self->geometry_cb_(self->current_geometry_);
   }
 
-  if (self->first_configuration_) {
-    self->create_context();
-
-    if (self->context_cb_) {
-      self->context_cb_(self->context_);
-    }
-  } else {
-    wl_egl_window_resize(
-        self->egl_window_.get(),
-        self->current_geometry_.physical_width(),
-        self->current_geometry_.physical_height(),
-        0, 0);
-  }
-
+  self->update_context();
   self->update_viewport();
 
   zwlr_layer_surface_v1_ack_configure(zwlr_layer_surface, serial);
 
   self->render();
-  self->first_configuration_ = false;
 }
 
 

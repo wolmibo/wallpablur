@@ -85,7 +85,6 @@ class surface {
     geometry                                current_geometry_;
     bool                                    geometry_changed_   {false};
 
-    bool                                    first_configuration_{true};
     bool                                    visible_            {true};
 
     std::move_only_function<bool(void)>     update_cb_;
@@ -100,7 +99,7 @@ class surface {
     void render();
     void reset_frame_listener();
 
-    void create_context();
+    void update_context();
 
     void update_viewport() const;
 
