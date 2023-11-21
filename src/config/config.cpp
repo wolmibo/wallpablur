@@ -442,12 +442,12 @@ namespace {
 
 
 
-  [[nodiscard]] wallpaper parse_wallpaper(opt_sec sec, opt_sec bg_sec) {
+  [[nodiscard]] wallpaper parse_wallpaper(opt_sec sec, opt_sec bg_sec, bool alt) {
     wallpaper wp{};
 
     wp.description = parse_brush(sec, {});
 
-    if (sec) {
+    if (alt && sec) {
       update(*sec, wp.condition, "enable-if");
     }
 
@@ -495,11 +495,11 @@ namespace {
     auto background_section = best_subsection(sec, fallback, "background");
 
     std::vector<wallpaper> wallpapers{
-      parse_wallpaper(wallpaper_section, background_section)
+      parse_wallpaper(wallpaper_section, background_section, false)
     };
 
     for (const auto* ptr: list_wallpaper_sections(sec, fallback)) {
-      if (auto wp = parse_wallpaper(*ptr, background_section);
+      if (auto wp = parse_wallpaper(*ptr, background_section, true);
           !wp.condition.is_always_false()) {
         wallpapers.emplace_back(std::move(wp));
       }
