@@ -428,16 +428,16 @@ namespace {
 
 
 
-  [[nodiscard]] opt_sec best_subsection(
+  [[nodiscard]] std::pair<const section*, opt_sec> select_section_sub(
       const section&   sec,
       opt_sec          fallback,
       std::string_view name
   ) {
     auto cand = sec.subsection(name);
     if (!cand && fallback) {
-      return fallback->subsection(name);
+      return {&*fallback, fallback->subsection(name)};
     }
-    return cand;
+    return {&sec, cand};
   }
 
 
@@ -462,10 +462,7 @@ namespace {
 
 
 
-  [[nodiscard]] std::vector<const section*> list_wallpaper_sections(
-      const section& sec,
-      opt_sec        /*fallback*/
-  ) {
+  [[nodiscard]] std::vector<const section*> list_wallpaper_sections(const section& sec) {
     std::vector<std::pair<size_t, const section*>> list;
     for (const auto& s: sec.subsections()) {
       if (s.name().starts_with("wallpaper#")) {
@@ -491,14 +488,14 @@ namespace {
 
 
   [[nodiscard]] output parse_output(const section& sec, opt_sec fallback) {
-    auto wallpaper_section  = best_subsection(sec, fallback, "wallpaper");
-    auto background_section = best_subsection(sec, fallback, "background");
+    auto [wp_parent, wallpaper_section] = select_section_sub(sec, fallback, "wallpaper");
+    auto background_section = select_section_sub(sec, fallback, "background").second;
 
     std::vector<wallpaper> wallpapers{
       parse_wallpaper(wallpaper_section, background_section, false)
     };
 
-    for (const auto* ptr: list_wallpaper_sections(sec, fallback)) {
+    for (const auto* ptr: list_wallpaper_sections(*wp_parent)) {
       if (auto wp = parse_wallpaper(*ptr, background_section, true);
           !wp.condition.is_always_false()) {
         wallpapers.emplace_back(std::move(wp));
@@ -507,8 +504,8 @@ namespace {
 
     std::ranges::reverse(wallpapers);
 
-    auto panel_section = best_subsection(sec, fallback, "panels");
-    auto s_e_section   = best_subsection(sec, fallback, "surface-effects");
+    auto panel_section = select_section_sub(sec, fallback, "panels").second;
+    auto s_e_section   = select_section_sub(sec, fallback, "surface-effects").second;
 
     auto [rounded_corners, border_effects] = parse_surface_effects(s_e_section);
 
