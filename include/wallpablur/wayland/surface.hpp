@@ -83,7 +83,7 @@ class surface {
     wl_ptr<wl_callback>                     frame_callback_;
 
     geometry                                current_geometry_;
-    bool                                    geometry_changed_   {false};
+    bool                                    invalid_            {false};
 
     bool                                    visible_            {true};
 
@@ -95,11 +95,12 @@ class surface {
                                             geometry_cb_;
 
 
+    void invalidate() { invalid_ = true; }
 
     void render();
     void reset_frame_listener();
 
-    void update_context();
+    bool update_context();
 
     void update_viewport() const;
 

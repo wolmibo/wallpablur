@@ -112,6 +112,8 @@ void wayland::surface::show() {
   zwlr_layer_surface_v1_set_anchor(layer_surface_.get(), anchor_all);
   wl_surface_commit(surface_.get());
 
+  invalidate();
+
   visible_ = true;
 }
 
@@ -133,11 +135,11 @@ void wayland::surface::hide() {
 
 
 
-void wayland::surface::update_context() {
+bool wayland::surface::update_context() {
   if (egl_window_) {
     wl_egl_window_resize(egl_window_.get(), current_geometry_.physical_width(),
         current_geometry_.physical_height(), 0, 0);
-    return;
+    return false;
   }
 
   logcerr::debug("{}: creating egl context", name_);
@@ -156,6 +158,8 @@ void wayland::surface::update_context() {
   if (context_cb_) {
     context_cb_(context_);
   }
+
+  return true;
 }
 
 
@@ -182,7 +186,7 @@ void wayland::surface::render() {
     throw std::runtime_error{"attempting to render without active egl context"};
   }
 
-  geometry_changed_ = false;
+  invalid_ = false;
 
   context_->make_current();
 
@@ -203,7 +207,7 @@ void wayland::surface::render() {
 void wayland::surface::callback_done_(void* data, wl_callback* /*cb*/, uint32_t /*ser*/) {
   auto* self = static_cast<surface*>(data);
 
-  if ((self->update_cb_ && self->update_cb_()) || self->geometry_changed_) {
+  if ((self->update_cb_ && self->update_cb_()) || self->invalid_) {
     self->render();
   }
 
@@ -233,12 +237,16 @@ void wayland::surface::layer_surface_configure_(
     self->geometry_cb_(self->current_geometry_);
   }
 
-  self->update_context();
+  bool require_render = self->update_context();
   self->update_viewport();
 
   zwlr_layer_surface_v1_ack_configure(zwlr_layer_surface, serial);
 
-  self->render();
+  if (require_render) {
+    self->render();
+  } else {
+    self->invalidate();
+  }
 }
 
 
@@ -274,7 +282,7 @@ void wayland::surface::update_viewport() const {
 void wayland::surface::update_screen_size(vec2<uint32_t> size) {
   if (size.x != current_geometry_.physical_width() ||
       size.y != current_geometry_.physical_height()) {
-    geometry_changed_ = true;
+    invalidate();
   }
 
   current_geometry_.physical_width(size.x);
