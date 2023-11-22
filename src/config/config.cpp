@@ -513,7 +513,7 @@ namespace {
     if (auto key = sec.unique_key("clipping")) {
       clipping = parse<bool>(*key);
     } else if (fallback) {
-      if (auto key = sec.unique_key("clipping")) {
+      if (auto key = fallback->unique_key("clipping")) {
         clipping = parse<bool>(*key);
       }
     }
