@@ -42,6 +42,7 @@ in combination with upstream Sway.
 * multi-monitor support including monitor hot-plugging and individual configuration
 * fractional output scaling
 * *wallpaper* and *background* can be independent images
+* wallpaper selection based on workspace properties
 * filter for *wallpaper* and *background*: blur, box-blur, color inversion
 * (optional) alpha fade-in and fade-out on startup and `SIGTERM`, respectively
 * border effects like shadows, glow, etc. depending on window properties
