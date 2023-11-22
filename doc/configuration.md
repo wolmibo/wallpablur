@@ -48,6 +48,10 @@ scale-filter = linear
 # - filter = blur;     iterations = 2; radius = 96; dithering = 1.0
 # - filter = box-blur; iterations = 1; radius = 96; dithering = 1.0
 
+# [wallpaper#1]
+# enable-if = true
+# ...
+
 [background]
 # same as [wallpaper] and additionally:
 enable-if = true
@@ -70,6 +74,10 @@ enable-if = true
 
 # [OUTPUT.wallpaper]
 # override wallpaper for OUTPUT
+
+# [OUTPUT.wallpaper#<u32>]
+# enable-if = true
+# ...
 
 # [OUTPUT.background]
 # override background for OUTPUT
@@ -240,8 +248,31 @@ To invert the colors and apply a rectangular blur:
 path = <filepath>
 - filter = invert
 - filter = box-blur; width = 20; height = 10
-
 ```
+
+
+
+## Conditional Wallpapers
+The `[wallpaper]` section above defines the default wallpaper, which can be overwritten
+using a `[wallpaper#<u32>]` section, where `<u32>` is any positive integer.
+These sections have an additional `enable-if` property which restricts its usage
+to specific workspace conditions (See section about conditions below).
+If multiple `[wallpaper#<u32>]` sections apply to the current workspace, the one with
+the highest number will be used.
+
+For example, to use a different wallpaper on workspace "1":
+```ini
+[wallpaper]
+...
+
+[wallpaper#0]
+enable-if = (ws_name == "1")
+path = <different filepath>
+```
+
+**Note**: While this approach allows to define per output wallpaper, using the overwriting
+approach described below is more efficient, *especially* if the outputs have different
+resolutions.
 
 
 
@@ -265,6 +296,8 @@ The sections above can be overwritten for a specific output `NAME`
 (e.g. `eDP-1` or `HDMI-A-1`) by providing a `[NAME.panels]`, `[NAME.wallpaper]` or
 `[NAME.background]` section, respectively.
 Without using quotation marks or escaping, `NAME` must not contain `.` or `]`.
+In order to overwrite `[NAME.wallpaper#<u32>]` section, the `[NAME.wallpaper]` section
+must also be overwritten.
 
 
 ### Example
