@@ -180,56 +180,35 @@ namespace {
 
 
 
-  void load_node_leaves(
-      workspace&                          ws,
-      const rapidjson::Value::ConstArray& list,
-      bool                                floating,
-      layout_orientation                  parent_orientation,
-      rectangle                           parent_rect
-  ) {
-
-    for (const auto& container: list) {
-      auto nodes  = json::member_to_array(container, "nodes");
-      auto floats = json::member_to_array(container, "floating_nodes");
-
-      if ((!nodes || nodes->Empty()) && (!floats || floats->Empty())) {
-        load_surface_from_json(ws, container, floating, parent_orientation, parent_rect);
-      } else {
-        auto orientation = orientation_from_json(container);
-
-        rectangle parent_rect{};
-        if (auto rect = json::find_member(container, "rect")) {
-          parent_rect = rectangle_from_json(*rect);
-        }
-
-        if (nodes) {
-          load_node_leaves(ws, *nodes, false, orientation, parent_rect);
-        }
-
-        if (floats) {
-          load_node_leaves(ws, *floats, true, orientation, parent_rect);
-        }
-      }
-    }
-  }
-
-
-
-  void parse_workspace_layout(workspace& ws, const rapidjson::Value& value) {
-    auto orientation = orientation_from_json(value);
+  bool parse_node_children(workspace& ws, const rapidjson::Value& value) {
+    auto ori = orientation_from_json(value);
 
     rectangle parent_rect{};
     if (auto rect = json::find_member(value, "rect")) {
       parent_rect = rectangle_from_json(*rect);
     }
 
-    if (auto nodes = json::member_to_array(value, "nodes")) {
-      load_node_leaves(ws, *nodes, false, orientation, parent_rect);
+    auto nodes    = json::member_to_array(value, "nodes");
+    auto floating = json::member_to_array(value, "floating_nodes");
+
+    if ((!nodes || nodes->Empty()) && (!floating || floating->Empty())) {
+      return false;
     }
 
-    if (auto floating = json::member_to_array(value, "floating_nodes")) {
-      load_node_leaves(ws, *floating, true, orientation, parent_rect);
-    }
+    auto handle_children = [&ws, &ori, &parent_rect](const auto& nodes, bool floating) {
+      if (nodes) {
+        for (const auto& node: *nodes) {
+          if (!parse_node_children(ws, node)) {
+            load_surface_from_json(ws, node, floating, ori, parent_rect);
+          }
+        }
+      }
+    };
+
+    handle_children(nodes, false);
+    handle_children(floating, true);
+
+    return true;
   }
 
 
@@ -264,7 +243,7 @@ namespace {
         {}
       };
 
-      parse_workspace_layout(ws, node);
+      parse_node_children(ws, node);
 
       if (auto offset = json::find_member(value, "rect")) {
         translate_surfaces(ws.surfaces(),
