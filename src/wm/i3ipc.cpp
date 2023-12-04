@@ -153,6 +153,8 @@ namespace {
 
     if (json::member_to_bool(value, "visible").value_or(false)) {
       ws.emplace_surface(base_rect, app_id, mask, 0.f, orientation);
+    } else {
+      return;
     }
 
 
