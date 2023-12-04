@@ -119,7 +119,8 @@ namespace {
       workspace&              ws,
       const rapidjson::Value& value,
       bool                    floating,
-      layout_orientation      orientation
+      layout_orientation      orientation,
+      rectangle               parent_rect
   ) {
     auto json_rect = json::find_member(value, "rect");
     if (!json_rect) {
@@ -166,7 +167,11 @@ namespace {
       return;
     }
 
-    deco_rect.translate(base_rect.x(), base_rect.y() - deco_rect.height());
+    if (floating) {
+      deco_rect.translate(parent_rect.x(), parent_rect.y());
+    } else {
+      deco_rect.translate(base_rect.x(), base_rect.y() - deco_rect.height());
+    }
 
     set_surface_flag(mask, surface_flag::decoration);
 
@@ -179,7 +184,8 @@ namespace {
       workspace&                          ws,
       const rapidjson::Value::ConstArray& list,
       bool                                floating,
-      layout_orientation                  parent_orientation
+      layout_orientation                  parent_orientation,
+      rectangle                           parent_rect
   ) {
 
     for (const auto& container: list) {
@@ -187,16 +193,21 @@ namespace {
       auto floats = json::member_to_array(container, "floating_nodes");
 
       if ((!nodes || nodes->Empty()) && (!floats || floats->Empty())) {
-        load_surface_from_json(ws, container, floating, parent_orientation);
+        load_surface_from_json(ws, container, floating, parent_orientation, parent_rect);
       } else {
         auto orientation = orientation_from_json(container);
 
+        rectangle parent_rect{};
+        if (auto rect = json::find_member(container, "rect")) {
+          parent_rect = rectangle_from_json(*rect);
+        }
+
         if (nodes) {
-          load_node_leaves(ws, *nodes, false, orientation);
+          load_node_leaves(ws, *nodes, false, orientation, parent_rect);
         }
 
         if (floats) {
-          load_node_leaves(ws, *floats, true, orientation);
+          load_node_leaves(ws, *floats, true, orientation, parent_rect);
         }
       }
     }
@@ -207,12 +218,17 @@ namespace {
   void parse_workspace_layout(workspace& ws, const rapidjson::Value& value) {
     auto orientation = orientation_from_json(value);
 
+    rectangle parent_rect{};
+    if (auto rect = json::find_member(value, "rect")) {
+      parent_rect = rectangle_from_json(*rect);
+    }
+
     if (auto nodes = json::member_to_array(value, "nodes")) {
-      load_node_leaves(ws, *nodes, false, orientation);
+      load_node_leaves(ws, *nodes, false, orientation, parent_rect);
     }
 
     if (auto floating = json::member_to_array(value, "floating_nodes")) {
-      load_node_leaves(ws, *floating, true, orientation);
+      load_node_leaves(ws, *floating, true, orientation, parent_rect);
     }
   }
 

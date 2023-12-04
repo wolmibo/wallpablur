@@ -8,6 +8,8 @@
 
 class rectangle {
   public:
+    rectangle() = default;
+
     rectangle(float x, float y, float width, float height, unsigned int rot_cw90 = 0) :
       x_       {x},
       y_       {y},
