@@ -127,7 +127,7 @@ namespace {
       return;
     }
 
-    std::string app_id {json::member_to_str (value, "app_id" ).value_or("")};
+    std::string app_id{json::member_to_str(value, "app_id").value_or("")};
 
     surface_flag_mask mask;
 
