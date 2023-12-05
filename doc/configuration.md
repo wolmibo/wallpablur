@@ -411,6 +411,7 @@ A surface condition is checked for an individual surface and has the following t
 * `panel`, `floating`, `tiled`: whether the surface is a panel
    (i.e., defined in `[panels]`), a floating window, or a tiled window, respectively
 * `fullscreen`: whether the surface is in fullscreen mode
+* `stacked`, `tabbed`, `splitv`, `splith`: the layout type of the parent container
 
 And string variables:
 * `app_id`: the app id of the current surface
