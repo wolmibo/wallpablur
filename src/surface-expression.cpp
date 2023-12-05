@@ -47,7 +47,11 @@ ICONFIGP_DEFINE_ENUM_LUT(surface_flag,
     "floating",   floating,
     "tiled",      tiled,
     "decoration", decoration,
-    "fullscreen", fullscreen);
+    "fullscreen", fullscreen,
+
+    "splitv",     splitv,
+    "splith",     splith
+);
 
 ICONFIGP_DEFINE_ENUM_LUT_NAMED(surface_expression_condition::string_var,
     "surface-variable",
