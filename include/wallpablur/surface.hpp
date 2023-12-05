@@ -25,6 +25,8 @@ enum class surface_flag : size_t {
 
   splitv,
   splith,
+  tabbed,
+  stacked,
 
   eoec_marker
 };

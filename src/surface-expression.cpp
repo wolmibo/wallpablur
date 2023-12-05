@@ -50,7 +50,9 @@ ICONFIGP_DEFINE_ENUM_LUT(surface_flag,
     "fullscreen", fullscreen,
 
     "splitv",     splitv,
-    "splith",     splith
+    "splith",     splith,
+    "stacked",    stacked,
+    "tabbed",     tabbed
 );
 
 ICONFIGP_DEFINE_ENUM_LUT_NAMED(surface_expression_condition::string_var,

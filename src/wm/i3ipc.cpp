@@ -114,6 +114,12 @@ namespace {
       if (*value == "splith") {
         set_surface_flag(flags, surface_flag::splith);
       }
+      if (*value == "stacked") {
+        set_surface_flag(flags, surface_flag::stacked);
+      }
+      if (*value == "tabbed") {
+        set_surface_flag(flags, surface_flag::tabbed);
+      }
     }
 
     return flags;
