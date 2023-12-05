@@ -104,13 +104,19 @@ namespace {
 
 
 
-  [[nodiscard]] layout_orientation orientation_from_json(const rapidjson::Value& parent) {
+  [[nodiscard]] surface_flag_mask init_surface_flag_mask(const rapidjson::Value& parent) {
+    surface_flag_mask flags;
+
     if (auto value = json::member_to_str(parent, "layout")) {
-      if (*value == "splitv") { return layout_orientation::vertical;   }
-      if (*value == "splith") { return layout_orientation::horizontal; }
+      if (*value == "splitv") {
+        set_surface_flag(flags, surface_flag::splitv);
+      }
+      if (*value == "splith") {
+        set_surface_flag(flags, surface_flag::splith);
+      }
     }
 
-    return layout_orientation::none;
+    return flags;
   }
 
 
@@ -118,8 +124,7 @@ namespace {
   void load_surface_from_json(
       workspace&              ws,
       const rapidjson::Value& value,
-      bool                    floating,
-      layout_orientation      orientation,
+      surface_flag_mask       flags,
       rectangle               parent_rect
   ) {
     auto json_rect = json::find_member(value, "rect");
@@ -129,30 +134,26 @@ namespace {
 
     std::string app_id{json::member_to_str(value, "app_id").value_or("")};
 
-    surface_flag_mask mask;
-
     if (json::member_to_bool(value, "focused").value_or(false)) {
-      set_surface_flag(mask, surface_flag::focused);
+      set_surface_flag(flags, surface_flag::focused);
     }
 
     if (json::member_to_bool(value, "urgent").value_or(false)) {
-      set_surface_flag(mask, surface_flag::urgent);
+      set_surface_flag(flags, surface_flag::urgent);
     }
 
     if (json::member_to_int(value, "fullscreen_mode").value_or(0) > 0) {
-      set_surface_flag(mask, surface_flag::fullscreen);
+      set_surface_flag(flags, surface_flag::fullscreen);
     }
 
-    if (floating) {
-      set_surface_flag(mask, surface_flag::floating);
-    } else {
-      set_surface_flag(mask, surface_flag::tiled);
+    if (!test_surface_flag(flags, surface_flag::floating)) {
+      set_surface_flag(flags, surface_flag::tiled);
     }
 
     auto base_rect{rectangle_from_json(*json_rect)};
 
     if (json::member_to_bool(value, "visible").value_or(false)) {
-      ws.emplace_surface(base_rect, app_id, mask, 0.f, orientation);
+      ws.emplace_surface(base_rect, app_id, flags, 0.f);
     } else {
       return;
     }
@@ -169,21 +170,21 @@ namespace {
       return;
     }
 
-    if (floating) {
+    if (test_surface_flag(flags, surface_flag::floating)) {
       deco_rect.translate(parent_rect.x(), parent_rect.y());
     } else {
       deco_rect.translate(base_rect.x(), base_rect.y() - deco_rect.height());
     }
 
-    set_surface_flag(mask, surface_flag::decoration);
+    set_surface_flag(flags, surface_flag::decoration);
 
-    ws.emplace_surface(deco_rect, app_id, mask, 0.f, orientation);
+    ws.emplace_surface(deco_rect, app_id, flags, 0.f);
   }
 
 
 
   bool parse_node_children(workspace& ws, const rapidjson::Value& value) {
-    auto ori = orientation_from_json(value);
+    auto flags = init_surface_flag_mask(value);
 
     rectangle parent_rect{};
     if (auto rect = json::find_member(value, "rect")) {
@@ -197,18 +198,20 @@ namespace {
       return false;
     }
 
-    auto handle_children = [&ws, &ori, &parent_rect](const auto& nodes, bool floating) {
+    auto handle_children = [&](const auto& nodes) {
       if (nodes) {
         for (const auto& node: *nodes) {
           if (!parse_node_children(ws, node)) {
-            load_surface_from_json(ws, node, floating, ori, parent_rect);
+            load_surface_from_json(ws, node, flags, parent_rect);
           }
         }
       }
     };
 
-    handle_children(nodes, false);
-    handle_children(floating, true);
+    handle_children(nodes);
+
+    set_surface_flag(flags, surface_flag::floating);
+    handle_children(floating);
 
     return true;
   }

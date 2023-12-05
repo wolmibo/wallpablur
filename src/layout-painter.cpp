@@ -56,7 +56,7 @@ namespace {
 
   [[nodiscard]] std::bitset<4> realize_sides(
       const config::sides_type& sides,
-      layout_orientation        orientation
+      surface_flag_mask         flags
   ) {
     auto output = sides.absolute.value();
     auto rel    = sides.relative.value();
@@ -65,15 +65,15 @@ namespace {
       return output;
     }
 
-    switch (orientation) {
-      case layout_orientation::horizontal:
+    if (test_surface_flag(flags, surface_flag::splith)) {
         return output | (rel >> 1) | std::bitset<4>(rel[0] ? 0x8 : 0);
-      case layout_orientation::vertical:
-        return output | rel;
-
-      default:
-        return output;
     }
+
+    if (test_surface_flag(flags, surface_flag::splitv)) {
+        return output | rel;
+    }
+
+    return output;
   }
 
 
@@ -467,7 +467,7 @@ struct layout_painter::wallpaper_context {
     const surface&               surf,
     float                        radius
   ) const {
-    auto sides = realize_sides(effect.sides, surf.orientation());
+    auto sides = realize_sides(effect.sides, surf.flags());
 
     if (sides.none()) {
       return;

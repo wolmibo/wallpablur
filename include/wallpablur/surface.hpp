@@ -12,14 +12,6 @@
 
 
 
-enum class layout_orientation {
-  none,
-  vertical,
-  horizontal
-};
-
-
-
 enum class surface_flag : size_t {
   panel,
   floating,
@@ -31,6 +23,9 @@ enum class surface_flag : size_t {
 
   fullscreen,
 
+  splitv,
+  splith,
+
   eoec_marker
 };
 
@@ -38,6 +33,13 @@ using surface_flag_mask = std::bitset<std::to_underlying(surface_flag::eoec_mark
 
 constexpr void set_surface_flag(surface_flag_mask& mask, surface_flag flag) {
   mask[std::to_underlying(flag)] = true;
+}
+
+[[nodiscard]] constexpr bool test_surface_flag(
+    const surface_flag_mask& mask,
+    surface_flag             flag
+) {
+  return mask[std::to_underlying(flag)];
 }
 
 
@@ -49,16 +51,13 @@ class surface {
         rectangle          rect,
         std::string        app_id,
         surface_flag_mask  mask        = {},
-        float              radius      = 0.f,
-        layout_orientation orientation = layout_orientation::none
+        float              radius      = 0.f
     ) :
       rect_       {rect},
       radius_     {radius},
 
       app_id_     {std::move(app_id)},
-      mask_       {mask},
-
-      orientation_{orientation}
+      mask_       {mask}
     {}
 
 
@@ -72,7 +71,7 @@ class surface {
 
     [[nodiscard]] std::string_view   app_id()      const { return app_id_;  }
 
-    [[nodiscard]] layout_orientation orientation() const { return orientation_; }
+    [[nodiscard]] const surface_flag_mask& flags() const { return mask_; }
 
 
 
@@ -89,8 +88,6 @@ class surface {
     std::string        app_id_;
 
     surface_flag_mask  mask_;
-
-    layout_orientation orientation_;
 };
 
 #endif // WALLPABLUR_SURFACE_HPP_INCLUDED
