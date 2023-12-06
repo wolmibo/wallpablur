@@ -107,7 +107,7 @@ namespace {
 
 
   rectangle center_tile(rectangle rect, const config::border_effect& effect) {
-    rect.pos() += vec2<float>{effect.offset.x, effect.offset.y};
+    rect.pos() += effect.offset;
 
     switch (effect.position) {
       case config::border_position::inside:

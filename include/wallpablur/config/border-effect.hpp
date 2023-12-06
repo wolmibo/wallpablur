@@ -44,16 +44,11 @@ struct sides_type {
 
 
 struct border_effect {
-  struct offset_type {
-    int x{0};
-    int y{0};
-  };
-
   surface_workspace_expression condition{true};
 
   uint32_t                     thickness{};
   border_position              position {border_position::outside};
-  offset_type                  offset;
+  vec2<float>                  offset   {0.f};
 
   color                        col      {};
   blend_mode                   blend    {blend_mode::alpha};

@@ -92,7 +92,7 @@ namespace {
       .condition = true,
       .thickness = 2,
       .position  = border_position::outside,
-      .offset    = border_effect::offset_type{},
+      .offset    = vec2{0.f},
       .col       = {0.f, 0.f, 0.f, 1.f},
       .blend     = blend_mode::alpha,
       .foff      = falloff::none,
@@ -104,7 +104,7 @@ namespace {
       .condition = true,
       .thickness = 30,
       .position  = border_position::centered,
-      .offset    = border_effect::offset_type {.x = 2, .y = 2},
+      .offset    = vec2{2.f},
       .col       = {0.f, 0.f, 0.f, 0.8f},
       .blend     = blend_mode::alpha,
       .foff      = falloff::sinusoidal,
@@ -116,7 +116,7 @@ namespace {
       .condition = true,
       .thickness = 20,
       .position  = border_position::outside,
-      .offset    = border_effect::offset_type{},
+      .offset    = vec2{0.f},
       .col       = {1.f, 1.f, 1.f, 1.f},
       .blend     = blend_mode::add,
       .foff      = falloff::linear,
@@ -161,10 +161,10 @@ ICONFIGP_DEFINE_VALUE_PARSER_NAMED(panel::size_type, "size",
       return std::bit_cast<panel::size_type>(parse_as_array<uint32_t, 2>(input));
     })
 
-ICONFIGP_DEFINE_VALUE_PARSER_NAMED(border_effect::offset_type, "offset",
-    "<x:i32>,<y:i32>",
+ICONFIGP_DEFINE_VALUE_PARSER_NAMED(vec2<float>, "vec2<f32>",
+    "<x:f32>,<y:f32>",
     [](std::string_view input) {
-      return std::bit_cast<border_effect::offset_type>(parse_as_array<int32_t, 2>(input));
+      return vec2<float>(parse_as_array<float, 2>(input));
     })
 
 ICONFIGP_DEFINE_VALUE_PARSER_NAMED(anchor_type, "anchor",

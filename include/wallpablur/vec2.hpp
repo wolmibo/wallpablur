@@ -5,6 +5,7 @@
 #define WALLPABLUR_VEC2_HPP_INCLUDED
 
 #include <algorithm>
+#include <array>
 
 
 
@@ -16,6 +17,11 @@ class vec2 {
     explicit vec2(const T& value) :
       x_{value},
       y_{value}
+    {}
+
+    explicit vec2(const std::array<T, 2>& values) :
+      x_{values[0]},
+      y_{values[1]}
     {}
 
     vec2(const T& x, const T& y) :
