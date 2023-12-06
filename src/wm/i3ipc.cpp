@@ -257,10 +257,10 @@ namespace {
       parse_node_children(ws, node);
 
       if (auto offset = json::find_member(value, "rect")) {
-        translate_surfaces(ws.surfaces(), vec2<float>{
+        translate_surfaces(ws.surfaces(), vec_cast<float>(vec2{
           -json::member_to_int(*offset, "x").value_or(0),
           -json::member_to_int(*offset, "y").value_or(0)
-        });
+        }));
       }
 
       return ws;
