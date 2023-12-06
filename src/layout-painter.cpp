@@ -44,8 +44,7 @@ namespace {
 
 
   void draw_mesh(const wayland::geometry& geo, const rectangle& r, const gl::mesh& mesh) {
-    glUniformMatrix4fv(0, 1, GL_FALSE,
-        r.to_matrix(geo.logical_width(), geo.logical_height()).data());
+    glUniformMatrix4fv(0, 1, GL_FALSE, r.to_matrix(geo.logical_size()).data());
 
     mesh.draw();
   }
@@ -713,8 +712,8 @@ void layout_painter::update_geometry(const wayland::geometry& geometry) {
 
   logcerr::verbose("{}: update geometry to logical = {}x{}@{}, pixel = {}x{}",
       config_.name,
-      geometry_.logical_width(), geometry_.logical_height(), geometry_.scale(),
-      geometry_.physical_width(), geometry_.physical_height());
+      geometry_.logical_size().x(), geometry_.logical_size().y(), geometry_.scale(),
+      geometry_.physical_size().x(), geometry_.physical_size().y());
 
 
 
@@ -723,7 +722,7 @@ void layout_painter::update_geometry(const wayland::geometry& geometry) {
 
   for (const auto& panel : config_.fixed_panels) {
     fixed_panels_.emplace_back(surface{
-        panel.to_rect({geometry_.logical_width(), geometry_.logical_height()}),
+        panel.to_rect(geometry_.logical_size()),
         panel.app_id,
         panel.mask,
         panel.radius
@@ -765,7 +764,7 @@ void layout_painter::update_geometry(const wayland::geometry& geometry) {
 void layout_painter::draw_wallpaper(const workspace& ws, uint64_t id) const {
   logcerr::debug("{}: drawing wallpaper", config_.name);
 
-  glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
+  glViewport(0, 0, geometry_.physical_size().x(), geometry_.physical_size().y());
 
   set_blend_mode();
 
@@ -812,8 +811,8 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
 
   if (!clipping_context_->cached || clipping_context_->cached_size != geometry_) {
     requires_update = true;
-    clipping_context_->cached = gl::texture(geometry_.physical_width(),
-                                            geometry_.physical_height());
+    clipping_context_->cached = gl::texture(geometry_.physical_size().x(),
+                                            geometry_.physical_size().y());
 
     clipping_context_->cached_size = geometry_;
   }
@@ -828,7 +827,7 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
   gl::framebuffer fb{clipping_context_->cached};
   auto lock = fb.bind();
 
-  glViewport(0, 0, geometry_.physical_width(), geometry_.physical_height());
+  glViewport(0, 0, geometry_.physical_size().x(), geometry_.physical_size().y());
 
   draw_wallpaper(ws, id);
 }
@@ -839,7 +838,7 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
 
 void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id) const {
   logcerr::debug("{}: rendering wallpaper {}x{}, alpha = {}", config_.name,
-      geometry_.physical_width(), geometry_.physical_height(), a);
+      geometry_.physical_size().x(), geometry_.physical_size().y(), a);
 
   if (!wallpaper_context_) {
     logcerr::warn("{}: trying to render wallpaper without context", config_.name);
@@ -878,7 +877,7 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
 
 void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) const {
   logcerr::debug("{}: rendering clipping {}x{}, alpha = {}", config_.name,
-      geometry_.physical_width(), geometry_.physical_height(), a);
+      geometry_.physical_size().x(), geometry_.physical_size().y(), a);
 
   if (!clipping_context_) {
     logcerr::warn("{}: trying to render clipping without context", config_.name);

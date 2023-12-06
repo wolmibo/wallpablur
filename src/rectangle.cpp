@@ -2,9 +2,7 @@
 
 
 
-std::array<float, 16> rectangle::to_matrix(float width, float height) const {
-  vec2 size{width, height};
-
+std::array<float, 16> rectangle::to_matrix(const vec2<float>& size) const {
   auto scale = div(size_, size);
 
   auto pos = div(mul((2.f * pos_ - (size - size_)), vec2{1.f, -1.f}), size);

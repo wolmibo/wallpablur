@@ -57,9 +57,7 @@ wayland::surface::surface(std::string name, client& cl, output& op, bool as_over
   name_            {std::move(name)},
   client_          {&cl}
 {
-  auto size = op.current_size();
-  current_geometry_.physical_width(size.x);
-  current_geometry_.physical_height(size.y);
+  current_geometry_.physical_size(op.current_size());
 
   logcerr::verbose("{}: creating surface", name_);
   surface_.reset(wl_compositor_create_surface(client_->compositor()));
@@ -137,15 +135,15 @@ void wayland::surface::hide() {
 
 bool wayland::surface::update_context() {
   if (egl_window_) {
-    wl_egl_window_resize(egl_window_.get(), current_geometry_.physical_width(),
-        current_geometry_.physical_height(), 0, 0);
+    wl_egl_window_resize(egl_window_.get(), current_geometry_.physical_size().x(),
+        current_geometry_.physical_size().y(), 0, 0);
     return false;
   }
 
   logcerr::debug("{}: creating egl context", name_);
 
   egl_window_.reset(wl_egl_window_create(surface_.get(),
-        current_geometry_.physical_width(), current_geometry_.physical_height()));
+        current_geometry_.physical_size().x(), current_geometry_.physical_size().y()));
 
   if (!egl_window_) {
     throw std::runtime_error{"unable to create egl window"};
@@ -190,8 +188,8 @@ void wayland::surface::render() {
 
   context_->make_current();
 
-  glViewport(0, 0, current_geometry_.physical_width(),
-      current_geometry_.physical_height());
+  glViewport(0, 0, current_geometry_.physical_size().x(),
+      current_geometry_.physical_size().y());
 
   if (render_cb_ && !current_geometry_.empty()) {
     render_cb_();
@@ -230,7 +228,7 @@ void wayland::surface::layer_surface_configure_(
   logcerr::debug("{}: configuring layer surface {}x{}", self->name_, width, height);
 
   self->current_geometry_.scale(
-      static_cast<float>(self->current_geometry_.physical_width())
+      static_cast<float>(self->current_geometry_.physical_size().x())
       / static_cast<float>(width));
 
   if (self->geometry_cb_) {
@@ -255,8 +253,8 @@ void wayland::surface::layer_surface_configure_(
 
 void wayland::surface::update_viewport() const {
   logcerr::debug("{}: viewport transform {}x{}->{}x{}", name_,
-      current_geometry_.physical_width(), current_geometry_.physical_height(),
-      current_geometry_.logical_width(),  current_geometry_.logical_height());
+      current_geometry_.physical_size().x(), current_geometry_.physical_size().y(),
+      current_geometry_.logical_size().x(),  current_geometry_.logical_size().y());
 
   if (!visible()) {
     wp_viewport_set_destination(viewport_.get(), 1, 1);
@@ -265,14 +263,14 @@ void wayland::surface::update_viewport() const {
     return;
   }
 
-  wp_viewport_set_destination(viewport_.get(),
-      current_geometry_.logical_width(), current_geometry_.logical_height());
+  auto logical = current_geometry_.logical_size();
+  wp_viewport_set_destination(viewport_.get(), logical.x(), logical.y());
 
   wp_viewport_set_source(viewport_.get(),
       wl_fixed_from_int(0),
       wl_fixed_from_int(0),
-      wl_fixed_from_int(current_geometry_.physical_width()),
-      wl_fixed_from_int(current_geometry_.physical_height()));
+      wl_fixed_from_int(current_geometry_.physical_size().x()),
+      wl_fixed_from_int(current_geometry_.physical_size().y()));
 }
 
 
@@ -280,11 +278,9 @@ void wayland::surface::update_viewport() const {
 
 
 void wayland::surface::update_screen_size(vec2<uint32_t> size) {
-  if (size.x != current_geometry_.physical_width() ||
-      size.y != current_geometry_.physical_height()) {
+  if (size != current_geometry_.physical_size()) {
     invalidate();
   }
 
-  current_geometry_.physical_width(size.x);
-  current_geometry_.physical_height(size.y);
+  current_geometry_.physical_size(size);
 }

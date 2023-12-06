@@ -43,7 +43,7 @@ class rectangle {
 
     [[nodiscard]] unsigned int rot_cw90() const { return rot_cw90_; }
 
-    [[nodiscard]] std::array<float, 16> to_matrix(float, float) const;
+    [[nodiscard]] std::array<float, 16> to_matrix(const vec2<float>&) const;
 
 
 

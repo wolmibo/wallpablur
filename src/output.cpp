@@ -33,7 +33,7 @@ output::output(std::unique_ptr<wayland::output> wl_output) :
     setup_surfaces();
   });
 
-  wl_output_->set_size_cb([this](wayland::vec2<uint32_t> size) {
+  wl_output_->set_size_cb([this](vec2<uint32_t> size) {
     if (wallpaper_surface_) {
       wallpaper_surface_->update_screen_size(size);
     }

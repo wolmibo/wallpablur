@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 
 
 
@@ -122,6 +123,12 @@ template<typename T>
 template<typename T>
 [[nodiscard]] constexpr vec2<T> div(const vec2<T>& l, const vec2<T>& r) {
   return {l.x() / r.x(), l.y() / r.y()};
+}
+
+
+template<std::floating_point T>
+[[nodiscard]] constexpr vec2<T> floor(const vec2<T>& v) {
+  return {std::floor(v.x()), std::floor(v.y())};
 }
 
 #endif // WALLPABLUR_VEC2_HPP_INCLUDED

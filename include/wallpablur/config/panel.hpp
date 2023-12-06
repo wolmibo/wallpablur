@@ -31,7 +31,7 @@ struct panel {
 
 
 
-  [[nodiscard]] rectangle to_rect(const vec2<uint32_t>&) const;
+  [[nodiscard]] rectangle to_rect(const vec2<float>&) const;
 };
 
 }

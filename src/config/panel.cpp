@@ -43,7 +43,7 @@ namespace {
 
 
 
-rectangle config::panel::to_rect(const vec2<uint32_t>& screen_size) const {
+rectangle config::panel::to_rect(const vec2<float>& screen_size) const {
   vec2 realized_size{
     extents(size.x(), anchor.left() && anchor.right(),
         margin.left + margin.right, screen_size.x()),

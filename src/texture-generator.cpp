@@ -49,10 +49,10 @@ namespace {
 
 
 
-  [[nodiscard]] std::array<float, 4> scale_matrix(float x, float y) {
+  [[nodiscard]] std::array<float, 4> scale_matrix(vec2<float> scale) {
     return {
-        x, 0.f,
-      0.f,  -y,
+      scale.x(), 0.f,
+      0.f,       -scale.y(),
     };
   }
 
@@ -79,36 +79,27 @@ namespace {
     config::scale_mode       scale_mode,
     const wayland::geometry& geometry,
 
-    float                    width,
-    float                    height
+    vec2<float>              size
   ) {
+    auto physical_size = vec_cast<float>(geometry.physical_size());
+    auto s = div(size, physical_size);
+
     switch (scale_mode) {
-      case config::scale_mode::zoom: {
-        auto scale = std::min<float>(width / geometry.physical_width(),
-            height / geometry.physical_height());
+      case config::scale_mode::zoom:
+        return scale_matrix(div(physical_size * std::min(s.x(), s.y()), size));
 
-        return scale_matrix(geometry.physical_width() * scale / width,
-            geometry.physical_height() * scale / height);
-      }
-
-      case config::scale_mode::fit: {
-        auto scale = std::max<float>(width / geometry.physical_width(),
-            height / geometry.physical_height());
-
-        return scale_matrix(geometry.physical_width() * scale / width,
-            geometry.physical_height() * scale / height);
-      }
+      case config::scale_mode::fit:
+        return scale_matrix(div(physical_size * std::max(s.x(), s.y()), size));
 
       case config::scale_mode::centered:
-        return scale_matrix(geometry.physical_width() / width,
-            geometry.physical_height() / height);
+        return scale_matrix(div(physical_size, size));
 
       case config::scale_mode::stretch:
-        return scale_matrix(1.f, 1.f);
+        return scale_matrix(vec2{1.f});
     }
 
     logcerr::warn("unsupported image scale mode");
-    return scale_matrix(1.f, 1.f);
+    return scale_matrix(vec2{1.f});
   }
 }
 
@@ -122,23 +113,25 @@ gl::texture texture_generator::create_base_texture(
 ) const {
   auto texture = load_to_gl_texture(brush.fgraph->path);
   texture.bind();
-  auto size = gl::active_texture_size();
+
+  auto s = gl::active_texture_size();
+  auto size = vec_cast<float>(vec2{s.width, s.height});
 
   logcerr::verbose("rescaling image {}x{} -> {}x{} ontop of ({:.2},{:.2},{:.2},{:.2})",
-      size.width, size.height,
-      geometry.physical_width(), geometry.physical_height(),
+      size.x(), size.y(),
+      geometry.physical_size().x(), geometry.physical_size().y(),
       brush.solid[0], brush.solid[1], brush.solid[2], brush.solid[3]);
 
   gl::texture output{
-    static_cast<GLsizei>(geometry.physical_width()),
-    static_cast<GLsizei>(geometry.physical_height()),
+    static_cast<GLsizei>(geometry.physical_size().x()),
+    static_cast<GLsizei>(geometry.physical_size().y()),
     gl::texture::format::rgba8
   };
 
   gl::framebuffer buffer{output};
   {
     auto lock = buffer.bind();
-    glViewport(0, 0, geometry.physical_width(), geometry.physical_height());
+    glViewport(0, 0, geometry.physical_size().x(), geometry.physical_size().y());
 
     glClearColor(
         brush.solid[0] * brush.solid[3],
@@ -152,8 +145,7 @@ gl::texture texture_generator::create_base_texture(
     texture.bind();
     setup_texture_parameter(brush.fgraph->distribution);
     glUniformMatrix2fv(0, 1, GL_FALSE,
-        scale_matrix(brush.fgraph->distribution.scale,
-          geometry, size.width, size.height).data());
+        scale_matrix(brush.fgraph->distribution.scale, geometry, size).data());
     quad_.draw();
   }
 
