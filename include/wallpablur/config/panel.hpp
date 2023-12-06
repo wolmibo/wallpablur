@@ -15,15 +15,8 @@
 namespace config {
 
 struct panel {
-  struct size_type {
-    uint32_t width {0};
-    uint32_t height{0};
-  };
-
-
-
   anchor_type          anchor {};
-  size_type            size   {};
+  vec2<uint32_t>       size   {0};
   margin_type          margin {};
 
   float                radius {0.f};
@@ -38,7 +31,7 @@ struct panel {
 
 
 
-  [[nodiscard]] rectangle to_rect(float, float) const;
+  [[nodiscard]] rectangle to_rect(const vec2<uint32_t>&) const;
 };
 
 }

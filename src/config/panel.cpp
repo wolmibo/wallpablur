@@ -43,17 +43,20 @@ namespace {
 
 
 
-rectangle config::panel::to_rect(float w, float h) const {
-  auto width  = extents(size.width, anchor.left() && anchor.right(),
-      margin.left + margin.right, w);
+rectangle config::panel::to_rect(const vec2<uint32_t>& screen_size) const {
+  vec2 realized_size{
+    extents(size.x(), anchor.left() && anchor.right(),
+        margin.left + margin.right, screen_size.x()),
 
-  auto height = extents(size.height, anchor.top() && anchor.bottom(),
-      margin.top + margin.bottom, h);
+    extents(size.y(), anchor.top() && anchor.bottom(),
+        margin.top + margin.bottom, screen_size.y())
+  };
 
   return {
-    {offset(margin.left, anchor.left(), margin.right,  anchor.right(),  width,  w),
-     offset(margin.top,  anchor.top(),  margin.bottom, anchor.bottom(), height, h)},
-    {width,
-     height}
+    {offset(margin.left, anchor.left(), margin.right,  anchor.right(),
+        realized_size.x(), screen_size.x()),
+     offset(margin.top,  anchor.top(),  margin.bottom, anchor.bottom(),
+        realized_size.y(), screen_size.y())},
+    realized_size
   };
 }

@@ -155,16 +155,16 @@ ICONFIGP_DEFINE_VALUE_PARSER_NAMED(margin_type, "margin",
       return std::bit_cast<margin_type>(parse_as_array<int32_t, 4>(input));
     })
 
-ICONFIGP_DEFINE_VALUE_PARSER_NAMED(panel::size_type, "size",
+ICONFIGP_DEFINE_VALUE_PARSER_NAMED(vec2<uint32_t>, "vec2<u32>",
     "<width:u32>:<height:u32>",
     [](std::string_view input) {
-      return std::bit_cast<panel::size_type>(parse_as_array<uint32_t, 2>(input));
+      return vec2(parse_as_array<uint32_t, 2>(input));
     })
 
 ICONFIGP_DEFINE_VALUE_PARSER_NAMED(vec2<float>, "vec2<f32>",
     "<x:f32>,<y:f32>",
     [](std::string_view input) {
-      return vec2<float>(parse_as_array<float, 2>(input));
+      return vec2(parse_as_array<float, 2>(input));
     })
 
 ICONFIGP_DEFINE_VALUE_PARSER_NAMED(anchor_type, "anchor",

@@ -723,7 +723,7 @@ void layout_painter::update_geometry(const wayland::geometry& geometry) {
 
   for (const auto& panel : config_.fixed_panels) {
     fixed_panels_.emplace_back(surface{
-        panel.to_rect(geometry_.logical_width(), geometry_.logical_height()),
+        panel.to_rect({geometry_.logical_width(), geometry_.logical_height()}),
         panel.app_id,
         panel.mask,
         panel.radius
