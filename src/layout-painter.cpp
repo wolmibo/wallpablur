@@ -107,7 +107,7 @@ namespace {
 
 
   rectangle center_tile(rectangle rect, const config::border_effect& effect) {
-    rect.translate(effect.offset.x, effect.offset.y);
+    rect.pos() += vec2<float>{effect.offset.x, effect.offset.y};
 
     switch (effect.position) {
       case config::border_position::inside:
@@ -128,59 +128,57 @@ namespace {
 
 
   [[nodiscard]] std::array<rectangle, 4> border_rectangles(rectangle r, float t) {
-    auto&& w = r.width();
-    auto&& h = r.height();
+    auto&& s = r.size();
 
     return {
-      rectangle{r.x(),         r.y() - t,     w, t, r.rot_cw90() + 0},
-      rectangle{r.x() + w,     r.y(),         t, h, r.rot_cw90() + 1},
-      rectangle{r.x(),         r.y() + h,     w, t, r.rot_cw90() + 2},
-      rectangle{r.x() - t,     r.y(),         t, h, r.rot_cw90() + 3},
+      rectangle{r.pos() - vec2{0.f,     t}, {s.x(), t}, r.rot_cw90() + 0},
+      rectangle{r.pos() + vec2{s.x(), 0.f}, {t, s.y()}, r.rot_cw90() + 1},
+      rectangle{r.pos() + vec2{0.f, s.y()}, {s.x(), t}, r.rot_cw90() + 2},
+      rectangle{r.pos() - vec2{t,     0.f}, {t, s.y()}, r.rot_cw90() + 3},
     };
   }
 
   [[nodiscard]] std::array<rectangle, 4> border_rectangles_in(rectangle r, float t) {
-    auto&& w = r.width();
-    auto&& h = r.height();
+    auto&& s = r.size();
 
     return {
-      rectangle{r.x(),         r.y(),         w, t, r.rot_cw90() + 2},
-      rectangle{r.x() + w - t, r.y(),         t, h, r.rot_cw90() + 3},
-      rectangle{r.x(),         r.y() + h - t, w, t, r.rot_cw90() + 0},
-      rectangle{r.x(),         r.y(),         t, h, r.rot_cw90() + 1},
+      rectangle{r.pos(),                        {s.x(), t}, r.rot_cw90() + 2},
+      rectangle{r.pos() + vec2{s.x() - t, 0.f}, {t, s.y()}, r.rot_cw90() + 3},
+      rectangle{r.pos() + vec2{0.f, s.y() - t}, {s.x(), t}, r.rot_cw90() + 0},
+      rectangle{r.pos(),                        {t, s.y()}, r.rot_cw90() + 1},
     };
   }
 
 
 
   [[nodiscard]] std::array<rectangle, 4> corner_rectangles(rectangle r, float t) {
-    auto&& w = r.width();
-    auto&& h = r.height();
+    auto&& s = r.size();
+    vec2 size{t};
 
     return {
-      rectangle{r.x() + w, r.y() - t, t, t, r.rot_cw90() + 0},
-      rectangle{r.x() + w, r.y() + h, t, t, r.rot_cw90() + 1},
-      rectangle{r.x() - t, r.y() + h, t, t, r.rot_cw90() + 2},
-      rectangle{r.x() - t, r.y() - t, t, t, r.rot_cw90() + 3}
+      rectangle{r.pos() + vec2{s.x(), -t}, size, r.rot_cw90() + 0},
+      rectangle{r.pos() + s,               size, r.rot_cw90() + 1},
+      rectangle{r.pos() + vec2{-t, s.y()}, size, r.rot_cw90() + 2},
+      rectangle{r.pos() - size,            size, r.rot_cw90() + 3},
     };
   }
 
 
 
   [[nodiscard]] std::array<rectangle, 8> corner_rectangles_alt(rectangle r, float t) {
-    auto&& w = r.width();
-    auto&& h = r.height();
+    auto&& s = r.size();
+    vec2 size{t};
 
     return {
-      rectangle{r.x() - t,     r.y(),         t, t, r.rot_cw90() + 2},
-      rectangle{r.x() + w - t, r.y() - t,     t, t, r.rot_cw90() + 3},
-      rectangle{r.x() + w,     r.y() + h - t, t, t, r.rot_cw90() + 0},
-      rectangle{r.x(),         r.y() + h,     t, t, r.rot_cw90() + 1},
+      rectangle{r.pos() + vec2{-t, 0.f},           size, r.rot_cw90() + 2},
+      rectangle{r.pos() + vec2{s.x(), 0.f} - size, size, r.rot_cw90() + 3},
+      rectangle{r.pos() + s - vec2{0.f, t},        size, r.rot_cw90() + 0},
+      rectangle{r.pos() + vec2{0.f, s.y()},        size, r.rot_cw90() + 1},
 
-      rectangle{r.x() + w,     r.y(),         t, t, r.rot_cw90() + 1},
-      rectangle{r.x() + w - t, r.y() + h,     t, t, r.rot_cw90() + 2},
-      rectangle{r.x() - t,     r.y() + h - t, t, t, r.rot_cw90() + 3},
-      rectangle{r.x(),         r.y() - t,     t, t, r.rot_cw90() + 0}
+      rectangle{r.pos() + vec2{s.x(), 0.f},        size, r.rot_cw90() + 1},
+      rectangle{r.pos() + s - vec2{t, 0.f},        size, r.rot_cw90() + 2},
+      rectangle{r.pos() + vec2{0.f, s.y()} - size, size, r.rot_cw90() + 3},
+      rectangle{r.pos() - vec2{0.f, t},            size, r.rot_cw90() + 0},
     };
   }
 
@@ -361,7 +359,7 @@ struct layout_painter::wallpaper_context {
       const gl::program&       shader,
       const gl::program&       corner_shader
   ) const {
-    radius = std::min({radius, rect.width(), rect.height()});
+    radius = std::min({radius, rect.size().x(), rect.size().y()});
 
     shader.use();
 
@@ -659,7 +657,7 @@ struct layout_painter::clipping_context {
       const rectangle&         rect,
       float                    radius
   ) const {
-    radius = std::min({radius, rect.width(), rect.height()});
+    radius = std::min({radius, rect.size().x(), rect.size().y()});
 
     if (radius < std::numeric_limits<float>::epsilon()) {
       return;

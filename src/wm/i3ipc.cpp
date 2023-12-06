@@ -85,9 +85,9 @@ void wm::i3ipc::event_loop(const std::stop_token& stoken) {
 
 
 namespace {
-  void translate_surfaces(std::span<surface> surf, int dx, int dy) {
+  void translate_surfaces(std::span<surface> surf, vec2<float> delta) {
     for (auto& r: surf) {
-      r.rect().translate(dx, dy);
+      r.rect().pos() += delta;
     }
   }
 
@@ -95,10 +95,10 @@ namespace {
 
   [[nodiscard]] rectangle rectangle_from_json(const rapidjson::Value& value) {
     return {
-      static_cast<float>(json::member_to_int (value, "x"     ).value_or(0)),
-      static_cast<float>(json::member_to_int (value, "y"     ).value_or(0)),
-      static_cast<float>(json::member_to_uint(value, "width" ).value_or(0)),
-      static_cast<float>(json::member_to_uint(value, "height").value_or(0))
+      {static_cast<float>(json::member_to_int (value, "x"     ).value_or(0)),
+       static_cast<float>(json::member_to_int (value, "y"     ).value_or(0))},
+      {static_cast<float>(json::member_to_uint(value, "width" ).value_or(0)),
+       static_cast<float>(json::member_to_uint(value, "height").value_or(0))}
     };
   }
 
@@ -177,9 +177,9 @@ namespace {
     }
 
     if (test_surface_flag(flags, surface_flag::floating)) {
-      deco_rect.translate(parent_rect.x(), parent_rect.y());
+      deco_rect.pos() += parent_rect.pos();
     } else {
-      deco_rect.translate(base_rect.x(), base_rect.y() - deco_rect.height());
+      deco_rect.pos() += base_rect.pos() + vec2{0.f, - deco_rect.size().y()};
     }
 
     set_surface_flag(flags, surface_flag::decoration);
@@ -257,10 +257,10 @@ namespace {
       parse_node_children(ws, node);
 
       if (auto offset = json::find_member(value, "rect")) {
-        translate_surfaces(ws.surfaces(),
+        translate_surfaces(ws.surfaces(), vec2<float>{
           -json::member_to_int(*offset, "x").value_or(0),
           -json::member_to_int(*offset, "y").value_or(0)
-        );
+        });
       }
 
       return ws;

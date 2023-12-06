@@ -51,9 +51,9 @@ rectangle config::panel::to_rect(float w, float h) const {
       margin.top + margin.bottom, h);
 
   return {
-    offset(margin.left, anchor.left(), margin.right,  anchor.right(),  width,  w),
-    offset(margin.top,  anchor.top(),  margin.bottom, anchor.bottom(), height, h),
-    width,
-    height
+    {offset(margin.left, anchor.left(), margin.right,  anchor.right(),  width,  w),
+     offset(margin.top,  anchor.top(),  margin.bottom, anchor.bottom(), height, h)},
+    {width,
+     height}
   };
 }

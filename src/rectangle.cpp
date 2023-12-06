@@ -3,47 +3,41 @@
 
 
 std::array<float, 16> rectangle::to_matrix(float width, float height) const {
-  auto sx = width_  / width;
-  auto sy = height_ / height;
+  vec2 size{width, height};
 
-  auto dx = width  - width_;
-  auto dy = height - height_;
+  auto scale = div(size_, size);
 
-  auto x = 2.f * x_ - dx;
-  auto y = dy - 2.f * y_;
+  auto pos = div(mul((2.f * pos_ - (size - size_)), vec2{1.f, -1.f}), size);
 
-  auto e = x / width;
-  auto f = y / height;
-
-  auto a = sx;  auto b = 0.f;
-  auto c = 0.f; auto d = sy;
+  auto a = scale.x();  auto b = 0.f;
+  auto c = 0.f;        auto d = scale.y();
 
   switch (rot_cw90_ % 4) {
     case 0:
     default:
       break;
     case 2:
-      a = -sx;
-      d = -sy;
+      a = -scale.x();
+      d = -scale.y();
       break;
     case 1:
       a = 0.f;
-      b = -sy;
-      c = sx;
+      b = -scale.y();
+      c = scale.x();
       d = 0.f;
       break;
     case 3:
       a = 0.f;
-      b = sy;
-      c = -sx;
+      b = scale.y();
+      c = -scale.x();
       d = 0.f;
       break;
   }
 
   return {
-      a,   b, 0.f, 0.f,
-      c,   d, 0.f, 0.f,
-    0.f, 0.f, 1.f, 0.f,
-      e,   f, 0.f, 1.f,
+          a,       b, 0.f, 0.f,
+          c,       d, 0.f, 0.f,
+        0.f,     0.f, 1.f, 0.f,
+    pos.x(), pos.y(), 0.f, 1.f,
   };
 }
