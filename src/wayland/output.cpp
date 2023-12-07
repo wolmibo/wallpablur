@@ -54,9 +54,7 @@ void wayland::output::output_mode_(
 
 void wayland::output::output_done_(void* data, wl_output* /*output*/) {
   auto* self = static_cast<output*>(data);
-  logcerr::debug("{}: output done {}x{}", self->name(),
-      self->current_size_.x(),
-      self->current_size_.y());
+  logcerr::debug("{}: output done {:#}", self->name(), self->current_size_);
 
   if (self->done_cb_) {
     self->done_cb_();

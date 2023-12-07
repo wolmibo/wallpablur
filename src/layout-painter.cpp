@@ -710,10 +710,8 @@ void layout_painter::update_geometry(const wayland::geometry& geometry) {
 
   geometry_ = geometry;
 
-  logcerr::verbose("{}: update geometry to logical = {}x{}@{}, pixel = {}x{}",
-      config_.name,
-      geometry_.logical_size().x(), geometry_.logical_size().y(), geometry_.scale(),
-      geometry_.physical_size().x(), geometry_.physical_size().y());
+  logcerr::verbose("{}: update geometry to logical = {:#}@{}, pixel = {:#}", config_.name,
+      geometry_.logical_size(), geometry_.scale(), geometry_.physical_size());
 
 
 
@@ -837,8 +835,8 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
 
 
 void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id) const {
-  logcerr::debug("{}: rendering wallpaper {}x{}, alpha = {}", config_.name,
-      geometry_.physical_size().x(), geometry_.physical_size().y(), a);
+  logcerr::debug("{}: rendering wallpaper {:#}, alpha = {}", config_.name,
+      geometry_.physical_size(), a);
 
   if (!wallpaper_context_) {
     logcerr::warn("{}: trying to render wallpaper without context", config_.name);
@@ -876,8 +874,8 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
 
 
 void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) const {
-  logcerr::debug("{}: rendering clipping {}x{}, alpha = {}", config_.name,
-      geometry_.physical_size().x(), geometry_.physical_size().y(), a);
+  logcerr::debug("{}: rendering clipping {:#}, alpha = {}", config_.name,
+      geometry_.physical_size(), a);
 
   if (!clipping_context_) {
     logcerr::warn("{}: trying to render clipping without context", config_.name);

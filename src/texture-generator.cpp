@@ -117,9 +117,8 @@ gl::texture texture_generator::create_base_texture(
   auto s = gl::active_texture_size();
   auto size = vec_cast<float>(vec2{s.width, s.height});
 
-  logcerr::verbose("rescaling image {}x{} -> {}x{} ontop of ({:.2},{:.2},{:.2},{:.2})",
-      size.x(), size.y(),
-      geometry.physical_size().x(), geometry.physical_size().y(),
+  logcerr::verbose("rescaling image {:#} -> {:#} ontop of ({:.2},{:.2},{:.2},{:.2})",
+      size, geometry.physical_size(),
       brush.solid[0], brush.solid[1], brush.solid[2], brush.solid[3]);
 
   gl::texture output{

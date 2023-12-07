@@ -225,7 +225,7 @@ void wayland::surface::layer_surface_configure_(
 ) {
   auto* self = static_cast<surface*>(data);
 
-  logcerr::debug("{}: configuring layer surface {}x{}", self->name_, width, height);
+  logcerr::debug("{}: configuring layer surface {:#}", self->name_, vec2{width, height});
 
   self->current_geometry_.scale(
       static_cast<float>(self->current_geometry_.physical_size().x())
@@ -252,9 +252,8 @@ void wayland::surface::layer_surface_configure_(
 
 
 void wayland::surface::update_viewport() const {
-  logcerr::debug("{}: viewport transform {}x{}->{}x{}", name_,
-      current_geometry_.physical_size().x(), current_geometry_.physical_size().y(),
-      current_geometry_.logical_size().x(),  current_geometry_.logical_size().y());
+  logcerr::debug("{}: viewport transform {:#}->{:#}", name_,
+      current_geometry_.physical_size(), current_geometry_.logical_size());
 
   if (!visible()) {
     wp_viewport_set_destination(viewport_.get(), 1, 1);
