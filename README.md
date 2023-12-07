@@ -59,22 +59,21 @@ in combination with upstream Sway.
 ## Dependencies
 
 To build WallpaBlur you will need:
-* GCC C++ 12 or newer
+* GCC C++ 13 or newer
 * meson
 * wayland development libraries
 * libepoxy
 * rapidjson
 * gdk-pixbuf or as fallback libpng
-* fmt (if compiler does not provide `std::format`)
 
 As well as the following libraries which will be pulled as meson subprojects and compiled
 if they are not available:
 * [logcerr](https://github.com/wolmibo/logcerr)
 * [iconfigp](https://github.com/wolmibo/iconfigp)
 
-To install all dependencies on Fedora 37 run:
+To install all dependencies on Fedora 39 run:
 ```sh
-sudo dnf install gcc-g++ meson libepoxy-devel rapidjson-devel fmt-devel \
+sudo dnf install gcc-g++ meson libepoxy-devel rapidjson-devel \
 wayland-devel wayland-protocols-devel gdk-pixbuf2-devel
 ```
 
