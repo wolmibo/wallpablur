@@ -41,7 +41,7 @@ void wayland::output::output_mode_(
 ) {
   auto* self = static_cast<output*>(data);
 
-  self->current_size_ = {width, height};
+  self->current_size_ = vec_cast<uint32_t>(max(vec2{width, height}, vec2{0}));
 
   if (self->size_cb_) {
     self->size_cb_(self->current_size_);
