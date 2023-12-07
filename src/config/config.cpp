@@ -346,8 +346,8 @@ namespace {
         if (type == filter_type::blur) {
           output.iterations = 2;
         }
-        update(filter, output.width,      "width",  "radius"sv);
-        update(filter, output.height,     "height", "radius"sv);
+        update(filter, output.size.x(),   "width",  "radius"sv);
+        update(filter, output.size.y(),   "height", "radius"sv);
         update(filter, output.iterations, "iterations");
         update(filter, output.dithering,  "dithering");
 

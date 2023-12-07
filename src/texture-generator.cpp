@@ -266,17 +266,17 @@ namespace {
       throw std::runtime_error{"unable to apply box blur filter with 0 iterations"};
     }
 
-    logcerr::verbose("applying box blur filter with scale {}x{} and {} iterations",
-        filter.width * 2 + 1, filter.height * 2 + 1, filter.iterations);
+    logcerr::verbose("applying box blur filter with scale {:#} and {} iterations",
+        filter.size * 2 + vec2{1u}, filter.iterations);
 
-    auto output = line_blur(line_blur(texture, filter.width, 1.f, 0.f,
+    auto output = line_blur(line_blur(texture, filter.size.x(), 1.f, 0.f,
                                       filter.dithering, shader, quad),
-                    filter.height, 0.f, 1.f, filter.dithering, shader, quad);
+                    filter.size.y(), 0.f, 1.f, filter.dithering, shader, quad);
 
     for (unsigned int i = 1; i < filter.iterations; ++i) {
-      output = line_blur(line_blur(output, filter.width, 1.f, 0.f,
+      output = line_blur(line_blur(output, filter.size.x(), 1.f, 0.f,
                                    filter.dithering, shader, quad),
-                    filter.height, 0.f, 1.f, filter.dithering, shader, quad);
+                    filter.size.y(), 0.f, 1.f, filter.dithering, shader, quad);
     }
     return output;
   }

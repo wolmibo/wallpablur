@@ -1,6 +1,8 @@
 #ifndef WALLPABLUR_CONFIG_FILTER_HPP_INCLUDED
 #define WALLPABLUR_CONFIG_FILTER_HPP_INCLUDED
 
+#include "wallpablur/vec2.hpp"
+
 #include <filesystem>
 #include <variant>
 #include <vector>
@@ -18,10 +20,9 @@ struct invert_filter {
 
 
 struct box_blur_filter {
-  unsigned int width     {96};
-  unsigned int height    {96};
-  unsigned int iterations{1};
-  float        dithering {1.f};
+  vec2<uint32_t> size{96};
+  unsigned int   iterations{1};
+  float          dithering {1.f};
 
   bool operator==(const box_blur_filter&) const = default;
 };
