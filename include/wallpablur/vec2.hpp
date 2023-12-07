@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <format>
 
 
 
@@ -130,5 +131,40 @@ template<std::floating_point T>
 [[nodiscard]] constexpr vec2<T> floor(const vec2<T>& v) {
   return {std::floor(v.x()), std::floor(v.y())};
 }
+
+
+
+template<std::formattable<char> T>
+struct std::formatter<vec2<T>, char> {
+  bool as_size = false;
+
+  template<class ParseContext>
+  constexpr ParseContext::iterator parse(ParseContext& ctx) {
+    auto it = ctx.begin();
+
+    if (it == ctx.end()) {
+      return it;
+    }
+
+    if (*it == '#') {
+      as_size = true;
+      ++it;
+    }
+
+    if (*it != '}') {
+      throw std::format_error{"Invalid format args for vec2<T>."};
+    }
+
+    return it;
+  }
+
+  template<class FmtContext>
+  FmtContext::iterator format(const vec2<T>& vec, FmtContext& ctx) const {
+    if (as_size) {
+      return std::ranges::copy(std::format("{}×{}", vec.x(), vec.y()), ctx.out()).out;
+    }
+    return std::ranges::copy(std::format("({}, {})", vec.x(), vec.y()), ctx.out()).out;
+  }
+};
 
 #endif // WALLPABLUR_VEC2_HPP_INCLUDED
