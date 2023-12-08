@@ -17,10 +17,12 @@ class workspace {
     workspace(
         std::string&&          name,
         std::string&&          output,
+        vec2<float>            size,
         std::vector<surface>&& surfaces
     ) :
       name_    {std::move(name)},
       output_  {std::move(output)},
+      size_    {size},
       surfaces_{std::move(surfaces)}
     {}
 
@@ -47,6 +49,7 @@ class workspace {
   private:
     std::string name_;
     std::string output_;
+    vec2<float> size_{0.f};
 
     std::vector<surface> surfaces_;
 };

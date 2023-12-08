@@ -40,6 +40,10 @@ class vec2 {
     [[nodiscard]] const T& y() const { return y_; }
 
 
+    [[nodiscard]] vec2<T> operator-() const {
+      return {-x_, -y_};
+    }
+
 
     [[nodiscard]] vec2<T> operator+(const vec2<T>& rhs) const {
       return {x_ + rhs.x_, y_ + rhs.y_ };
