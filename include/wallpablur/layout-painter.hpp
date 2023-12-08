@@ -54,8 +54,6 @@ class layout_painter {
     std::unique_ptr<radius_cache>         radius_cache_;
 
     wayland::geometry                     geometry_;
-    std::vector<std::pair<surface, workspace_expression>>
-                                          fixed_panels_;
 
 
     void draw_wallpaper(const workspace&, uint64_t) const;

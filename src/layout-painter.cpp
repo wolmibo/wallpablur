@@ -225,11 +225,7 @@ class layout_painter::radius_cache {
 
 
 
-    void update(
-        const workspace&                                          ws,
-        std::span<const std::pair<surface, workspace_expression>> fixed,
-        uint64_t                                                  id
-    ) {
+    void update(const workspace& ws, uint64_t id) {
       if (id == id_) {
         return;
       }
@@ -238,16 +234,6 @@ class layout_painter::radius_cache {
       cache_.clear();
 
       for (const auto& surf: ws.surfaces()) {
-        if (auto r = radius(surf, ws); r > std::numeric_limits<float>::epsilon()) {
-          cache_.emplace_back(&surf, radius(surf, ws));
-        }
-      }
-
-      for (const auto& [surf, condition]: fixed) {
-        if (!condition.evaluate(ws)) {
-          continue;
-        }
-
         if (auto r = radius(surf, ws); r > std::numeric_limits<float>::epsilon()) {
           cache_.emplace_back(&surf, radius(surf, ws));
         }
@@ -519,20 +505,14 @@ struct layout_painter::wallpaper_context {
 
 
   void draw_surface_effects(
-      const wayland::geometry&                                  geo,
-      std::span<const config::border_effect>                    border_effects,
-      const workspace&                                          ws,
-      std::span<const std::pair<surface, workspace_expression>> fixed,
-      const radius_cache&                                       radii
+      const wayland::geometry&               geo,
+      std::span<const config::border_effect> border_effects,
+      const workspace&                       ws,
+      const radius_cache&                    radii
   ) const {
     for (const auto& be: border_effects) {
       for (const auto& surface: ws.surfaces()) {
         if (be.condition.evaluate(surface, ws)) {
-          draw_border_effect(geo, be, surface, radii.radius(surface));
-        }
-      }
-      for (const auto& [surface, condition]: fixed) {
-        if (condition.evaluate(ws) && be.condition.evaluate(surface, ws)) {
           draw_border_effect(geo, be, surface, radii.radius(surface));
         }
       }
@@ -571,23 +551,15 @@ struct layout_painter::wallpaper_context {
 
 
   void draw_background(
-      const wayland::geometry&                                  geo,
-      const config::background&                                 bg,
-      const workspace&                                          ws,
-      std::span<const std::pair<surface, workspace_expression>> fixed,
-      const radius_cache&                                       radii
+      const wayland::geometry&  geo,
+      const config::background& bg,
+      const workspace&          ws,
+      const radius_cache&       radii
   ) const {
     auto [shader, corner_shader] = setup_aa_shader(bg);
 
     for (const auto& surface: ws.surfaces()) {
       if (bg.condition.evaluate(surface, ws)) {
-        draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface),
-            *shader, *corner_shader);
-      }
-    }
-
-    for (const auto& [surface, condition]: fixed) {
-      if (condition.evaluate(ws) && bg.condition.evaluate(surface, ws)) {
         draw_rounded_rectangle(geo, surface.rect(), radii.radius(surface),
             *shader, *corner_shader);
       }
@@ -715,22 +687,6 @@ void layout_painter::update_geometry(const wayland::geometry& geometry) {
 
 
 
-  fixed_panels_.clear();
-  fixed_panels_.reserve(config_.fixed_panels.size());
-
-  for (const auto& panel : config_.fixed_panels) {
-    fixed_panels_.emplace_back(surface{
-        panel.to_rect(geometry_.logical_size()),
-        panel.app_id,
-        panel.mask,
-        panel.radius
-      },
-      panel.condition
-    );
-  }
-
-
-
   for (auto& wp: config_.wallpapers) {
     if (wp.description.fgraph) {
       wp.description.realization = texture_provider_->get(geometry, wp.description);
@@ -772,14 +728,14 @@ void layout_painter::draw_wallpaper(const workspace& ws, uint64_t id) const {
     wallpaper_context_->draw_wallpaper(*active);
   }
 
-  radius_cache_->update(ws, fixed_panels_, id);
+  radius_cache_->update(ws, id);
 
   wallpaper_context_->draw_surface_effects(geometry_, config_.border_effects, ws,
-      fixed_panels_, *radius_cache_);
+      *radius_cache_);
 
   if (active != nullptr) {
     wallpaper_context_->draw_background(geometry_, active->background, ws,
-        fixed_panels_, *radius_cache_);
+        *radius_cache_);
   }
 }
 
@@ -896,18 +852,9 @@ void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) 
 
   clipping_context_->cached.bind();
 
-
-
   for (const auto& surface: ws.surfaces()) {
     clipping_context_->draw_corner_clipping(geometry_, surface.rect(),
         radius_cache_->radius(surface));
-  }
-
-  for (const auto& [surface, condition]: fixed_panels_) {
-    if (condition.evaluate(ws)) {
-      clipping_context_->draw_corner_clipping(geometry_, surface.rect(),
-          radius_cache_->radius(surface));
-    }
   }
 }
 
@@ -916,6 +863,6 @@ void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) 
 
 
 bool layout_painter::update_rounded_corners(const workspace& ws, uint64_t id) {
-  radius_cache_->update(ws, fixed_panels_, id);
+  radius_cache_->update(ws, id);
   return !radius_cache_->empty();
 }

@@ -30,6 +30,7 @@ class output {
 
   private:
     std::unique_ptr<wayland::output>  wl_output_;
+    std::optional<config::output>     config_;
 
     std::unique_ptr<wayland::surface> wallpaper_surface_;
     std::unique_ptr<wayland::surface> clipping_surface_;
@@ -46,12 +47,17 @@ class output {
     uint64_t                          last_layout_id_ {0};
     workspace                         last_layout_;
 
+    std::vector<std::pair<surface, workspace_expression>>
+                                      fixed_panels_;
+    wayland::geometry                 geometry_;
 
 
     void create_surfaces(bool);
     void setup_surfaces();
 
-    void update();
+    void update(bool);
+
+    void update_geometry(const wayland::geometry&);
 };
 
 #endif // WALLPABLUR_OUTPUT_HPP_INCLUDED
