@@ -18,8 +18,8 @@ using flag_mask = std::bitset<std::to_underlying(Enum::eoec_marker) - 1>;
 
 
 template<typename Enum>
-constexpr void set_flag(flag_mask<Enum>& mask, Enum flag) {
-  mask[std::to_underlying(flag)] = true;
+constexpr void set_flag(flag_mask<Enum>& mask, Enum flag, bool value = true) {
+  mask[std::to_underlying(flag)] = value;
 }
 
 

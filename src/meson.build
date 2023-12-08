@@ -79,6 +79,7 @@ sources = [
   'layout-painter.cpp',
 
   'output.cpp',
+  'workspace.cpp',
 
   'application.cpp',
   'application-args.cpp',
