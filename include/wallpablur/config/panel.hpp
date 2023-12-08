@@ -22,9 +22,8 @@ struct panel {
   float                radius {0.f};
 
 
-  std::string          app_id {};
-
-  surface_flag_mask    mask   {};
+  std::string             app_id {};
+  flag_mask<surface_flag> mask   {};
 
 
   workspace_expression condition{true};

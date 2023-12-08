@@ -297,13 +297,13 @@ namespace {
   [[nodiscard]] panel parse_panel(const group& grp) {
     panel output;
 
-    set_surface_flag(output.mask, surface_flag::panel);
+    set_flag(output.mask, surface_flag::panel);
 
     if (auto key = grp.unique_key("focused"); key && parse<bool>(*key)) {
-      set_surface_flag(output.mask, surface_flag::focused);
+      set_flag(output.mask, surface_flag::focused);
     }
     if (auto key = grp.unique_key("urgent"); key && parse<bool>(*key)) {
-      set_surface_flag(output.mask, surface_flag::urgent);
+      set_flag(output.mask, surface_flag::urgent);
     }
 
     update(grp, output.anchor,    "anchor");

@@ -6,7 +6,7 @@
 bool surface_expression_condition::evaluate(const surface& surf) const {
   switch (cond_.index()) {
     case 0:
-      return surf.has_flag(std::get<0>(cond_));
+      return test_flag(surf.flags(), std::get<0>(cond_));
 
     case 1: {
       const auto& [expr, var] = std::get<1>(cond_);

@@ -55,7 +55,7 @@ namespace {
 
   [[nodiscard]] std::bitset<4> realize_sides(
       const config::sides_type& sides,
-      surface_flag_mask         flags
+      flag_mask<surface_flag>   flags
   ) {
     auto output = sides.absolute.value();
     auto rel    = sides.relative.value();
@@ -64,11 +64,11 @@ namespace {
       return output;
     }
 
-    if (test_surface_flag(flags, surface_flag::splith)) {
+    if (test_flag(flags, surface_flag::splith)) {
         return output | (rel >> 1) | std::bitset<4>(rel[0] ? 0x8 : 0);
     }
 
-    if (test_surface_flag(flags, surface_flag::splitv)) {
+    if (test_flag(flags, surface_flag::splitv)) {
         return output | rel;
     }
 
