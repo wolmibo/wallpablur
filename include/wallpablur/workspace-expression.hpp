@@ -50,7 +50,8 @@ class workspace_expression_condition {
   private:
     std::variant<
       string_expr,
-      surface_expr
+      surface_expr,
+      workspace_flag
     > cond_;
 
 

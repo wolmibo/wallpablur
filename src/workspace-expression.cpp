@@ -1,6 +1,7 @@
 #include "wallpablur/expression/parser.hpp"
 #include "wallpablur/expression/string-compare.hpp"
 #include "wallpablur/surface-expression.hpp"
+#include "wallpablur/workspace.hpp"
 #include "wallpablur/workspace-expression.hpp"
 
 #include <utility>
@@ -46,8 +47,11 @@ bool workspace_expression_condition::evaluate(const workspace& ws) const {
       return false;
     }
 
+    case 2:
+      return ws.test_flag(std::get<2>(cond_));
+
     default:
-      static_assert(std::variant_size_v<decltype(cond_)> == 2);
+      static_assert(std::variant_size_v<decltype(cond_)> == 3);
       std::unreachable();
   }
 }
@@ -59,6 +63,7 @@ bool workspace_expression_condition::evaluate(const workspace& ws) const {
 std::string_view iconfigp::value_parser<workspace_expression>::format() {
   return
     "Boolean expression formed from the terms:\n"
+    "  <boolean>, <workspace_flag>\n"
     "  (ws_name|output) == [*]<string>[*]\n"
     "  all(<se>), any(<se>), none(<se>), unique(<se>) where <se> is a surface expression\n"
     "which can be combined (in descending precendence) using:\n"
@@ -68,10 +73,17 @@ std::string_view iconfigp::value_parser<workspace_expression>::format() {
 
 
 
+
+ICONFIGP_DEFINE_ENUM_LUT(workspace_flag,
+    "covered", covered
+);
+
 ICONFIGP_DEFINE_ENUM_LUT_NAMED(workspace_expression_condition::string_var,
     "workspace-variable",
     "ws_name", ws_name, "ws-name", ws_name,
     "output",  output);
+
+
 
 
 
@@ -131,9 +143,9 @@ namespace {
     }
 
     try {
-    if (auto surf_expr = iconfigp::value_parser<surface_expression>::parse(value)) {
-      return workspace_expression_condition::surface_expr{std::move(*surf_expr), *agg};
-    }
+      if (auto surf_expr = iconfigp::value_parser<surface_expression>::parse(value)) {
+        return workspace_expression_condition::surface_expr{std::move(*surf_expr), *agg};
+      }
     } catch (const iconfigp::value_parse_exception::range_exception& rex) {
       throw iconfigp::value_parse_exception::range_exception{
         std::string{rex.message()},
@@ -151,6 +163,10 @@ namespace {
 std::optional<workspace_expression_condition> workspace_expression_condition::from_token(
     expression::token in
 ) {
+  if (auto flag = iconfigp::value_parser<workspace_flag>::parse(in.content())) {
+    return workspace_expression_condition{*flag};
+  }
+
   if (auto surf = parse_surface_expression(in)) {
     return workspace_expression_condition{std::move(*surf)};
   }
