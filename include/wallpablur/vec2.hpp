@@ -14,82 +14,82 @@
 template<typename T>
 class vec2 {
   public:
-    vec2() = default;
+    constexpr vec2() = default;
 
-    explicit vec2(const T& value) :
+    constexpr explicit vec2(const T& value) :
       x_{value},
       y_{value}
     {}
 
-    explicit vec2(const std::array<T, 2>& values) :
+    constexpr explicit vec2(const std::array<T, 2>& values) :
       x_{values[0]},
       y_{values[1]}
     {}
 
-    vec2(const T& x, const T& y) :
+    constexpr vec2(const T& x, const T& y) :
       x_{x},
       y_{y}
     {}
 
-    bool operator==(const vec2<T>&) const = default;
+    constexpr bool operator==(const vec2<T>&) const = default;
 
-    [[nodiscard]] T& x() { return x_; }
-    [[nodiscard]] T& y() { return y_; }
+    [[nodiscard]] constexpr T& x() { return x_; }
+    [[nodiscard]] constexpr T& y() { return y_; }
 
-    [[nodiscard]] const T& x() const { return x_; }
-    [[nodiscard]] const T& y() const { return y_; }
+    [[nodiscard]] constexpr const T& x() const { return x_; }
+    [[nodiscard]] constexpr const T& y() const { return y_; }
 
 
-    [[nodiscard]] vec2<T> operator-() const {
+    [[nodiscard]] constexpr vec2<T> operator-() const {
       return {-x_, -y_};
     }
 
 
-    [[nodiscard]] vec2<T> operator+(const vec2<T>& rhs) const {
+    [[nodiscard]] constexpr vec2<T> operator+(const vec2<T>& rhs) const {
       return {x_ + rhs.x_, y_ + rhs.y_ };
     }
 
-    [[nodiscard]] vec2<T> operator-(const vec2<T>& rhs) const {
+    [[nodiscard]] constexpr vec2<T> operator-(const vec2<T>& rhs) const {
       return {x_ - rhs.x_, y_ - rhs.y_ };
     }
 
-    vec2<T>& operator+=(const vec2<T>& rhs) {
+    constexpr vec2<T>& operator+=(const vec2<T>& rhs) {
       x_ += rhs.x_; y_ += rhs.y_;
       return *this;
     }
 
-    vec2<T>& operator-=(const vec2<T>& rhs) {
+    constexpr vec2<T>& operator-=(const vec2<T>& rhs) {
       x_ -= rhs.x_; y_ -= rhs.y_;
       return *this;
     }
 
 
 
-    [[nodiscard]] vec2<T> operator*(const T& a) const {
+    [[nodiscard]] constexpr vec2<T> operator*(const T& a) const {
       return {x_ * a, y_ * a};
     }
 
-    [[nodiscard]] vec2<T> operator/(const T& a) const {
+    [[nodiscard]] constexpr vec2<T> operator/(const T& a) const {
       return {x_ / a, y_ / a};
     }
 
-    vec2<T>& operator*=(const T& a) {
+    constexpr vec2<T>& operator*=(const T& a) {
       x_ *= a; y_ *= a;
       return *this;
     }
 
-    vec2<T>& operator/=(const T& a) {
+    constexpr vec2<T>& operator/=(const T& a) {
       x_ /= a; y_ /= a;
       return *this;
     }
 
 
 
-    [[nodiscard]] friend vec2<T> operator*(const T& a, const vec2<T>& r) {
+    [[nodiscard]] constexpr friend vec2<T> operator*(const T& a, const vec2<T>& r) {
       return {a * r.x_, a * r.y_};
     }
 
-    [[nodiscard]] friend vec2<T> operator/(const T& a, const vec2<T>& r) {
+    [[nodiscard]] constexpr friend vec2<T> operator/(const T& a, const vec2<T>& r) {
       return {a / r.x_, a / r.y_};
     }
 
