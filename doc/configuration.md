@@ -419,6 +419,7 @@ And string variables:
 ### Workspace Conditions
 A workspace condition is checked for the current workspace and all its contained surfaces,
 with the following terms:
+* `covered`: whether the entire workspace is covered with panels / surfaces
 * `any(S)`, `all(S)`, `none(S)`, `unique(S)`: whether any / all / none / a unique
   surface(s) on the current workspace satisfy the surface condition `S`
 
