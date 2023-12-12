@@ -135,7 +135,9 @@ void output::setup_surfaces() {
 
   if (clipping_surface_) {
     clipping_surface_->set_geometry_cb([this](const wayland::geometry& geo) {
-        update_geometry(geo);
+        if (clipping_surface_->visible()) {
+          update_geometry(geo);
+        }
     });
 
 
