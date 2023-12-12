@@ -154,12 +154,12 @@ void output::setup_surfaces() {
 
     clipping_surface_->set_render_cb([this]() {
       surface_updated_[1] = true;
+      last_clipping_alpha_ = app().alpha();
 
       if (!clipping_surface_->visible()) {
         return;
       }
 
-      last_clipping_alpha_ = app().alpha();
       painter_.value().render_clipping(last_layout_, last_clipping_alpha_,
           last_layout_id_);
     });
