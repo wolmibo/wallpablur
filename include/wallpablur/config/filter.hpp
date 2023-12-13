@@ -1,13 +1,13 @@
 #ifndef WALLPABLUR_CONFIG_FILTER_HPP_INCLUDED
 #define WALLPABLUR_CONFIG_FILTER_HPP_INCLUDED
 
-#include "wallpablur/vec2.hpp"
-
 #include <filesystem>
 #include <variant>
 #include <vector>
 
 #include <epoxy/gl.h>
+
+#include <vec2.hpp>
 
 
 

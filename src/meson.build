@@ -35,6 +35,7 @@ subdir('shader')
 dependencies = [
   logcerr_dep,
   iconfigp_dep,
+  utils_dep,
 
   gl_lib_dep,
   dependency('wayland-client'),

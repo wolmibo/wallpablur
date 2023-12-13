@@ -1,10 +1,10 @@
 #ifndef WALLPABLUR_WAYLAND_GEOMETRY_HPP_INCLUDED
 #define WALLPABLUR_WAYLAND_GEOMETRY_HPP_INCLUDED
 
-#include "wallpablur/vec2.hpp"
-
 #include <cmath>
 #include <cstdint>
+
+#include <vec2.hpp>
 
 namespace wayland {
 

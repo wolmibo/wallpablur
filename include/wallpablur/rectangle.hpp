@@ -1,10 +1,10 @@
 #ifndef WALLPABLUR_RECTANGLE_HPP_INCLUDED
 #define WALLPABLUR_RECTANGLE_HPP_INCLUDED
 
-#include "wallpablur/vec2.hpp"
-
 #include <array>
 #include <limits>
+
+#include <vec2.hpp>
 
 
 

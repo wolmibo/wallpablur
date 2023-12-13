@@ -1,8 +1,8 @@
 // Copyright (c) 2023 wolmibo
 // SPDX-License-Identifier: MIT
 
-#ifndef WALLPABLUR_VEC2_HPP_INCLUDED
-#define WALLPABLUR_VEC2_HPP_INCLUDED
+#ifndef VEC2_HPP_INCLUDED
+#define VEC2_HPP_INCLUDED
 
 #include <algorithm>
 #include <array>
@@ -171,4 +171,4 @@ struct std::formatter<vec2<T>, char> {
   }
 };
 
-#endif // WALLPABLUR_VEC2_HPP_INCLUDED
+#endif // VEC2_HPP_INCLUDED
