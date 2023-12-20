@@ -31,4 +31,14 @@ template<typename Enum>
 
 
 
+template<typename Enum, typename... Args>
+[[nodiscard]] constexpr flag_mask<Enum> make_mask(Args&&... flags) {
+  std::array<Enum, sizeof...(Args)> flag_array = { std::forward<Args>(flags)... };
+  flag_mask<Enum> mask;
+  for (auto flag: flag_array) { set_flag(mask, flag); }
+  return mask;
+}
+
+
+
 #endif // WALLPABLUR_FLAGS_HPP_INCLUDED
