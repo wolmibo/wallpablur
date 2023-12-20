@@ -105,9 +105,13 @@ namespace {
 
 
   [[nodiscard]] flag_mask<surface_flag> init_surface_flag_mask(
-      const rapidjson::Value& parent
+      const rapidjson::Value& parent,
+      flag_mask<surface_flag> parent_flags
   ) {
-    flag_mask<surface_flag> flags;
+    static constexpr auto conttype_mask =
+      make_mask<surface_flag>(surface_flag::tiled, surface_flag::floating);
+
+    auto flags = parent_flags & conttype_mask;
 
     if (auto value = json::member_to_str(parent, "layout")) {
       if (*value == "splitv") {
@@ -133,7 +137,8 @@ namespace {
       workspace&              ws,
       const rapidjson::Value& value,
       flag_mask<surface_flag> flags,
-      rectangle               parent_rect
+      rectangle               parent_rect,
+      bool                    floating
   ) {
     auto json_rect = json::find_member(value, "rect");
     if (!json_rect) {
@@ -152,10 +157,6 @@ namespace {
 
     if (json::member_to_int(value, "fullscreen_mode").value_or(0) > 0) {
       set_flag(flags, surface_flag::fullscreen);
-    }
-
-    if (!test_flag(flags, surface_flag::floating)) {
-      set_flag(flags, surface_flag::tiled);
     }
 
     auto base_rect{rectangle_from_json(*json_rect)};
@@ -178,7 +179,7 @@ namespace {
       return;
     }
 
-    if (test_flag(flags, surface_flag::floating)) {
+    if (floating) {
       deco_rect.pos() += parent_rect.pos();
     } else {
       deco_rect.pos() += base_rect.pos() + vec2{0.f, - deco_rect.size().y()};
@@ -191,8 +192,12 @@ namespace {
 
 
 
-  bool parse_node_children(workspace& ws, const rapidjson::Value& value) {
-    auto flags = init_surface_flag_mask(value);
+  bool parse_node_children(
+      workspace&              ws,
+      const rapidjson::Value& value,
+      flag_mask<surface_flag> parent_flags
+  ) {
+    auto con_flags = init_surface_flag_mask(value, parent_flags);
 
     rectangle parent_rect{};
     if (auto rect = json::find_member(value, "rect")) {
@@ -206,20 +211,21 @@ namespace {
       return false;
     }
 
-    auto handle_children = [&](const auto& nodes) {
+    auto handle_children = [&](const auto& nodes, surface_flag type) {
+      auto flags = con_flags | make_mask<surface_flag>(type);
+      bool floating = (type == surface_flag::floating);
+
       if (nodes) {
         for (const auto& node: *nodes) {
-          if (!parse_node_children(ws, node)) {
-            load_surface_from_json(ws, node, flags, parent_rect);
+          if (!parse_node_children(ws, node, flags)) {
+            load_surface_from_json(ws, node, flags, parent_rect, floating);
           }
         }
       }
     };
 
-    handle_children(nodes);
-
-    set_flag(flags, surface_flag::floating);
-    handle_children(floating);
+    handle_children(nodes,    surface_flag::tiled);
+    handle_children(floating, surface_flag::floating);
 
     return true;
   }
@@ -262,7 +268,7 @@ namespace {
         {}
       };
 
-      parse_node_children(ws, node);
+      parse_node_children(ws, node, make_mask<surface_flag>());
 
       if (auto offset = json::find_member(value, "rect")) {
         translate_surfaces(ws.surfaces(), -output_rect.pos());
