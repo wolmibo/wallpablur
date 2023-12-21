@@ -1,8 +1,8 @@
 // Copyright (c) 2023 wolmibo
 // SPDX-License-Identifier: MIT
 
-#ifndef WALLPABLUR_FLAGS_HPP_INCLUDED
-#define WALLPABLUR_FLAGS_HPP_INCLUDED
+#ifndef FLAGS_HPP_INCLUDED
+#define FLAGS_HPP_INCLUDED
 
 #include <bitset>
 #include <type_traits>
@@ -41,4 +41,4 @@ template<typename Enum, typename... Args>
 
 
 
-#endif // WALLPABLUR_FLAGS_HPP_INCLUDED
+#endif // FLAGS_HPP_INCLUDED

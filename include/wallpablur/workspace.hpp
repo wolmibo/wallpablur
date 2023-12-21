@@ -1,13 +1,14 @@
 #ifndef WALLPABLUR_WORKSPACE_HPP_INCLUDED
 #define WALLPABLUR_WORKSPACE_HPP_INCLUDED
 
-#include "wallpablur/flags.hpp"
 #include "wallpablur/surface.hpp"
 
 #include <span>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include <flags.hpp>
 
 
 

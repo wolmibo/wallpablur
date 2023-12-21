@@ -1,12 +1,13 @@
 #ifndef WALLPABLUR_SURFACE_HPP_INCLUDED
 #define WALLPABLUR_SURFACE_HPP_INCLUDED
 
-#include "wallpablur/flags.hpp"
 #include "wallpablur/rectangle.hpp"
 
 #include <string>
 #include <string_view>
 #include <utility>
+
+#include <flags.hpp>
 
 
 
