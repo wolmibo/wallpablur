@@ -252,17 +252,18 @@ void wayland::surface::layer_surface_configure_(
 
 
 void wayland::surface::update_viewport() const {
-  logcerr::debug("{}: viewport transform {:#}->{:#}", name_,
-      current_geometry_.physical_size(), current_geometry_.logical_size());
+  auto logical = current_geometry_.logical_size();
 
-  if (!visible()) {
+  logcerr::debug("{}: viewport transform {:#}->{:#}", name_,
+      current_geometry_.physical_size(), logical);
+
+  if (!visible() || std::abs(logical.x() * logical.y()) < 1) {
     wp_viewport_set_destination(viewport_.get(), 1, 1);
     wp_viewport_set_source(viewport_.get(), wl_fixed_from_int(0), wl_fixed_from_int(0),
         wl_fixed_from_int(1), wl_fixed_from_int(1));
     return;
   }
 
-  auto logical = current_geometry_.logical_size();
   wp_viewport_set_destination(viewport_.get(), logical.x(), logical.y());
 
   wp_viewport_set_source(viewport_.get(),
