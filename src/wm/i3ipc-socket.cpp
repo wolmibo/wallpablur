@@ -107,7 +107,7 @@ namespace {
       return std::unexpected(*err);
     }
 
-    return std::make_pair(head.type, str_buffer);
+    return std::make_pair(head.type, std::move(str_buffer));
   }
 
 
@@ -184,7 +184,7 @@ std::optional<wm::i3ipc_socket::message> wm::i3ipc_socket::next_message() const 
   std::lock_guard lock{socket_mutex_};
 
   if (auto result = recv_i3ipc(socket_)) {
-    const auto& [type, payload] = *result;
+    auto& [type, payload] = *result;
 
     switch (type) {
       case std::to_underlying(event::workspace):
