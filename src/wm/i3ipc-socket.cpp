@@ -190,9 +190,10 @@ std::optional<wm::i3ipc_socket::message> wm::i3ipc_socket::next_message() const 
       case std::to_underlying(event::workspace):
       case std::to_underlying(event::window):
         return make_pair(static_cast<event>(type), std::move(payload));
-    }
 
-    throw std::runtime_error{"next message has unsupported event"};
+      default:
+        throw std::runtime_error{"next message has unsupported event"};
+    }
   }
 
   return {};
