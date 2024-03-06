@@ -242,13 +242,13 @@ std::optional<std::filesystem::path> wm::find_i3_socket() {
     return env;
   }
 
-  if (auto socket = guess_socket()) {
+  auto socket = guess_socket();
+
+  if (socket) {
     logcerr::warn("guessed socket \"{}\"\n"
         "make sure SWAYSOCK or I3SOCK is set correctly or use --socket",
         socket->string());
-
-    return *socket;
   }
 
-  return {};
+  return socket;
 }
