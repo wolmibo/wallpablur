@@ -15,15 +15,15 @@
 namespace config {
 
 struct panel {
-  anchor_type          anchor {};
+  anchor_type          anchor;
   vec2<uint32_t>       size   {0};
-  margin_type          margin {};
+  margin_type          margin;
 
   float                radius {0.f};
 
 
-  std::string             app_id {};
-  flag_mask<surface_flag> mask   {};
+  std::string             app_id;
+  flag_mask<surface_flag> mask;
 
 
   workspace_expression condition{true};
