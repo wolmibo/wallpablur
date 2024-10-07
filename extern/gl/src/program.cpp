@@ -89,7 +89,12 @@ namespace {
     auto start = line.find(':');
 
     if (end == std::string_view::npos || start > end) {
-      return {std::string{line}, 0, 0, std::string{line}};
+      return {
+        .complete_message = std::string{line},
+        .row              = 0,
+        .column           = 0,
+        .message          = std::string{line}
+      };
     }
 
     auto split = line.find('(', start + 1);
@@ -102,10 +107,10 @@ namespace {
     }
 
     return {
-      std::string{line},
-      str_to_size_t(line.substr(start + 1, split - start - 1)) - 1,
-      str_to_size_t(line.substr(split + 1, end   - split - 1)) - 1,
-      std::string{message}
+      .complete_message = std::string{line},
+      .row              = str_to_size_t(line.substr(start + 1, split - start - 1)) - 1,
+      .column           = str_to_size_t(line.substr(split + 1, end   - split - 1)) - 1,
+      .message          = std::string{message}
     };
   }
 

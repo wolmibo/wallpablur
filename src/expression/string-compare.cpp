@@ -1,5 +1,6 @@
 #include "wallpablur/expression/string-compare.hpp"
 
+#include <algorithm>
 #include <iconfigp/reader.hpp>
 
 
@@ -16,8 +17,8 @@ namespace {
   ) {
     input = iconfigp::trim_front(input);
 
-    const auto* var_name_end = std::find_if    (input.begin(), input.end(), is_infix);
-    const auto* value_begin  = std::find_if_not(var_name_end,  input.end(), is_infix);
+    const auto* var_name_end = std::ranges::find_if(input, is_infix);
+    const auto* value_begin  = std::find_if_not(var_name_end, input.end(), is_infix);
 
     return {
       std::string_view{input.begin(), var_name_end},

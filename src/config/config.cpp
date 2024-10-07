@@ -76,7 +76,7 @@ enum class surface_effect_type : size_t {
   shadow   = 1,
   glow     = 2,
 
-  rounded_corners
+  rounded_corners = 3
 };
 
 

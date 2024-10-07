@@ -49,6 +49,7 @@ version as background. Additional options in this case:
   };
 
 
+  //NOLINTBEGIN(modernize-use-designated-initializers)
   const std::array long_options = {
     option{"help",          no_argument,       nullptr, 'h'},
     option{"version",       no_argument,       nullptr, 'v'},
@@ -71,6 +72,7 @@ version as background. Additional options in this case:
 
     option{nullptr,         0,                 nullptr,   0}
   };
+  //NOLINTEND(modernize-use-designated-initializers)
 
   const char* short_options = "hvVc:i:s:Wp:f:F:b:";
 
