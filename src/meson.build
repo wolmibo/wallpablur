@@ -82,6 +82,7 @@ sources = [
   'output.cpp',
   'workspace.cpp',
 
+  'exception.cpp',
   'application.cpp',
   'application-args.cpp',
   'main.cpp',

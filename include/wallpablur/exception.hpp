@@ -43,6 +43,10 @@ class exception: public std::runtime_error {
 };
 
 
+void print_exception(const exception&);
+void print_exception(std::exception&);
+
+
 
 
 
