@@ -1,12 +1,13 @@
 #include "wallpablur/wm/i3ipc-socket.hpp"
 
+#include "wallpablur/exception.hpp"
+
 #include <algorithm>
 #include <array>
 #include <expected>
 #include <filesystem>
 #include <limits>
 #include <span>
-#include <stdexcept>
 
 #include <memory.h>
 #include <unistd.h>
@@ -94,7 +95,7 @@ namespace {
     }
 
     if (!std::ranges::equal(buffer, to_bytes(header_signature))) {
-      throw std::runtime_error{"invalid i3ipc header"};
+      throw exception{"invalid i3ipc header"};
     }
 
     header head;
@@ -122,8 +123,7 @@ namespace {
       case window:    return R"(["window"])";
     }
 
-    throw std::runtime_error{"unknown i3ipc event: "
-      + std::to_string(std::to_underlying(ev))};
+    throw exception{std::format("unknown i3ipc event: {}", std::to_underlying(ev))};
   }
 
 
@@ -156,8 +156,8 @@ void wm::i3ipc_socket::subscribe(event ev) const {
   if ((result && !is_success(result->second))
       || (!result && result.error() == receive_status::error)) {
 
-    throw std::runtime_error{"unable to subscribe to i3ipc event "
-      + std::string{subscription_code(ev)}};
+    throw exception{std::format("unable to subscribe to i3ipc event {}",
+        subscription_code(ev))};
   }
 }
 
@@ -192,7 +192,7 @@ std::optional<wm::i3ipc_socket::message> wm::i3ipc_socket::next_message() const 
         return make_pair(static_cast<event>(type), std::move(payload));
 
       default:
-        throw std::runtime_error{"next message has unsupported event"};
+        throw exception{std::format("next message has unsupported event {}", type)};
     }
   }
 
