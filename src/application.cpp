@@ -172,7 +172,7 @@ int application::run() {
 
   wayland_client_.explore();
 
-  while (wayland_client_.dispatch() != -1 && !exit_signal_received) {}
+  while (!exit_signal_received) { wayland_client_.dispatch(); }
 
   if (config::global_config().fade_out() == std::chrono::milliseconds{0}) {
     return EXIT_SUCCESS;
@@ -183,7 +183,7 @@ int application::run() {
   register_signal_handler();
   exit_start_ = std::chrono::high_resolution_clock::now();
 
-  while (wayland_client_.dispatch() != -1 && !exit_signal_received) {}
+  while (!exit_signal_received) { wayland_client_.dispatch(); }
 
   global_state::app = nullptr;
 

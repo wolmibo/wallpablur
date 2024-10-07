@@ -1,5 +1,6 @@
 #include "wallpablur/wayland/surface.hpp"
 
+#include "wallpablur/exception.hpp"
 #include "wallpablur/wayland/client.hpp"
 #include "wallpablur/wayland/output.hpp"
 
@@ -63,7 +64,7 @@ wayland::surface::surface(std::string name, client& cl, output& op, bool as_over
   surface_.reset(wl_compositor_create_surface(client_->compositor()));
 
   if (!surface_) {
-    throw std::runtime_error{"unable to create surface"};
+    throw exception{"unable to create surface"};
   }
 
 
@@ -146,7 +147,7 @@ bool wayland::surface::update_context() {
         current_geometry_.physical_size().x(), current_geometry_.physical_size().y()));
 
   if (!egl_window_) {
-    throw std::runtime_error{"unable to create egl window"};
+    throw exception{"unable to create egl window"};
   }
 
   context_ = std::make_shared<egl::context>(client_->context().share(egl_window_.get()));
@@ -167,7 +168,7 @@ bool wayland::surface::update_context() {
 void wayland::surface::reset_frame_listener() {
   frame_callback_.reset(wl_surface_frame(surface_.get()));
   if (!frame_callback_) {
-    throw std::runtime_error{"unable to set frame callback"};
+    throw exception{"unable to set frame callback"};
   }
 
   wl_callback_add_listener(frame_callback_.get(), &callback_listener_, this);
@@ -181,7 +182,7 @@ void wayland::surface::reset_frame_listener() {
 
 void wayland::surface::render() {
   if (!context_) {
-    throw std::runtime_error{"attempting to render without active egl context"};
+    throw exception{"attempting to render without active egl context"};
   }
 
   invalid_ = false;

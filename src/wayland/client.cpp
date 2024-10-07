@@ -1,11 +1,10 @@
 #include "wallpablur/wayland/client.hpp"
 
+#include "wallpablur/exception.hpp"
 #include "wallpablur/wayland/output.hpp"
 
-#include <array>
 #include <cstdint>
 #include <cstdio>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -14,11 +13,24 @@
 
 
 namespace {
-  [[noreturn]] void wl_log_cb(const char* fmt, va_list argp) {
-    std::array<char, 1024> buffer{};
-    vsnprintf(buffer.data(), buffer.size(), fmt, argp);
-    throw std::runtime_error{std::string{"wayland protocol error: "} + buffer.data()};
+  [[nodiscard]] std::string format_message(const char* fmt, va_list argp) {
+    if (auto char_count = vsnprintf(nullptr, 0, fmt, argp); char_count >= 0) {
+      std::string output;
+      output.resize(char_count);
+      vsnprintf(output.data(), output.size() + 1, fmt, argp);
+      return output;
+    }
+
+    return "<error formatting message>";
   }
+
+
+
+  [[noreturn]] void wl_log_cb(const char* fmt, va_list argp) {
+    throw exception{format_message(fmt, argp), true, {}}; 
+  }
+
+
 
   [[nodiscard]] wl_ptr<wl_display> connect_to_wayland_display() {
     wl_log_set_handler_client(wl_log_cb);
@@ -26,10 +38,51 @@ namespace {
     wl_ptr<wl_display> display{wl_display_connect(nullptr)};
 
     if (!display) {
-      throw std::runtime_error{"unable to connect to wayland compositor"};
+      throw exception{"unable to connect to wayland compositor"};
     }
 
     return display;
+  }
+
+
+
+  template<typename T>
+  void require_interface(
+      const wl_ptr<T>&     interface,
+      std::source_location location = std::source_location::current()
+  ) {
+    if (!interface) {
+      throw exception{
+        std::format("required wayland interface \"{}\" missing", wayland_interface<T>::get()->name),
+        false,
+        location
+      };
+    }
+  }
+
+
+
+  template<typename Fnc, typename Str>
+  void check_errno(
+      Str&& message,
+      Fnc&& fnc,
+      std::source_location location = std::source_location::current()
+  ) {
+    errno = 0;
+
+    if (std::invoke(std::forward<Fnc>(fnc))) {
+      return;
+    }
+
+    std::string msg{};
+
+    if (auto error = std::make_error_code(static_cast<std::errc>(errno))) {
+      msg = std::format("{}: {} ({})", std::forward<Str>(message), error.message(), error.value());
+    } else {
+      msg = std::format("{}: unknown error", std::forward<Str>(message));
+    }
+
+    throw exception(msg, true, location);
   }
 }
 
@@ -45,22 +98,27 @@ wayland::client::client() :
 
 
 
+void wayland::client::dispatch() {
+  check_errno("wayland: unable to dispatch", [&] {
+      return wl_display_dispatch(display_.get()) >= 0;
+  });
+}
+
+
+void wayland::client::roundtrip() {
+  check_errno("wayland: unable to perform roundtrip", [&] {
+      return wl_display_roundtrip(display_.get()) >= 0;
+  });
+}
+
+
+
 void wayland::client::explore() {
-  if (dispatch() == -1) {
-    throw std::runtime_error{"wayland: unable to dispatch"};
-  };
+  dispatch();
 
-  if (!compositor_) {
-    throw std::runtime_error{"wayland: unable to obtain interface wl_compositor"};
-  }
-
-  if (!layer_shell_) {
-    throw std::runtime_error{"wayland: unable to obtain interface zwlr_layer_shell_v1"};
-  }
-
-  if (!viewporter_) {
-    throw std::runtime_error{"wayland: unable to obtain interface wp_viewporter"};
-  }
+  require_interface(compositor_);
+  require_interface(layer_shell_);
+  require_interface(viewporter_);
 
   roundtrip();
 }

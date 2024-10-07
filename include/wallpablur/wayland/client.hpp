@@ -33,8 +33,8 @@ class client {
 
 
 
-    int  dispatch()  { return wl_display_dispatch(display_.get()); }
-    void roundtrip() { wl_display_roundtrip(display_.get());       }
+    void dispatch();
+    void roundtrip();
 
     void explore();
 
