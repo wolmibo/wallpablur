@@ -1,7 +1,9 @@
+#include "wallpablur/wm/i3ipc.hpp"
+
 #include "wallpablur/config/config.hpp"
+#include "wallpablur/exception.hpp"
 #include "wallpablur/json/utils.hpp"
 #include "wallpablur/surface.hpp"
-#include "wallpablur/wm/i3ipc.hpp"
 #include "wallpablur/wm/layout-manager.hpp"
 
 #include <logcerr/log.hpp>
@@ -55,7 +57,7 @@ void wm::i3ipc::timer_loop(const std::stop_token& stoken) {
       }
     }
   } catch (std::exception& ex) {
-    logcerr::error(ex.what());
+    print_exception(ex);
   } catch (...) {
     logcerr::error("unhandled exception");
   }
@@ -74,7 +76,7 @@ void wm::i3ipc::event_loop(const std::stop_token& stoken) {
       }
     }
   } catch (std::exception& ex) {
-    logcerr::error(ex.what());
+    print_exception(ex);
   } catch (...) {
     logcerr::error("unhandled exception");
   }
@@ -325,6 +327,6 @@ void wm::i3ipc::update_layouts() {
   try {
     parse_layout(manager_, layouts_json_);
   } catch (std::exception& ex) {
-    logcerr::error("unable to parse json: {}", ex.what());
+    print_exception(ex);
   }
 }
