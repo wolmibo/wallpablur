@@ -1,3 +1,5 @@
+#include "wallpablur/exception.hpp"
+
 #include <algorithm>
 #include <filesystem>
 
@@ -37,8 +39,8 @@ gl::texture load_to_gl_texture(const std::filesystem::path& path) {
   std::unique_ptr<GError, gerror_destructor> error{error_unsafe};
 
   if (error) {
-    throw std::runtime_error{"failed to decode " + path.string()
-      + " using gdk-pixbuf:\n" + error->message};
+    throw exception{std::format("failed to decode {} using gdk-pixbuf:\n{}",
+        path.string(), error->message)};
   }
 
 
@@ -47,8 +49,9 @@ gl::texture load_to_gl_texture(const std::filesystem::path& path) {
   int height = gdk_pixbuf_get_height(pixbuf.get());
 
   if (gdk_pixbuf_get_bits_per_sample(pixbuf.get()) != 8) {
-    throw std::runtime_error{"failed to use " + path.string() + ":\n"
-      "only images with 8 bits per color channel are supported"};
+    throw exception{std::format("failed to use {}:\n"
+      "only images with 8 bits per color channel are supported",
+      path.string())};
   }
 
   std::span<const guint8> pixels {

@@ -5,12 +5,12 @@
 #include "wallpablur/config/output.hpp"
 #include "wallpablur/config/panel.hpp"
 #include "wallpablur/config/types.hpp"
+#include "wallpablur/exception.hpp"
 
 #include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <optional>
-#include <stdexcept>
 #include <string_view>
 
 #include <unistd.h>
@@ -356,7 +356,7 @@ namespace {
       case filter_type::invert:
         return invert_filter{};
     }
-    throw std::runtime_error{"filter type is not implemented"};
+    throw ::exception{"filter type is not implemented"};
   }
 
 
@@ -568,11 +568,11 @@ cfg::config(std::string_view input) {
       logcerr::warn("config file contains unused keys");
       logcerr::print_raw_sync(std::cout, *message);
     }
-  } catch (const exception& ex) {
+  } catch (const iconfigp::exception& ex) {
     logcerr::error(ex.what());
-    logcerr::print_raw_sync(std::cout,
+    logcerr::print_raw_sync(std::cerr,
         format_exception(ex, input, logcerr::is_colored()));
-    throw false;
+    throw ::exception{"invalid config file"};
   }
 }
 

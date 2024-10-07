@@ -1,11 +1,12 @@
-#include "wallpablur/config/filter.hpp"
-#include "wallpablur/gl/utils.hpp"
 #include "wallpablur/texture-generator.hpp"
+
+#include "wallpablur/config/filter.hpp"
+#include "wallpablur/exception.hpp"
+#include "wallpablur/gl/utils.hpp"
 #include "shader/shader.hpp"
 
 #include <algorithm>
 #include <array>
-#include <stdexcept>
 #include <utility>
 
 #include <logcerr/log.hpp>
@@ -161,7 +162,7 @@ gl::texture texture_generator::generate_from_existing(
   std::span<const config::filter> remaining_filters
 ) const {
   if (remaining_filters.empty()) {
-    throw std::runtime_error{"trying to create texture which already exists"};
+    throw exception{"trying to create texture which already exists"};
   }
   logcerr::verbose("creating texture from existing with {} filter(s) remaining",
       remaining_filters.size());
@@ -183,7 +184,7 @@ gl::texture texture_generator::generate(
   const config::brush&     brush
 ) const {
   if (!brush.fgraph) {
-    throw std::runtime_error{"missing filter_graph in brush"};
+    throw exception{"missing filter_graph in brush"};
   }
 
   logcerr::verbose("creating texture from scratch");
@@ -263,7 +264,7 @@ namespace {
       const gl::mesh&                quad
   ) {
     if (filter.iterations == 0) {
-      throw std::runtime_error{"unable to apply box blur filter with 0 iterations"};
+      throw exception{"unable to apply box blur filter with 0 iterations"};
     }
 
     logcerr::verbose("applying box blur filter with scale {:#} and {} iterations",
@@ -315,7 +316,7 @@ gl::texture texture_generator::apply_filter(
           resources::filter_vs(), resources::filter_invert_fs()).use();
 
     } else {
-      throw std::runtime_error{"trying to use unimplemented filter"};
+      throw exception{"trying to use unimplemented filter"};
     }
     quad_.draw();
   }

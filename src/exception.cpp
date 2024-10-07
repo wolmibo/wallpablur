@@ -6,6 +6,7 @@
 
 #include <gl/program.hpp>
 
+#include <iconfigp/exception.hpp>
 #include <iconfigp/format.hpp>
 
 

@@ -38,7 +38,7 @@ namespace {
                                                   name));
 
     if (!layer_surface) {
-      throw std::runtime_error{"unable to create layer surface"};
+      throw exception{"unable to create layer surface"};
     }
 
     zwlr_layer_surface_v1_set_size          (layer_surface.get(), 0, 0);

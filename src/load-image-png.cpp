@@ -1,3 +1,5 @@
+#include "wallpablur/exception.hpp"
+
 #include <filesystem>
 #include <memory>
 #include <stdexcept>
@@ -13,7 +15,7 @@
 
 namespace {
   [[noreturn]] void png_error(png_structp /*png*/, png_const_charp msg) {
-    throw std::runtime_error{logcerr::format("unable to decode png: {}", msg)};
+    throw exception{logcerr::format("unable to decode png: {}", msg), false, {}};
   }
 
   void png_warning(png_structp /*png*/, png_const_charp msg) {
@@ -30,7 +32,7 @@ namespace {
       ptr{png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr)}
     {
       if (ptr == nullptr) {
-        throw std::runtime_error{"unable to create png read struct"};
+        throw exception{"unable to create png read struct"};
       }
 
       png_set_error_fn(ptr, nullptr, png_error, png_warning);
@@ -39,7 +41,7 @@ namespace {
 
       if (info == nullptr) {
         png_destroy_read_struct(&ptr, nullptr, nullptr);
-        throw std::runtime_error{"unable to create png info struct"};
+        throw exception{"unable to create png info struct"};
       }
     }
 
@@ -81,7 +83,7 @@ namespace {
   [[nodiscard]] file_ptr open_file(const std::filesystem::path& path) {
     file_ptr fp{fopen(path.string().c_str(), "rb")};
     if (!fp) {
-      throw std::runtime_error{
+      throw exception{
         logcerr::format("unable to open \"{}\" for reading", path.string())};
     }
 
@@ -120,7 +122,7 @@ namespace {
     png_read_update_info(png.ptr, png.info);
 
     if (static_cast<GLsizei>(png_get_rowbytes(png.ptr, png.info)) != img.width * 4) {
-      throw std::runtime_error{"error setting up png decoder: stride mismatch"};
+      throw exception{"error setting up png decoder: stride mismatch"};
     }
 
     int passes = png_set_interlace_handling(png.ptr);

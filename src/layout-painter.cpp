@@ -206,7 +206,7 @@ namespace {
       std::shared_ptr<egl::context> ctx
   ) {
     if (!ctx) {
-      throw std::runtime_error{"expected non-null context"};
+      throw exception{"expected non-null context"};
     }
     ctx->make_current();
     return ctx;
@@ -325,7 +325,7 @@ struct layout_painter::wallpaper_context {
     aa_cutoff            {texture_aa_shader.uniform("cutoff")}
   {
     if (aa_cutoff != solid_color_aa_shader.uniform("cutoff")) {
-      throw std::runtime_error{"uniform mismatch cutoff"};
+      throw exception{"uniform mismatch cutoff"};
     }
   }
 

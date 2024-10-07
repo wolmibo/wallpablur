@@ -173,8 +173,7 @@ version as background. Additional options in this case:
   [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::ate);
     if (!input) {
-      throw std::runtime_error{logcerr::format("unable to read file at \"{}\"",
-          path.string())};
+      throw exception{logcerr::format("unable to read file at \"{}\"", path.string())};
     }
 
     auto size = input.tellg();
