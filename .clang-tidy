@@ -21,4 +21,5 @@ Checks: >
   readability-*,
     -readability-identifier-length,
     -readability-magic-numbers,
+    -readability-math-missing-parentheses,
     -readability-uppercase-literal-suffix
