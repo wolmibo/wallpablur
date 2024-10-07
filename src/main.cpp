@@ -1,5 +1,6 @@
 #include "wallpablur/application.hpp"
 #include "wallpablur/application-args.hpp"
+#include "wallpablur/exception.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -14,6 +15,20 @@
 
 
 namespace {
+  void print_exception(const exception& ex) {
+    if (auto location = ex.location()) {
+      logcerr::error("{}\n{}:{} in {}",
+          ex.what(),
+          location->file_name(),
+          location->line(),
+          location->function_name()
+      );
+    } else {
+      logcerr::error(ex.what());
+    }
+  }
+
+
   void print_gl_error(const gl::program_error& err) {
     logcerr::error(err.what());
     for (const auto& message: err.messages()) {
@@ -44,6 +59,9 @@ int main(int argc, char** argv) {
     }
   } catch (const gl::program_error& err) {
     print_gl_error(err);
+    return EXIT_FAILURE;
+  } catch (const exception& ex) {
+    print_exception(ex);
     return EXIT_FAILURE;
   } catch (std::exception& ex) {
     logcerr::error(ex.what());
