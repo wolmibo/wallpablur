@@ -96,13 +96,12 @@ namespace {
 
   [[nodiscard]] std::string format_egl_error_message(
     const std::string&   message,
-    EGLint               code,
-    std::source_location location
+    EGLint               code
   ) {
-    return logcerr::format("{}: eglError({}, {:#X})\n in: {}:{}:{} `{}`",
+    return logcerr::format("{}: eglError({}, {:#X})",
       message,
-      egl_error_to_string(code), code,
-      location.file_name(), location.line(), location.column(), location.function_name()
+      egl_error_to_string(code),
+      code
     );
   }
 }
@@ -110,7 +109,7 @@ namespace {
 
 
 egl::error::error(const std::string& message, EGLint code, std::source_location loc) :
-  std::runtime_error{format_egl_error_message(message, code, loc)}
+  exception{format_egl_error_message(message, code), false, loc}
 {}
 
 

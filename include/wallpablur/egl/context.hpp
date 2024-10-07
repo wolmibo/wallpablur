@@ -1,8 +1,9 @@
 #ifndef WALLPABLUR_EGL_CONTEXT_HPP_INCLUDED
 #define WALLPABLUR_EGL_CONTEXT_HPP_INCLUDED
 
+#include "wallpablur/exception.hpp"
+
 #include <source_location>
-#include <stdexcept>
 #include <string>
 
 #include <epoxy/gl.h>
@@ -13,7 +14,7 @@
 
 namespace egl {
 
-class error : public std::runtime_error {
+class error : public exception {
   public:
     error(
       const std::string&,
