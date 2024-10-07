@@ -59,31 +59,6 @@ namespace {
       };
     }
   }
-
-
-
-  template<typename Fnc, typename Str>
-  void check_errno(
-      Str&& message,
-      Fnc&& fnc,
-      std::source_location location = std::source_location::current()
-  ) {
-    errno = 0;
-
-    if (std::invoke(std::forward<Fnc>(fnc))) {
-      return;
-    }
-
-    std::string msg{};
-
-    if (auto error = std::make_error_code(static_cast<std::errc>(errno))) {
-      msg = std::format("{}: {} ({})", std::forward<Str>(message), error.message(), error.value());
-    } else {
-      msg = std::format("{}: unknown error", std::forward<Str>(message));
-    }
-
-    throw exception(msg, true, location);
-  }
 }
 
 
