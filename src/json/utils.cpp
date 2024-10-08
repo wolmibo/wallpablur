@@ -1,5 +1,7 @@
 #include "wallpablur/json/utils.hpp"
 
+#include "wallpablur/exception.hpp"
+
 #include <rapidjson/error/en.h>
 
 #include <logcerr/log.hpp>
@@ -13,8 +15,8 @@ void json::assert_parse_success(rapidjson::ParseResult code) {
 
   const auto *message = rapidjson::GetParseError_En(code.Code());
 
-  throw std::runtime_error{logcerr::format("rapidjson error: {} ({})",
-      message, code.Offset())};
+  throw exception{logcerr::format("rapidjson error: {} ({})",
+      message, code.Offset()), true, {}};
 }
 
 
@@ -41,13 +43,12 @@ std::optional<unsigned int> json::member_to_uint(
     const rapidjson::Value::Ch* name
 ) {
   return find_member(value, name)
-            .transform([name](const auto& val) {
-              if (val.get().IsUint()) {
-                return val.get().GetUint();
-              }
-              throw std::invalid_argument{
-                std::string{"expected type unsigned int for member "} + name};
-            });
+    .transform([name](const auto& val) {
+      if (val.get().IsUint()) {
+        return val.get().GetUint();
+      }
+      throw exception{std::format("expected unsigned int for \"{}\"", name), true, {}};
+    });
 }
 
 
@@ -57,13 +58,12 @@ std::optional<int> json::member_to_int(
     const rapidjson::Value::Ch* name
 ) {
   return find_member(value, name)
-            .transform([name](const auto& val) {
-              if (val.get().IsInt()) {
-                return val.get().GetInt();
-              }
-              throw std::invalid_argument{
-                std::string{"expected type int for member "} + name};
-            });
+    .transform([name](const auto& val) {
+      if (val.get().IsInt()) {
+        return val.get().GetInt();
+      }
+      throw exception{std::format("expected int for \"{}\"", name), true, {}};
+    });
 }
 
 
@@ -73,13 +73,12 @@ std::optional<bool> json::member_to_bool(
     const rapidjson::Value::Ch* name
 ) {
   return find_member(value, name)
-            .transform([name](const auto& val) {
-              if (val.get().IsBool()) {
-                return val.get().GetBool();
-              }
-              throw std::invalid_argument{
-                std::string{"expected type int for member "} + name};
-            });
+    .transform([name](const auto& val) {
+      if (val.get().IsBool()) {
+        return val.get().GetBool();
+      }
+      throw exception{std::format("expected bool for \"{}\"", name), true, {}};
+    });
 }
 
 
@@ -89,14 +88,13 @@ std::optional<std::string_view> json::member_to_str(
     const rapidjson::Value::Ch* name
 ) {
   return find_member(value, name)
-            .transform([name](const auto& val) {
-              if (val.get().IsString()) {
-                return std::string_view{val.get().GetString(),
-                  val.get().GetStringLength()};
-              }
-              throw std::invalid_argument{
-                std::string{"expected type int for member "} + name};
-            });
+    .transform([name](const auto& val) {
+      if (val.get().IsString()) {
+        return std::string_view{val.get().GetString(),
+          val.get().GetStringLength()};
+      }
+      throw exception{std::format("expected string for \"{}\"", name), true, {}};
+    });
 }
 
 
@@ -106,11 +104,10 @@ std::optional<rapidjson::Value::ConstArray> json::member_to_array(
     const rapidjson::Value::Ch* name
 ) {
   return find_member(value, name)
-            .transform([name](const auto& val) {
-              if (val.get().IsArray()) {
-                return val.get().GetArray();
-              }
-              throw std::invalid_argument{
-                std::string{"expected type array for member "} + name};
-            });
+    .transform([name](const auto& val) {
+      if (val.get().IsArray()) {
+        return val.get().GetArray();
+      }
+      throw exception{std::format("expected array for \"{}\"", name), true, {}};
+    });
 }
