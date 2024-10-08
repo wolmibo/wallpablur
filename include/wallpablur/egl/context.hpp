@@ -48,12 +48,14 @@ class context {
 
 
   private:
-    EGLDisplay display_{EGL_NO_DISPLAY};
+    class display_wrapper;
+    std::shared_ptr<display_wrapper> display_;
+
     EGLConfig  config_;
     EGLSurface surface_{EGL_NO_SURFACE};
     EGLContext context_{EGL_NO_CONTEXT};
 
-    context(EGLDisplay, EGLConfig, EGLSurface, EGLContext);
+    context(std::shared_ptr<display_wrapper>, EGLConfig, EGLSurface, EGLContext);
 
     void enable_debugging() const;
 };

@@ -116,24 +116,6 @@ egl::error::error(const std::string& message, EGLint code, std::source_location 
 
 
 
-void egl::context::make_current() const {
-  if (eglMakeCurrent(display_, surface_, surface_, context_) == 0) {
-    throw error("unable to make context current");
-  }
-}
-
-
-
-void egl::context::swap_buffers() const {
-  if (eglSwapBuffers(display_, surface_) == 0) {
-    throw error("unable to swap buffers");
-  }
-}
-
-
-
-
-
 void egl::context::enable_debugging() const {
   if constexpr (logcerr::debugging_enabled()) {
     make_current();
@@ -145,36 +127,73 @@ void egl::context::enable_debugging() const {
 
 
 
+class egl::context::display_wrapper {
+  public:
+    display_wrapper(const display_wrapper&) = delete;
+    display_wrapper(display_wrapper&&)      = delete;
+    display_wrapper& operator=(const display_wrapper&) = delete;
+    display_wrapper& operator=(display_wrapper&&)      = delete;
+
+
+    display_wrapper(NativeDisplayType display)
+        : display_{eglGetDisplay(display)}
+    {
+      if (display_ == EGL_NO_DISPLAY) {
+        throw egl::error{"unable to obtain egl display"};
+      }
+
+      EGLint major{0};
+      EGLint minor{0};
+      if (eglInitialize(display_, &major, &minor) == EGL_FALSE) {
+        throw egl::error{"unable to initialize egl"};
+      }
+      logcerr::verbose("egl version {}.{}", major, minor);
+
+
+      eglBindAPI(EGL_OPENGL_API);
+
+      eglSwapInterval(display_, 0);
+    }
+
+    ~display_wrapper() {
+      if (eglTerminate(display_) == EGL_FALSE) {
+        logcerr::error(error{"unable to terminate egl display connection"}.what());
+      }
+    }
+
+    EGLDisplay operator*() { return display_; }
+
+  private:
+    EGLDisplay display_;
+};
+
+
+
+
+
+void egl::context::make_current() const {
+  if (eglMakeCurrent(**display_, surface_, surface_, context_) == EGL_FALSE) {
+    throw error{"unable to make context current"};
+  }
+}
+
+
+
+void egl::context::swap_buffers() const {
+  if (eglSwapBuffers(**display_, surface_) == EGL_FALSE) {
+    throw error{"unable to swap buffers"};
+  }
+}
+
+
+
 
 
 namespace {
-  [[nodiscard]] EGLDisplay create_egl_display(NativeDisplayType display) {
-    EGLDisplay egl_display = eglGetDisplay(display);
-    if (egl_display == EGL_NO_DISPLAY) {
-      throw egl::error("unable to obtain egl display");
-    }
-
-    EGLint major{0};
-    EGLint minor{0};
-    if (eglInitialize(egl_display, &major, &minor) == 0) {
-      throw egl::error("unable to initialize egl");
-    }
-    logcerr::verbose("egl version {}.{}", major, minor);
-
-
-    eglBindAPI(EGL_OPENGL_API);
-
-    eglSwapInterval(egl_display, 0);
-
-    return egl_display;
-  }
-
-
-
   [[nodiscard]] EGLConfig create_egl_config(EGLDisplay display) {
     EGLint count{0};
     if (eglGetConfigs(display, nullptr, 0, &count) != EGL_TRUE || count == 0) {
-      throw egl::error("unable to find egl configuration");
+      throw egl::error{"unable to find egl configuration"};
     }
 
     const std::array<EGLint, 18> attrib = {
@@ -190,7 +209,7 @@ namespace {
     EGLConfig config{};
     if (eglChooseConfig(display, attrib.data(), &config, 1, &count) != EGL_TRUE
         || count != 1) {
-      throw egl::error("unable to choose egl configuration");
+      throw egl::error{"unable to choose egl configuration"};
     }
 
     return config;
@@ -227,7 +246,7 @@ namespace {
 
     EGLContext context = eglCreateContext(display, config, shared, cx.data());
     if (context == EGL_NO_CONTEXT) {
-      throw egl::error("unable to create egl context");
+      throw egl::error{"unable to create egl context"};
     }
 
     return context;
@@ -237,10 +256,10 @@ namespace {
 
 
 egl::context::context(NativeDisplayType display) :
-  display_{create_egl_display(display)},
-  config_ {create_egl_config(display_)},
+  display_{std::make_shared<display_wrapper>(display)},
+  config_ {create_egl_config(**display_)},
   surface_{EGL_NO_SURFACE},
-  context_{create_egl_context(display_, config_, EGL_NO_CONTEXT)}
+  context_{create_egl_context(**display_, config_, EGL_NO_CONTEXT)}
 {
   enable_debugging();
 }
@@ -248,12 +267,12 @@ egl::context::context(NativeDisplayType display) :
 
 
 egl::context::context(
-    EGLDisplay display,
-    EGLConfig  config,
-    EGLSurface surface,
-    EGLContext context
+    std::shared_ptr<display_wrapper> display,
+    EGLConfig                        config,
+    EGLSurface                       surface,
+    EGLContext                       context
 ) :
-  display_{display},
+  display_{std::move(display)},
   config_ {config},
   surface_{surface},
   context_{context}
@@ -264,7 +283,7 @@ egl::context::context(
 
 
 egl::context::context(context&& rhs) noexcept :
-  display_{std::exchange(rhs.display_, EGL_NO_DISPLAY)},
+  display_{std::exchange(rhs.display_, nullptr)},
   config_ {rhs.config_},
   surface_{std::exchange(rhs.surface_, EGL_NO_SURFACE)},
   context_{std::exchange(rhs.context_, EGL_NO_CONTEXT)}
@@ -287,25 +306,32 @@ egl::context egl::context::share(NativeWindowType window) const {
   return context {
     display_,
     config_,
-    create_egl_surface(display_, config_, window),
-    create_egl_context(display_, config_, context_)
+    create_egl_surface(**display_, config_, window),
+    create_egl_context(**display_, config_, context_)
   };
 }
 
 
 
 egl::context::~context() {
+  if (!display_) {
+    return;
+  }
+
+  if (eglMakeCurrent(**display_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)
+      == EGL_FALSE) {
+    logcerr::error(error{"unable to unbind egl surface and context"}.what());
+  }
+
   if (context_ != EGL_NO_CONTEXT) {
-    if (eglDestroyContext(display_, context_) == 0) {
-      error err{"unable to destroy egl context"};
-      logcerr::warn(err.what());
+    if (eglDestroyContext(**display_, context_) == 0) {
+      logcerr::error(error{"unable to destroy egl context"}.what());
     }
   }
 
   if (surface_ != EGL_NO_SURFACE) {
-    if (eglDestroySurface(display_, surface_) == 0) {
-      error err{"unable to destroy egl surface"};
-      logcerr::warn(err.what());
+    if (eglDestroySurface(**display_, surface_) == 0) {
+      logcerr::error(error{"unable to destroy egl surface"}.what());
     }
   }
 }
