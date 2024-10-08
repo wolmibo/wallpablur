@@ -102,6 +102,7 @@ The following options are defined in the global section, e.g. on top of the file
   This setting can:
   - affect overall graphics performance
   - punch holes in surfaces above tiled windows (e.g. floating windows, dialogs)
+
   Can be overwritten per output.
 
 
