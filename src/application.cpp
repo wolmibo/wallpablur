@@ -74,7 +74,7 @@ application::application(const application_args& args) :
   i3ipc_ {i3ipc_from_args_and_config(args)},
   texture_provider_{std::make_shared<::texture_provider>(wayland_client_.share_context())},
 
-  app_start_{std::chrono::high_resolution_clock::now()}
+  app_start_{clock::now()}
 {
   register_signal_handler();
 
@@ -108,11 +108,9 @@ application::application(const application_args& args) :
 
 
 namespace {
-  std::chrono::milliseconds elapsed_since(
-      std::chrono::high_resolution_clock::time_point tp
-  ) {
+  std::chrono::milliseconds elapsed_since(application::clock::time_point tp) {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::high_resolution_clock::now() - tp);
+        application::clock::now() - tp);
   }
 }
 
@@ -181,7 +179,7 @@ int application::run() {
   logcerr::log("stop signal received; send again to cancel fade out");
 
   register_signal_handler();
-  exit_start_ = std::chrono::high_resolution_clock::now();
+  exit_start_ = clock::now();
 
   while (!exit_signal_received) { wayland_client_.dispatch(); }
 

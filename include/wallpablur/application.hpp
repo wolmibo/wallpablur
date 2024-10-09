@@ -18,6 +18,8 @@ class output;
 
 class application {
   public:
+    using clock = std::chrono::steady_clock;
+
     application(const application_args&);
 
     [[nodiscard]] int run();
@@ -33,16 +35,14 @@ class application {
 
 
   private:
-    using time_point = std::chrono::high_resolution_clock::time_point;
-
     std::optional<wm::i3ipc>                    i3ipc_;
     wayland::client                             wayland_client_;
     std::shared_ptr<::texture_provider>         texture_provider_;
 
     flat_map<uint32_t, std::unique_ptr<output>> outputs_;
 
-    time_point                                  app_start_;
-    std::optional<time_point>                   exit_start_;
+    clock::time_point                           app_start_;
+    std::optional<clock::time_point>            exit_start_;
 };
 
 
