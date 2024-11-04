@@ -34,6 +34,7 @@ class layout_painter {
 
     void render_wallpaper(const workspace&, float, uint64_t) const;
     void render_clipping(const workspace&, float, uint64_t) const;
+    static void render_clear();
 
     bool update_rounded_corners(const workspace&, uint64_t);
 

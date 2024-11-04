@@ -790,6 +790,15 @@ void layout_painter::update_cache(const workspace& ws, uint64_t id) const {
 
 
 
+void layout_painter::render_clear() {
+  glClearColor(0.f, 0.f, 0.f, 0.f);
+  glClear(GL_COLOR_BUFFER_BIT);
+}
+
+
+
+
+
 void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id) const {
   logcerr::debug("{}: rendering wallpaper {:#}, alpha = {}", config_.name,
       geometry_.physical_size(), a);
@@ -806,8 +815,7 @@ void layout_painter::render_wallpaper(const workspace& ws, float a, uint64_t id)
   if (clipping_context_) {
     update_cache(ws, id);
 
-    glClearColor(0.f, 0.f, 0.f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    render_clear();
 
     wallpaper_context_->texture_shader.use();
     glUniform1f(wallpaper_context_->texture_alpha, a);
@@ -842,8 +850,7 @@ void layout_painter::render_clipping(const workspace& ws, float a, uint64_t id) 
 
   clipping_context_->context->make_current();
 
-  glClearColor(0.f, 0.f, 0.f, 0.f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  render_clear();
 
   set_blend_mode();
 

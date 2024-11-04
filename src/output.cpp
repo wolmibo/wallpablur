@@ -157,6 +157,7 @@ void output::setup_surfaces() {
       last_clipping_alpha_ = app().alpha();
 
       if (!clipping_surface_->visible()) {
+        layout_painter::render_clear();
         return;
       }
 
