@@ -55,7 +55,7 @@ DEFINE_WAYLAND_DELETER(wl_egl_window, destroy);
 #ifdef ZWLR_LAYER_SURFACE_V1_INTERFACE
 DEFINE_WAYLAND_DELETER  (zwlr_layer_surface_v1, destroy);
 DEFINE_WAYLAND_DELETER  (zwlr_layer_shell_v1,   destroy);
-DEFINE_WAYLAND_INTERFACE(zwlr_layer_shell_v1, 1);
+DEFINE_WAYLAND_INTERFACE(zwlr_layer_shell_v1, 3);
 #endif
 
 
