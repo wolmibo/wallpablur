@@ -20,12 +20,13 @@ template<typename T> struct wayland_interface{};
   };
 
 
-#define DEFINE_WAYLAND_INTERFACE(x)            \
+#define DEFINE_WAYLAND_INTERFACE(x, v)         \
   class x;                                     \
   template<> struct wayland_interface<x> {     \
     static const wl_interface* get() {         \
       return & x ##_interface;                 \
     }                                          \
+    static constexpr uint32_t version{v};      \
   };                                           \
 // NOLINTEND(*macro-usage,*macro-parentheses)
 
@@ -36,10 +37,10 @@ DEFINE_WAYLAND_DELETER(wl_registry, destroy);
 DEFINE_WAYLAND_DELETER  (wl_surface, destroy);
 
 DEFINE_WAYLAND_DELETER  (wl_compositor, destroy);
-DEFINE_WAYLAND_INTERFACE(wl_compositor);
+DEFINE_WAYLAND_INTERFACE(wl_compositor, 4);
 
 DEFINE_WAYLAND_DELETER  (wl_output, destroy);
-DEFINE_WAYLAND_INTERFACE(wl_output);
+DEFINE_WAYLAND_INTERFACE(wl_output, 4);
 
 
 DEFINE_WAYLAND_DELETER(wl_callback, destroy);
@@ -54,14 +55,14 @@ DEFINE_WAYLAND_DELETER(wl_egl_window, destroy);
 #ifdef ZWLR_LAYER_SURFACE_V1_INTERFACE
 DEFINE_WAYLAND_DELETER  (zwlr_layer_surface_v1, destroy);
 DEFINE_WAYLAND_DELETER  (zwlr_layer_shell_v1,   destroy);
-DEFINE_WAYLAND_INTERFACE(zwlr_layer_shell_v1);
+DEFINE_WAYLAND_INTERFACE(zwlr_layer_shell_v1, 1);
 #endif
 
 
 #ifdef WP_VIEWPORTER_INTERFACE
 DEFINE_WAYLAND_DELETER  (wp_viewport,   destroy);
 DEFINE_WAYLAND_DELETER  (wp_viewporter, destroy);
-DEFINE_WAYLAND_INTERFACE(wp_viewporter);
+DEFINE_WAYLAND_INTERFACE(wp_viewporter, 1);
 #endif
 
 

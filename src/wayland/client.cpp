@@ -2,6 +2,7 @@
 
 #include "wallpablur/exception.hpp"
 #include "wallpablur/wayland/output.hpp"
+#include "wallpablur/wayland/utils.hpp"
 
 #include <cstdint>
 #include <cstdio>
@@ -53,7 +54,8 @@ namespace {
   ) {
     if (!interface) {
       throw exception{
-        std::format("required wayland interface \"{}\" missing", wayland_interface<T>::get()->name),
+        std::format("required wayland interface \"{}\" (version {}) missing",
+            wayland_interface<T>::get()->name, wayland_interface<T>::version),
         false,
         location
       };
@@ -106,17 +108,28 @@ namespace {
   template<typename T>
   [[nodiscard]] wl_ptr<T> registry_bind(
       wl_registry* registry,
-      uint32_t     name,
-      uint32_t     version
+      uint32_t     name
   ) {
     return wl_ptr<T>{static_cast<T*>(
-      wl_registry_bind(registry, name, wayland_interface<T>::get(), version)
+      wl_registry_bind(registry, name,
+        wayland_interface<T>::get(), wayland_interface<T>::version)
     )};
   }
 
 
-  [[nodiscard]] bool is_interface(std::string_view value, const wl_interface& iface) {
-    return value == iface.name;
+  template<typename T>
+  [[nodiscard]] bool is_interface(std::string_view value, uint32_t version) {
+    if (value != wayland_interface<T>::get()->name) {
+      return false;
+    }
+
+    if (version < wayland_interface<T>::version) {
+      logcerr::warn("provided interface for \"{}\" has version {} (required: {})",
+          value, version, wayland_interface<T>::version);
+      return false;
+    }
+
+    return true;
   }
 }
 
@@ -127,21 +140,21 @@ void wayland::client::registry_global_(
     wl_registry* registry,
     uint32_t     name,
     const char*  interface,
-    uint32_t     /*version*/
+    uint32_t     version
 ) {
   auto* self = static_cast<client*>(data);
 
-  if (is_interface(interface, wl_compositor_interface)) {
-    self->compositor_ = registry_bind<wl_compositor>(registry, name, 4);
-  } else if (is_interface(interface, wl_output_interface)) {
+  if (is_interface<wl_compositor>(interface, version)) {
+    self->compositor_ = registry_bind<wl_compositor>(registry, name);
+  } else if (is_interface<wl_output>(interface, version)) {
     if (self->output_add_callback_) {
       self->output_add_callback_(name,
-        std::make_unique<output>(registry_bind<wl_output>(registry, name, 4), *self));
+        std::make_unique<output>(registry_bind<wl_output>(registry, name), *self));
     }
-  } else if (is_interface(interface, zwlr_layer_shell_v1_interface)) {
-    self->layer_shell_ = registry_bind<zwlr_layer_shell_v1>(registry, name, 1);
-  } else if (is_interface(interface, wp_viewporter_interface)) {
-    self->viewporter_ = registry_bind<wp_viewporter>(registry, name, 1);
+  } else if (is_interface<zwlr_layer_shell_v1>(interface, version)) {
+    self->layer_shell_ = registry_bind<zwlr_layer_shell_v1>(registry, name);
+  } else if (is_interface<wp_viewporter>(interface, version)) {
+    self->viewporter_ = registry_bind<wp_viewporter>(registry, name);
   }
 }
 
