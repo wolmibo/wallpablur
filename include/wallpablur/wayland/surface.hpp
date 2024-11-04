@@ -86,6 +86,7 @@ class surface {
     bool                                    invalid_            {false};
 
     bool                                    visible_            {true};
+    bool                                    as_overlay_         {false};
 
     std::move_only_function<bool(void)>     update_cb_;
     std::move_only_function<void(void)>     render_cb_;

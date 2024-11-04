@@ -21,6 +21,10 @@ namespace {
     ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP    |
     ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
 
+  [[nodiscard]] constexpr uint32_t layer_shell_layer(bool as_overlay) {
+    return as_overlay ? ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY :
+      ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
+  }
 
 
   [[nodiscard]] wl_ptr<zwlr_layer_surface_v1> create_layer_surface(
@@ -28,11 +32,8 @@ namespace {
       wl_output*           output,
       wl_surface*          surface,
       const char*          name,
-      bool                 as_overlay
+      uint32_t             layer
   ) {
-    const uint32_t layer = as_overlay ?
-      ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY : ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
-
     wl_ptr<zwlr_layer_surface_v1> layer_surface(zwlr_layer_shell_v1_get_layer_surface(
                                                   layer_shell, surface, output, layer,
                                                   name));
@@ -56,7 +57,8 @@ namespace {
 
 wayland::surface::surface(std::string name, client& cl, output& op, bool as_overlay) :
   name_            {std::move(name)},
-  client_          {&cl}
+  client_          {&cl},
+  as_overlay_      {as_overlay}
 {
   current_geometry_.physical_size(op.current_size());
 
@@ -88,7 +90,7 @@ wayland::surface::surface(std::string name, client& cl, output& op, bool as_over
   logcerr::debug("{}: creating layer surface", name_);
   layer_surface_ =
     ::create_layer_surface(client_->layer_shell(), op.wl_raw(), surface_.get(),
-                           name_.c_str(), as_overlay);
+                           name_.c_str(), layer_shell_layer(as_overlay_));
 
   zwlr_layer_surface_v1_add_listener(layer_surface_.get(),
       &layer_surface_listener_, this);
@@ -109,6 +111,7 @@ void wayland::surface::show() {
 
   zwlr_layer_surface_v1_set_size  (layer_surface_.get(), 0, 0);
   zwlr_layer_surface_v1_set_anchor(layer_surface_.get(), anchor_all);
+  zwlr_layer_surface_v1_set_layer (layer_surface_.get(), layer_shell_layer(as_overlay_));
   wl_surface_commit(surface_.get());
 
   invalidate();
@@ -125,6 +128,7 @@ void wayland::surface::hide() {
 
   zwlr_layer_surface_v1_set_size  (layer_surface_.get(), 1, 1);
   zwlr_layer_surface_v1_set_anchor(layer_surface_.get(), anchor_top_left);
+  zwlr_layer_surface_v1_set_layer (layer_surface_.get(), layer_shell_layer(false));
   wl_surface_commit(surface_.get());
 
   visible_ = false;
