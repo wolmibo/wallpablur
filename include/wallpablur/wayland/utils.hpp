@@ -34,7 +34,6 @@ DEFINE_WAYLAND_DELETER(wl_display,  disconnect);
 DEFINE_WAYLAND_DELETER(wl_registry, destroy);
 
 DEFINE_WAYLAND_DELETER  (wl_surface, destroy);
-DEFINE_WAYLAND_INTERFACE(wl_surface);
 
 DEFINE_WAYLAND_DELETER  (wl_compositor, destroy);
 DEFINE_WAYLAND_INTERFACE(wl_compositor);
