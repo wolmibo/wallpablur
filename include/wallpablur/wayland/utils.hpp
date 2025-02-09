@@ -12,7 +12,7 @@ template<typename T> struct wayland_interface{};
 
 // NOLINTBEGIN(*macro-usage,*macro-parentheses)
 #define DEFINE_WAYLAND_DELETER(x, y)           \
-  class x;                                     \
+  struct x;                                     \
   template<> struct wayland_deleter<x> {       \
     void operator()(x* ptr) const {            \
       x ##_ ## y (ptr);                        \
@@ -21,7 +21,7 @@ template<typename T> struct wayland_interface{};
 
 
 #define DEFINE_WAYLAND_INTERFACE(x, v)         \
-  class x;                                     \
+  struct x;                                     \
   template<> struct wayland_interface<x> {     \
     static const wl_interface* get() {         \
       return & x ##_interface;                 \
