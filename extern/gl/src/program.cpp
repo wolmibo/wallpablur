@@ -66,6 +66,7 @@ namespace {
 
   [[nodiscard]] size_t str_to_size_t(std::string_view str) {
     size_t value{0};
+    //NOLINTNEXTLINE(*-pointer-arithmetic)
     std::from_chars(str.data(), str.data() + str.size(), value);
     return value;
   }
