@@ -258,6 +258,7 @@ namespace {
 egl::context::context(NativeDisplayType display) :
   display_{std::make_shared<display_wrapper>(display)},
   config_ {create_egl_config(**display_)},
+  //NOLINTNEXTLINE(*-use-default-member-init)
   surface_{EGL_NO_SURFACE},
   context_{create_egl_context(**display_, config_, EGL_NO_CONTEXT)}
 {
